@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "1087651372468",
+    "firebase_url": "https://household-1c133.firebaseio.com",
+    "project_id": "household-1c133",
+    "storage_bucket": "household-1c133.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1087651372468:android:fb97887bd484e426",
+        "android_client_info": {
+          "package_name": "com.caudelldevelopment.udacity.capstone.household.household"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1087651372468-d25mqo890r13j2dlp14clg2kjk57iuaa.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC_1Zqmt9pIGxSUuOyW76ZOEPr8Ale4K-4"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
