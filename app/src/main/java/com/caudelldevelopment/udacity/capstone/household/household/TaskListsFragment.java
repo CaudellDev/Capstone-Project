@@ -28,7 +28,8 @@ import java.util.List;
  * Use the {@link TaskListsFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class TaskListsFragment extends Fragment {
+public class TaskListsFragment extends Fragment
+                                implements PersonalListFragment.OnPersonalFragListener {
 
     private static final String LOG_TAG = TaskListsFragment.class.getSimpleName();
 
@@ -92,7 +93,6 @@ public class TaskListsFragment extends Fragment {
 
                 }
 
-                // Do something to give mPersonalTasks to mPersonalFrag
             } else {
                 Log.w(LOG_TAG, "onCreate - task_arr is null!!");
             }
@@ -115,6 +115,8 @@ public class TaskListsFragment extends Fragment {
         mTabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
 
         mTabLayout.setupWithViewPager(mTaskLists);
+
+
 
 //        mPersonalTab = rootView.findViewById(R.id.tab_personal);
 //        mFamilyTab = rootView.findViewById(R.id.tab_family);
@@ -151,6 +153,16 @@ public class TaskListsFragment extends Fragment {
         mListener = null;
     }
 
+    @Override
+    public void onFragmentInteraction() {
+
+    }
+
+    @Override
+    public void onPersonalFragAttach() {
+
+    }
+
     /**
      * This interface must be implemented by activities that contain this
      * fragment to allow an interaction in this fragment to be communicated
@@ -180,7 +192,7 @@ public class TaskListsFragment extends Fragment {
             Fragment result = null;
 
             if (position == 0) {
-                result = new PersonalListFragment();
+                result = PersonalListFragment.newInstance(mPersonalTasks);
             } else if (position == 1) {
                 result = new FamilyListFragment();
             } else {

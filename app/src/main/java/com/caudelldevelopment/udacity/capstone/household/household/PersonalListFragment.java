@@ -4,10 +4,23 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.Layout;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
+import android.widget.TextView;
+
+import com.caudelldevelopment.udacity.capstone.household.household.data.Task;
+import com.pchmn.materialchips.ChipsInput;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 
 /**
@@ -19,14 +32,13 @@ import android.view.ViewGroup;
  * create an instance of this fragment.
  */
 public class PersonalListFragment extends Fragment {
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+    private static final String LOG_TAG = PersonalListFragment.class.getSimpleName();
+    private static final String PERS_TASK_LIST = "parsonal_task_list";
+
+    private List<Task> data;
+    private RecyclerView mTaskList;
+    private PersonalAdapter mAdapter;
 
     private OnPersonalFragListener mListener;
 
@@ -38,16 +50,18 @@ public class PersonalListFragment extends Fragment {
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
      *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
+     * @param data Parameter 1.
      * @return A new instance of fragment PersonalListFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static PersonalListFragment newInstance(String param1, String param2) {
+    public static PersonalListFragment newInstance(List<Task> data) {
         PersonalListFragment fragment = new PersonalListFragment();
         Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
+
+        Task[] task_arr = new Task[data.size()];
+        task_arr = data.toArray(task_arr);
+        args.putParcelableArray(PERS_TASK_LIST, task_arr);
+
         fragment.setArguments(args);
         return fragment;
     }
@@ -56,8 +70,8 @@ public class PersonalListFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
+            Task[] task_arr = (Task[]) getArguments().getParcelableArray(PERS_TASK_LIST);
+            data = new LinkedList<>(Arrays.asList(task_arr));
         }
     }
 
@@ -65,7 +79,17 @@ public class PersonalListFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_personal_list, container, false);
+        View rootView = inflater.inflate(R.layout.fragment_personal_list, container, false);
+
+        mTaskList = rootView.findViewById(R.id.personal_list_rv);
+        mTaskList.setLayoutManager(new LinearLayoutManager(getContext()));
+
+        mAdapter = new PersonalAdapter();
+        mAdapter.data = data;
+        mTaskList.setAdapter(mAdapter);
+        mAdapter.notifyDataSetChanged();
+
+        return rootView;
     }
 
     // TODO: Rename method, update argument and hook method into UI event
@@ -78,12 +102,20 @@ public class PersonalListFragment extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-//        if (context instanceof OnPersonalFragListener) {
-//            mListener = (OnPersonalFragListener) context;
-//        } else {
-//            throw new RuntimeException(context.toString()
-//                    + " must implement OnListsFragmentListener");
-//        }
+
+        Fragment parent = getParentFragment();
+
+        if (parent != null) {
+            if (parent instanceof OnPersonalFragListener) {
+                mListener = (OnPersonalFragListener) context;
+                mListener.onPersonalFragAttach();
+            } else {
+                throw new RuntimeException(parent.toString()
+                        + " must implement OnListsFragmentListener");
+            }
+        } else {
+            Log.w(LOG_TAG, "onAttach - parent fragment is null!!!");
+        }
     }
 
     @Override
@@ -92,38 +124,57 @@ public class PersonalListFragment extends Fragment {
         mListener = null;
     }
 
+    public void setData(List<Task> data) {
+        this.data = data;
+
+    }
+
     public class PersonalTaskViewHolder extends RecyclerView.ViewHolder {
 
-        // Name
-        // Date
-        // Desc
-        // Tags
-        // Completed
-        // User
+        private TextView title;
+        private TextView date;
+        private TextView desc;
+        private CheckBox comp;
+        private ChipsInput tags;
 
         public PersonalTaskViewHolder(View itemView) {
             super(itemView);
+            title = itemView.findViewById(R.id.task_title);
+            date = itemView.findViewById(R.id.task_date);
+            desc = itemView.findViewById(R.id.task_desc);
+            comp = itemView.findViewById(R.id.task_checkbox);
+            tags = itemView.findViewById(R.id.task_tags_ci);
         }
     }
 
     public class PersonalAdapter extends RecyclerView.Adapter<PersonalTaskViewHolder> {
 
         // Array list of the tasks
-
+        protected List<Task> data;
 
         @Override
         public PersonalTaskViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            return null;
+            View item = LayoutInflater.from(parent.getContext()).inflate(R.layout.task_item, parent, false);
+            return new PersonalTaskViewHolder(item);
         }
 
         @Override
         public void onBindViewHolder(PersonalTaskViewHolder holder, int position) {
+            Task curr = data.get(position);
 
+            holder.title.setText(curr.getTitle());
+            holder.date.setText(curr.getDate());
+            holder.desc.setText(curr.getDesc());
+            holder.comp.setChecked(curr.isComplete());
+
+            for (int i = 0; i < curr.getTag_ids().size(); i++) {
+                holder.tags.addChip(curr.getTag(i), "");
+            }
         }
 
         @Override
         public int getItemCount() {
-            return 0;
+            return data.size();
         }
     }
 
@@ -140,5 +191,7 @@ public class PersonalListFragment extends Fragment {
     public interface OnPersonalFragListener {
         // TODO: Update argument type and name
         void onFragmentInteraction();
+
+        void onPersonalFragAttach();
     }
 }
