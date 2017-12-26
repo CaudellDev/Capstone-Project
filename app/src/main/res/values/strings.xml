@@ -16,4 +16,9 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <string name="family_title">Family</string>
+    <string name="personal_title">Personal</string>
+    <string name="no_network_title">Network Error: Not Connected</string>
+
 </resources>
