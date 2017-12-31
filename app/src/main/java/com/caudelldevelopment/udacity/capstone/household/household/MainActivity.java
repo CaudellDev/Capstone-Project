@@ -31,6 +31,22 @@ public class MainActivity extends AppCompatActivity
         mAddTaskBtn.setOnClickListener(this);
 
         initMockData();
+
+        Fragment frag = getSupportFragmentManager().findFragmentById(R.id.main_task_lists);
+        Log.v(LOG_TAG, "onCreate - task lists frag is null: " + (frag == null));
+//        if (frag != null) {
+//
+//        }
+    }
+
+    @Override
+    public void onListsFragAttach() {
+        TaskListsFragment fragment = (TaskListsFragment) getSupportFragmentManager().findFragmentById(R.id.main_task_lists);
+        Log.v(LOG_TAG, "onListsFragAttach - lists fragment == null: " + (fragment == null));
+        if (fragment != null) {
+            initMockData();
+            fragment.updateListData(mock_data);
+        }
     }
 
     private void initMockData() {

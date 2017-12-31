@@ -58,6 +58,11 @@ public class PersonalListFragment extends Fragment {
         PersonalListFragment fragment = new PersonalListFragment();
         Bundle args = new Bundle();
 
+        Log.v(LOG_TAG, "newInstance - data.size: " + data.size());
+        for (Task curr : data) {
+            Log.v(LOG_TAG, "newInstance - curr task.title: " + curr.getTitle());
+        }
+
         Task[] task_arr = new Task[data.size()];
         task_arr = data.toArray(task_arr);
         args.putParcelableArray(PERS_TASK_LIST, task_arr);
@@ -78,6 +83,9 @@ public class PersonalListFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        Fragment parent = getFragmentManager().findFragmentById(R.id.main_task_lists);
+        Log.d(LOG_TAG, "Parent fragment is null: " + (parent == null));
+
         // Inflate the layout for this fragment
         View rootView = inflater.inflate(R.layout.fragment_personal_list, container, false);
 
@@ -107,7 +115,7 @@ public class PersonalListFragment extends Fragment {
 
         if (parent != null) {
             if (parent instanceof OnPersonalFragListener) {
-                mListener = (OnPersonalFragListener) context;
+                mListener = (OnPersonalFragListener) parent;
                 mListener.onPersonalFragAttach();
             } else {
                 throw new RuntimeException(parent.toString()
@@ -126,7 +134,10 @@ public class PersonalListFragment extends Fragment {
 
     public void setData(List<Task> data) {
         this.data = data;
-
+        if (mAdapter != null) {
+            mAdapter.data = this.data;
+            mAdapter.notifyDataSetChanged();
+        }
     }
 
     public class PersonalTaskViewHolder extends RecyclerView.ViewHolder {

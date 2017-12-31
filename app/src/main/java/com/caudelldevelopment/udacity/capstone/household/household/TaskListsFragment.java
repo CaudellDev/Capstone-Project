@@ -66,6 +66,13 @@ public class TaskListsFragment extends Fragment
         TaskListsFragment fragment = new TaskListsFragment();
         Bundle args = new Bundle();
 
+//        Log.v(LOG_TAG, "newInstance - data.size: " + data.size());
+//        for (Task curr : data) {
+//            Log.v(LOG_TAG, "newInstance - curr task.title: " + curr.getTitle());
+//        }
+
+        Log.v(LOG_TAG, "newInstance - log test");
+
         Task[] task_arr = new Task[data.size()];
         task_arr = data.toArray(task_arr);
         args.putParcelableArray(TASK_LIST, task_arr);
@@ -78,7 +85,10 @@ public class TaskListsFragment extends Fragment
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mPersonalTasks = new LinkedList<>();
+        Log.v(LOG_TAG, "onCreate has been run.");
+
+        if (mPersonalTasks == null) mPersonalTasks = new LinkedList<>();
+
         mFamilyTasks = new LinkedList<>();
 
         if (getArguments() != null) {
@@ -124,6 +134,35 @@ public class TaskListsFragment extends Fragment
         return rootView;
     }
 
+    public void updateListData(List<Task> data) {
+        Log.v(LOG_TAG, "updateListData - data.size: " + data.size());
+        for (Task curr : data) {
+            Log.v(LOG_TAG, "updateListData - curr task.title: " + curr.getTitle());
+        }
+
+        List<Task> tempPers = new LinkedList<>();
+        List<Task> tempFaml = new LinkedList<>();
+
+        for (Task curr : data) {
+            Log.v(LOG_TAG, "updateListData - curr.isFamily: " + curr.isFamily());
+            if (curr.isFamily()) tempFaml.add(curr);
+            else                 tempPers.add(curr);
+        }
+
+        mPersonalTasks = tempPers;
+        mFamilyTasks = tempFaml;
+
+        Log.v(LOG_TAG, "updateListData - mPersonalTasks.size: " + mPersonalTasks.size());
+
+        if (mPersonalFrag != null) {
+            mPersonalFrag.setData(mPersonalTasks);
+        }
+
+        if (mFamilyFrag != null) {
+            // Same function in family frag class
+        }
+    }
+
     // TODO: Rename method, update argument and hook method into UI event
     public void onAddTaskPressed() {
 
@@ -141,6 +180,7 @@ public class TaskListsFragment extends Fragment
 
         if (context instanceof OnListsFragmentListener) {
             mListener = (OnListsFragmentListener) context;
+            mListener.onListsFragAttach();
         } else {
             throw new RuntimeException(context.toString()
                     + " must implement OnListsFragmentListener");
@@ -160,7 +200,7 @@ public class TaskListsFragment extends Fragment
 
     @Override
     public void onPersonalFragAttach() {
-
+        mPersonalFrag.setData(mPersonalTasks);
     }
 
     /**
@@ -176,6 +216,7 @@ public class TaskListsFragment extends Fragment
     public interface OnListsFragmentListener {
         // TODO: Update argument type and name
         void onAddTask(String tab);
+        void onListsFragAttach();
     }
 
 
@@ -192,7 +233,13 @@ public class TaskListsFragment extends Fragment
             Fragment result = null;
 
             if (position == 0) {
-                result = PersonalListFragment.newInstance(mPersonalTasks);
+                Log.v(LOG_TAG, "TaskListPagerAdapter, getPersonalFrag - mPersonalTasks.size: " + mPersonalTasks.size());
+                if (mPersonalFrag == null) {
+                    result = PersonalListFragment.newInstance(mPersonalTasks);
+                    mPersonalFrag = (PersonalListFragment) result;
+                } else {
+                    result = mPersonalFrag;
+                }
             } else if (position == 1) {
                 result = new FamilyListFragment();
             } else {
