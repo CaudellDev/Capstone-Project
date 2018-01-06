@@ -84,7 +84,7 @@ public class PersonalListFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         Fragment parent = getFragmentManager().findFragmentById(R.id.main_task_lists);
-        Log.d(LOG_TAG, "Parent fragment is null: " + (parent == null));
+        Log.d(LOG_TAG, "onCreateView - parent fragment is null: " + (parent == null));
 
         // Inflate the layout for this fragment
         View rootView = inflater.inflate(R.layout.fragment_personal_list, container, false);

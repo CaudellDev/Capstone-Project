@@ -6,14 +6,13 @@ import android.support.design.widget.TabItem;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.caudelldevelopment.udacity.capstone.household.household.data.Tag;
 import com.caudelldevelopment.udacity.capstone.household.household.data.Task;
 
 import java.util.LinkedList;
@@ -40,7 +39,7 @@ public class TaskListsFragment extends Fragment
 
     private OnListsFragmentListener mListener;
 
-    private ViewPager mTaskLists;
+    private ViewPager mListsPager;
     private TaskListsPagerAdapter mTaskAdapter;
 
     private TabLayout mTabLayout;
@@ -116,20 +115,11 @@ public class TaskListsFragment extends Fragment
         FragmentManager fragmentManager = getFragmentManager();
         mTaskAdapter = new TaskListsPagerAdapter(fragmentManager);
 
-        mTaskLists = rootView.findViewById(R.id.main_view_pager);
-        mTaskLists.setAdapter(mTaskAdapter);
-
+        mListsPager = rootView.findViewById(R.id.main_view_pager);
         mTabLayout = rootView.findViewById(R.id.main_tab_layout);
-        mTabLayout.addTab(mTabLayout.newTab().setText(getString(R.string.personal_title)));
-        mTabLayout.addTab(mTabLayout.newTab().setText(getString(R.string.family_title)));
-        mTabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
 
-        mTabLayout.setupWithViewPager(mTaskLists);
-
-
-
-//        mPersonalTab = rootView.findViewById(R.id.tab_personal);
-//        mFamilyTab = rootView.findViewById(R.id.tab_family);
+        mListsPager.setAdapter(mTaskAdapter);
+        mTabLayout.setupWithViewPager(mListsPager);
 
         return rootView;
     }
@@ -222,7 +212,7 @@ public class TaskListsFragment extends Fragment
 
     // ####---- View Pager ----####
 
-    private class TaskListsPagerAdapter extends FragmentStatePagerAdapter {
+    private class TaskListsPagerAdapter extends FragmentPagerAdapter {
 
         public TaskListsPagerAdapter(FragmentManager fm) {
             super(fm);
@@ -269,6 +259,8 @@ public class TaskListsFragment extends Fragment
                     Log.w(LOG_TAG, "Warning!!! TaskListsFragment - getPageTitle() position not recognized: " + position);
                     break;
             }
+
+            Log.v(LOG_TAG, "TaskListsPagerAdapter - getPageTitle: " + result);
 
             return result;
         }
