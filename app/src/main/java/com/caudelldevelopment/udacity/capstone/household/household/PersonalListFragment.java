@@ -4,6 +4,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Layout;
@@ -12,9 +13,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.caudelldevelopment.udacity.capstone.household.household.data.Task;
+import com.pchmn.materialchips.ChipView;
 import com.pchmn.materialchips.ChipsInput;
 
 import java.util.Arrays;
@@ -90,6 +93,9 @@ public class PersonalListFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_personal_list, container, false);
 
         mTaskList = rootView.findViewById(R.id.personal_list_rv);
+        DividerItemDecoration itemDecoration = new DividerItemDecoration(getContext(), DividerItemDecoration.VERTICAL);
+        itemDecoration.setDrawable(getContext().getDrawable(R.drawable.list_divider));
+        mTaskList.addItemDecoration(itemDecoration);
         mTaskList.setLayoutManager(new LinearLayoutManager(getContext()));
 
         mAdapter = new PersonalAdapter();
@@ -146,7 +152,9 @@ public class PersonalListFragment extends Fragment {
         private TextView date;
         private TextView desc;
         private CheckBox comp;
-        private ChipsInput tags;
+//        private ChipsInput tags;
+
+        private LinearLayout tags_layout;
 
         public PersonalTaskViewHolder(View itemView) {
             super(itemView);
@@ -154,7 +162,9 @@ public class PersonalListFragment extends Fragment {
             date = itemView.findViewById(R.id.task_date);
             desc = itemView.findViewById(R.id.task_desc);
             comp = itemView.findViewById(R.id.task_checkbox);
-            tags = itemView.findViewById(R.id.task_tags_ci);
+//            tags = itemView.findViewById(R.id.task_tags_ci);
+
+            tags_layout = itemView.findViewById(R.id.task_tags_ll);
         }
     }
 
@@ -179,7 +189,14 @@ public class PersonalListFragment extends Fragment {
             holder.comp.setChecked(curr.isComplete());
 
             for (int i = 0; i < curr.getTag_ids().size(); i++) {
-                holder.tags.addChip(curr.getTag(i), "");
+//                holder.tags.addChip(curr.getTag(i), "");
+
+                // Trying to avoid using a ChipInput. The user doesn't need to type here
+                // and it would improve performance to have a ViewGroup with ChipViews.
+                ChipView chipView = new ChipView(getContext());
+                chipView.setLabel(curr.getTag(i));
+
+                holder.tags_layout.addView(chipView);
             }
         }
 
