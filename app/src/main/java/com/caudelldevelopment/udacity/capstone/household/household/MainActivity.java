@@ -1,5 +1,6 @@
 package com.caudelldevelopment.udacity.capstone.household.household;
 
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
@@ -10,6 +11,13 @@ import android.util.Log;
 import android.view.View;
 
 import com.caudelldevelopment.udacity.capstone.household.household.data.Task;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.LinkedList;
 
@@ -18,6 +26,7 @@ public class MainActivity extends AppCompatActivity
 
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
 
+    private TaskListsFragment mListFragment;
     private FloatingActionButton mAddTaskBtn;
 
     private LinkedList<Task> mock_data;
@@ -30,55 +39,26 @@ public class MainActivity extends AppCompatActivity
         mAddTaskBtn = findViewById(R.id.main_add_task);
         mAddTaskBtn.setOnClickListener(this);
 
-        initMockData();
-
         Fragment frag = getSupportFragmentManager().findFragmentById(R.id.main_task_lists);
         Log.v(LOG_TAG, "onCreate - task lists frag is null: " + (frag == null));
-//        if (frag != null) {
-//
+
+//        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+//        if (user != null) {
+//            Log.v(LOG_TAG, "onCreate - Firebase user display name: " + user.getDisplayName() + ", " + user.getUid());
+//        } else {
+//            Log.w(LOG_TAG, "onCreate - Firebase user is nul!!!!!");
 //        }
+
+        Log.v(LOG_TAG, "onCreate - end of onCreate");
     }
 
     @Override
     public void onListsFragAttach() {
-        TaskListsFragment fragment = (TaskListsFragment) getSupportFragmentManager().findFragmentById(R.id.main_task_lists);
-        Log.v(LOG_TAG, "onListsFragAttach - lists fragment == null: " + (fragment == null));
-        if (fragment != null) {
-            initMockData();
-            fragment.updateListData(mock_data);
+        mListFragment = (TaskListsFragment) getSupportFragmentManager().findFragmentById(R.id.main_task_lists);
+        Log.v(LOG_TAG, "onListsFragAttach - lists fragment == null: " + (mListFragment == null));
+        if (mListFragment != null) {
+
         }
-    }
-
-    private void initMockData() {
-        mock_data = new LinkedList<>();
-
-        Task task1 = new Task();
-        task1.setTitle("Laundry");
-        task1.setDate("11-02-1994");
-        task1.setDesc("Do laundry");
-        task1.addTag_id("Chores");
-        task1.addTag_id("Clothes");
-        task1.setUser_id("1001");
-        mock_data.add(task1);
-
-        Task task2 = new Task();
-        task2.setTitle("Cat Litter");
-        task2.setDate("12-23-2006");
-        task2.setDesc("Change litter");
-        task2.addTag_id("Chores");
-        task2.addTag_id("Cats");
-        task2.setUser_id("1001");
-        mock_data.add(task2);
-
-        Task task3 = new Task();
-        task3.setTitle("Clean Bathroom");
-        task3.setDate("03-13-2007");
-        task3.setDesc("Clean toilet and mirror");
-        task3.addTag_id("Chores");
-        task3.addTag_id("Bathroom");
-        task3.setUser_id("F2102");
-        task3.setFamily(true);
-        mock_data.add(task3);
     }
 
     @Override

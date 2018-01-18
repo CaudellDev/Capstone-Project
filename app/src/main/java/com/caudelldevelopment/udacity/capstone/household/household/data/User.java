@@ -11,6 +11,7 @@ public class User {
 
     private String name;
     private String id;
+    private String family;
     private List<String> task_ids;
 
     public User() {
