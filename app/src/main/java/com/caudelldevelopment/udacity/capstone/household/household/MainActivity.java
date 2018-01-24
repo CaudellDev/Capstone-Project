@@ -77,7 +77,11 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onAddTask(String tab) {
         if (tab != null) {
-            Snackbar.make(mAddTaskBtn, "onAddTask in " + tab, Snackbar.LENGTH_SHORT).show();
+//            Snackbar.make(mAddTaskBtn, "onAddTask in " + tab, Snackbar.LENGTH_SHORT).show();
+            boolean family = tab.equals("Family");
+            NewTaskDialogFrag dialog = NewTaskDialogFrag.newInstance(family, null);
+            dialog.show(getSupportFragmentManager(), "new_task_dialog");
+
         } else {
             Log.w(LOG_TAG, "onAddTask, but task title could not be retrieved.");
         }

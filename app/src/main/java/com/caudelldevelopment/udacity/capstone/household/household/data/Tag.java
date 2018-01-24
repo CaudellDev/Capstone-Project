@@ -8,7 +8,7 @@ import java.util.List;
  */
 public class Tag {
 
-    private String title;
+    private String name;
     private String id;
     private int count;
     private List<String> task_ids;
@@ -18,12 +18,12 @@ public class Tag {
         count = 0;
     }
 
-    public String getTitle() {
-        return title;
+    public String getName() {
+        return name;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getId() {

@@ -20,5 +20,7 @@
     <string name="family_title">Family</string>
     <string name="personal_title">Personal</string>
     <string name="no_network_title">Network Error: Not Connected</string>
+    <string name="name">Name</string>
+    <string name="description">Description</string>
 
 </resources>

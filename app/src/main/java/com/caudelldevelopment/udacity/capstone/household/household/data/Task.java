@@ -20,6 +20,7 @@ public class Task implements Parcelable {
 
     private static final String LOG_TAG = Task.class.getSimpleName();
 
+    public static final String TAG = "task_tag";
     public static final String TASKS_ID = "tasks";
     public static final String ACCESS_ID = "access_id";
     public static final String COMP_ID = "complete";
@@ -113,7 +114,17 @@ public class Task implements Parcelable {
     }
 
     public String getDateStr() {
-        return date;
+        String result;
+
+        try {
+            Date temp = new SimpleDateFormat("dd/MM/yyyy", Locale.US).parse(date);
+            result = temp.toString();
+        } catch (ParseException e) {
+            e.printStackTrace();
+            result = date;
+        }
+
+        return result;
     }
 
     public Date getDate() {
