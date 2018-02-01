@@ -73,7 +73,7 @@ public class Task implements Parcelable {
         }
     }
 
-    public Task(Parcel in) {
+    private Task(Parcel in) {
         tag_ids = new LinkedList<>();
 
         id = in.readString();

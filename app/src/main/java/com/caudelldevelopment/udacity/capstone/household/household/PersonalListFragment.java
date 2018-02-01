@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -128,7 +129,10 @@ public class PersonalListFragment extends Fragment implements EventListener<Quer
     public void onAttach(Context context) {
         super.onAttach(context);
 
-        Fragment parent = getParentFragment();
+        FragmentManager fm = getFragmentManager();
+        Fragment parent = fm.findFragmentById(R.id.main_task_lists);
+
+        Log.w(LOG_TAG, "onAttach - parent fragment == null: " + (parent == null));
 
         if (parent != null) {
             if (parent instanceof OnPersonalFragListener) {
@@ -149,7 +153,17 @@ public class PersonalListFragment extends Fragment implements EventListener<Quer
         mListener = null;
     }
 
+    public void addTask(Task task) {
+        data.add(task);
+        if (mAdapter != null) {
+            mAdapter.data = data;
+            mAdapter.notifyDataSetChanged();
+        }
+    }
+
     public void setData(List<Task> data) {
+        Log.v(LOG_TAG, "setDate - mAdapter == null: " + (mAdapter == null));
+
         this.data = data;
         if (mAdapter != null) {
             mAdapter.data = this.data;

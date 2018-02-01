@@ -1,70 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
     android:layout_width="400dp"
     android:layout_height="550dp">
 
     <EditText
         android:id="@+id/dialog_name_tv"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:ems="10"
         android:hint="@string/name"
-        android:inputType="textPersonName"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:inputType="textPersonName" />
 
-    <Switch
-        android:id="@+id/dialog_family_switch"
-        android:layout_width="0dp"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="8dp"
-        android:checked="false"
-        android:splitTrack="false"
-        android:switchPadding="8dp"
-        android:text="@string/family_title"
-        app:layout_constraintBottom_toTopOf="@+id/dialog_desc_tv"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/dialog_name_tv" />
+        android:orientation="horizontal">
 
-    <EditText
-        android:id="@+id/dialog_date_tv"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:ems="10"
-        android:inputType="date"
-        android:textSize="14sp"
-        app:layout_constraintEnd_toStartOf="@+id/dialog_date_btn"
-        app:layout_constraintStart_toEndOf="@+id/dialog_family_switch"
-        app:layout_constraintTop_toBottomOf="@+id/dialog_name_tv" />
+        <Switch
+            android:id="@+id/dialog_family_switch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="8dp"
+            android:checked="false"
+            android:splitTrack="false"
+            android:switchPadding="8dp"
+            android:text="@string/family_title" />
 
-    <Button
-        android:id="@+id/dialog_date_btn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginTop="8dp"
-        android:drawableStart="@drawable/ic_today_black_24dp"
-        android:onClick="onClickDatePicker"
-        app:layout_constraintBottom_toTopOf="@+id/dialog_desc_tv"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/dialog_name_tv" />
+        <EditText
+            android:id="@+id/dialog_date_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:ems="10"
+            android:inputType="date"
+            android:textSize="14sp" />
+
+        <Button
+            android:id="@+id/dialog_date_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginTop="8dp"
+            android:drawableStart="@drawable/ic_today_black_24dp"
+            android:onClick="onClickDatePicker" />
+
+    </LinearLayout>
 
     <EditText
         android:id="@+id/dialog_desc_tv"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
         android:layout_marginEnd="8dp"
@@ -73,21 +69,14 @@
         android:ems="10"
         android:hint="@string/description"
         android:inputType="textMultiLine"
-        android:textSize="14sp"
-        app:layout_constraintBottom_toTopOf="@+id/dialog_tag_ci"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/dialog_date_tv" />
+        android:textSize="14sp" />
 
     <com.pchmn.materialchips.ChipsInput
         android:id="@+id/dialog_tag_ci"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginBottom="8dp"
         android:layout_marginEnd="8dp"
-        android:layout_marginStart="8dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        android:layout_marginStart="8dp" />
 
-</android.support.constraint.ConstraintLayout>
+</LinearLayout>

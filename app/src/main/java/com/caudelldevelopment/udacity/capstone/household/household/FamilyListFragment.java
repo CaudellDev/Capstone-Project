@@ -140,6 +140,14 @@ public class FamilyListFragment extends Fragment implements EventListener<QueryS
         mListener = null;
     }
 
+    public void addTask(Task task) {
+        data.add(task);
+        if (mAdapter != null) {
+            mAdapter.data = data;
+            mAdapter.notifyDataSetChanged();
+        }
+    }
+
     public void setData(List<Task> data) {
         this.data = data;
         if (mAdapter != null) {

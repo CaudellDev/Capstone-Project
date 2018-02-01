@@ -2,6 +2,7 @@ package com.caudelldevelopment.udacity.capstone.household.household;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.TabItem;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
@@ -17,6 +18,7 @@ import com.caudelldevelopment.udacity.capstone.household.household.data.Family;
 import com.caudelldevelopment.udacity.capstone.household.household.data.Tag;
 import com.caudelldevelopment.udacity.capstone.household.household.data.Task;
 import com.caudelldevelopment.udacity.capstone.household.household.data.User;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentChange;
@@ -77,11 +79,7 @@ public class TaskListsFragment extends Fragment
      * @return A new instance of fragment TaskListsFragment.
      */
     public static TaskListsFragment newInstance() {
-        TaskListsFragment fragment = new TaskListsFragment();
-
-//        Bundle args = new Bundle(); fragment.setArguments(args);
-
-        return fragment;
+        return new TaskListsFragment();
     }
 
     @Override
@@ -90,17 +88,19 @@ public class TaskListsFragment extends Fragment
         Log.v(LOG_TAG, "onCreate has been run.");
 
         if (mPersonalTasks == null) mPersonalTasks = new LinkedList<>();
-        if (mFamilyTasks == null) mFamilyTasks = new LinkedList<>();
+        if (mFamilyTasks   == null) mFamilyTasks   = new LinkedList<>();
+
+//        if (mPersonalFrag == null) mPersonalFrag = PersonalListFragment.newInstance(mPersonalTasks);
+//        if (mFamilyFrag   == null) mFamilyFrag   = FamilyListFragment.newInstance(mFamilyTasks);
 
         mDatabase = FirebaseFirestore.getInstance();
-        mFirebaseUser = FirebaseAuth.getInstance().getCurrentUser();
 
-        mDatabase.collection("users")
-                .document(mFirebaseUser.getUid())
-                .addSnapshotListener(this);
+//        mFirebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+//        Log.v(LOG_TAG, "onCreate - mFirebaseUser.getUid: " + mFirebaseUser.getUid());
 
-//        mDatabase.collection("families")
-//                .whereEqualTo("members", )
+//        mDatabase.collection("users")
+//                .document(mFirebaseUser.getUid())
+//                .addSnapshotListener(this);
 
         // Listener for the personal tasks
         mDatabase.collection(Task.TASKS_ID)
@@ -111,7 +111,6 @@ public class TaskListsFragment extends Fragment
         mDatabase.collection(Task.TASKS_ID)
                 .whereEqualTo(Task.FAM_ID, true)
                 .addSnapshotListener(this);
-
     }
 
     @Override
@@ -123,25 +122,28 @@ public class TaskListsFragment extends Fragment
         mTaskAdapter = new TaskListsPagerAdapter(fragmentManager);
 
         mListsPager = rootView.findViewById(R.id.main_view_pager);
-        mTabLayout = rootView.findViewById(R.id.main_tab_layout);
+        mTabLayout  = rootView.findViewById(R.id.main_tab_layout);
 
         mListsPager.setAdapter(mTaskAdapter);
         mTabLayout.setupWithViewPager(mListsPager);
 
+//        mPersonalFrag = PersonalListFragment.newInstance(mPersonalTasks);
+//        mFamilyFrag   = FamilyListFragment.newInstance(mFamilyTasks);
+
         return rootView;
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onAddTaskPressed() {
 
+
+    public void onAddTaskPressed() {
         if (mListener != null) {
             String selectedTab = (String) mTabLayout.getTabAt(mTabLayout.getSelectedTabPosition()).getText();
-
-            // We may not need this in the future. It's only to do the Snackbar with the CoordinatorLayout in MainActivity.
             mListener.onAddTask(selectedTab);
-
-            // Launch the dialog fragment...
         }
+    }
+
+    public void setUser(User user) {
+        mUser = user;
     }
 
     @Override
@@ -163,6 +165,15 @@ public class TaskListsFragment extends Fragment
         mListener = null;
     }
 
+    // Probably won't need this. Will add a task to Firebase, then the listener will trigger onEvent.
+//    public void addNewTask(Task task) {
+//        if (task.isFamily()) {
+//            mFamilyFrag.addTask(task);
+//        } else {
+//            mPersonalFrag.addTask(task);
+//        }
+//    }
+
     @Override
     public void onFragmentInteraction() {
 
@@ -175,7 +186,8 @@ public class TaskListsFragment extends Fragment
 
     @Override
     public void onPersonalFragAttach() {
-        mPersonalFrag.setData(mPersonalTasks);
+        // I don't need to set this here, because the fragment is still new, and therefore will run onCreateView shortly.
+//        mPersonalFrag.setData(mPersonalTasks);
     }
 
 //    @Override
@@ -270,6 +282,7 @@ public class TaskListsFragment extends Fragment
             for (DocumentChange dc : documentSnapshots.getDocumentChanges()) {
 
                 Log.v(LOG_TAG, "onEvent - Document change Collection path: " + dc.getDocument().getReference().getParent().getPath());
+                Log.v(LOG_TAG, "onEvent - Document change type: " + dc.getType());
 
                 switch (dc.getType()) {
                     case ADDED:
@@ -294,20 +307,7 @@ public class TaskListsFragment extends Fragment
                         // Is it going from personal to family, or family to personal?
                         // Remove from the old list, change the family property, and add to the new list.
 
-                        String access_id = mod_task.getAccess_id();
-                        boolean family = mod_task.isFamily();
-                        int old_ind = dc.getOldIndex();
 
-                        if (family) {
-                            Task old_task = mFamilyTasks.get(old_ind);
-
-                        }
-
-                        if (family) {
-                            fam = true;
-                        } else {
-                            pers = true;
-                        }
 
                         break;
                     case REMOVED:
@@ -326,15 +326,41 @@ public class TaskListsFragment extends Fragment
                 }
             }
 
-            if (fam) mFamilyFrag.setData(mFamilyTasks);
-            if (pers) mPersonalFrag.setData(mPersonalTasks);
+            Log.v(LOG_TAG, "onEvent tasks - fam and pers booleans: " + fam + ", " + pers);
+            Log.v(LOG_TAG, "onEvent tasks - mFamFrag and mPersFrag null: " + (mFamilyFrag == null) + ", " + (mPersonalFrag == null));
+            Log.v(LOG_TAG, "onEvent tasks - mFamTasks and mPersTasks null: " + (mFamilyTasks == null) + ", " + (mPersonalTasks == null));
+            Log.v(LOG_TAG, "onEvent tasks - mFamTasks and mPersTasks size: " + mFamilyTasks.size() + ", " + mPersonalTasks.size());
 
-        } else if (result instanceof DocumentSnapshot) { // Event from Families collection
+            if (fam && mFamilyFrag != null) mFamilyFrag.setData(mFamilyTasks);
+            if (pers && mPersonalFrag != null) mPersonalFrag.setData(mPersonalTasks);
+
+        } else if (result instanceof DocumentSnapshot) { // Event from Families and Users collection
             DocumentSnapshot documentSnapshot = (DocumentSnapshot) result;
 
+            Log.v(LOG_TAG, "onEvent, DocumentSnapshot contains family: " + documentSnapshot.contains("family"));
 
+            if (documentSnapshot.contains("family")) { // Users
+                mUser = documentSnapshot.toObject(User.class);
+
+                Log.v(LOG_TAG, "onEvent, DocumentSnapshot - user id: " + mUser.getName() + ", " + mUser.getId() + ", " + mUser.getFamily());
+
+                // Now that I know the family id, I can query for that family object.
+                if (mUser.getFamily() != null && !mUser.getFamily().isEmpty()) {
+                    mDatabase.collection("families")
+                            .document(mUser.getFamily())
+                            .addSnapshotListener(this);
+                } else {
+                    // User hasn't chosen a family yet...
+                }
+
+            } else if (documentSnapshot.contains("members")) { // Families
+                mFamily = documentSnapshot.toObject(Family.class);
+            }
+        } else {
+            Log.w(LOG_TAG, "onEvent - result type not recognized! result.class.name: " + result.getClass().getName());
         }
     }
+
 
     /**
      * This interface must be implemented by activities that contain this
@@ -363,21 +389,28 @@ public class TaskListsFragment extends Fragment
 
         @Override
         public Fragment getItem(int position) {
+            Log.v(LOG_TAG, "TaskListsPagerAdapter - getItem has been run.");
+
             Fragment result = null;
 
             if (position == 0) {
                 Log.v(LOG_TAG, "TaskListPagerAdapter, getPersonalFrag - mPersonalTasks.size: " + mPersonalTasks.size());
+                Log.v(LOG_TAG, "TaskListPagerAdapter, getPersonalFrag - mPersonalFrag == null: " + (mPersonalFrag == null));
                 if (mPersonalFrag == null) {
                     result = PersonalListFragment.newInstance(mPersonalTasks);
                     mPersonalFrag = (PersonalListFragment) result;
                 } else {
+                    mPersonalFrag.setData(mPersonalTasks);
                     result = mPersonalFrag;
                 }
             } else if (position == 1) {
+                Log.v(LOG_TAG, "TaskListPagerAdapter, getFamilyFrag - mFamilyTasks.size: " + mFamilyTasks.size());
+                Log.v(LOG_TAG, "TaskListPagerAdapter, getFamilyFrag - mFamilyFrag == null: " + (mFamilyFrag == null));
                 if (mFamilyFrag == null) {
                     result = FamilyListFragment.newInstance(mFamilyTasks);
                     mFamilyFrag = (FamilyListFragment) result;
                 } else {
+                    mFamilyFrag.setData(mFamilyTasks);
                     result = mFamilyFrag;
                 }
             } else {

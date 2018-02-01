@@ -1,5 +1,6 @@
 package com.caudelldevelopment.udacity.capstone.household.household;
 
+import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -11,6 +12,7 @@ import android.util.Log;
 import android.view.View;
 
 import com.caudelldevelopment.udacity.capstone.household.household.data.Task;
+import com.caudelldevelopment.udacity.capstone.household.household.data.User;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.firebase.auth.FirebaseAuth;
@@ -22,34 +24,29 @@ import com.google.firebase.firestore.QuerySnapshot;
 import java.util.LinkedList;
 
 public class MainActivity extends AppCompatActivity
-                          implements View.OnClickListener, TaskListsFragment.OnListsFragmentListener {
+                          implements View.OnClickListener,
+                                     TaskListsFragment.OnListsFragmentListener,
+                                     NewTaskDialogFrag.NewTaskDialogListener {
 
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
 
     private TaskListsFragment mListFragment;
     private FloatingActionButton mAddTaskBtn;
 
-    private LinkedList<Task> mock_data;
+    private User mUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.v(LOG_TAG, "onCreate has been started.");
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         mAddTaskBtn = findViewById(R.id.main_add_task);
         mAddTaskBtn.setOnClickListener(this);
 
-        Fragment frag = getSupportFragmentManager().findFragmentById(R.id.main_task_lists);
-        Log.v(LOG_TAG, "onCreate - task lists frag is null: " + (frag == null));
-
-//        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-//        if (user != null) {
-//            Log.v(LOG_TAG, "onCreate - Firebase user display name: " + user.getDisplayName() + ", " + user.getUid());
-//        } else {
-//            Log.w(LOG_TAG, "onCreate - Firebase user is nul!!!!!");
-//        }
-
-        Log.v(LOG_TAG, "onCreate - end of onCreate");
+        Intent intent = getIntent();
+        mUser = intent.getParcelableExtra(User.DOC_TAG);
     }
 
     @Override
@@ -57,7 +54,7 @@ public class MainActivity extends AppCompatActivity
         mListFragment = (TaskListsFragment) getSupportFragmentManager().findFragmentById(R.id.main_task_lists);
         Log.v(LOG_TAG, "onListsFragAttach - lists fragment == null: " + (mListFragment == null));
         if (mListFragment != null) {
-
+            mListFragment.setUser(mUser);
         }
     }
 
@@ -79,11 +76,21 @@ public class MainActivity extends AppCompatActivity
         if (tab != null) {
 //            Snackbar.make(mAddTaskBtn, "onAddTask in " + tab, Snackbar.LENGTH_SHORT).show();
             boolean family = tab.equals("Family");
-            NewTaskDialogFrag dialog = NewTaskDialogFrag.newInstance(family, null);
+            NewTaskDialogFrag dialog = NewTaskDialogFrag.newInstance(family, mUser, null);
             dialog.show(getSupportFragmentManager(), "new_task_dialog");
 
         } else {
             Log.w(LOG_TAG, "onAddTask, but task title could not be retrieved.");
         }
+    }
+
+    @Override
+    public void onDialogPositiveClick(Task task) {
+//        mListFragment.addNewTask(task);
+    }
+
+    @Override
+    public void onDialogNegativeClick() {
+        // Do nothing?
     }
 }
