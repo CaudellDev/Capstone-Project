@@ -3,7 +3,6 @@ package com.caudelldevelopment.udacity.capstone.household.household;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -11,11 +10,9 @@ import android.support.v4.app.DialogFragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Switch;
-import android.widget.TextView;
 
 import com.caudelldevelopment.udacity.capstone.household.household.data.Tag;
 import com.caudelldevelopment.udacity.capstone.household.household.data.Task;
@@ -28,8 +25,12 @@ import com.pchmn.materialchips.ChipsInput;
 import com.pchmn.materialchips.model.Chip;
 import com.pchmn.materialchips.model.ChipInterface;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by caude on 1/23/2018.
@@ -85,10 +86,13 @@ public class NewTaskDialogFrag extends DialogFragment implements OnCompleteListe
     public void onAttach(Context context) {
         super.onAttach(context);
 
+        Log.v(LOG_TAG, "onAttach - context instance of NewTaskDialogListener: " + (context instanceof NewTaskDialogListener));
+
         if (context instanceof NewTaskDialogListener) {
             mListener = (NewTaskDialogListener) context;
         } else {
-            // Throw exception...
+            throw new RuntimeException(context.toString()
+                    + " must implement NewTaskDialogListener");
         }
     }
 
@@ -110,7 +114,6 @@ public class NewTaskDialogFrag extends DialogFragment implements OnCompleteListe
         mDatePickerBtn = rootView.findViewById(R.id.dialog_date_btn);
         mDesc = rootView.findViewById(R.id.dialog_desc_tv);
         mTagInput = rootView.findViewById(R.id.dialog_tag_ci);
-
 
         Bundle args = getArguments();
 
@@ -135,7 +138,7 @@ public class NewTaskDialogFrag extends DialogFragment implements OnCompleteListe
                     Task newTask = new Task();
                     newTask.setName(mName.getText().toString());
                     newTask.setDesc(mDesc.getText().toString());
-                    newTask.setDateStr(mDate.getText().toString());
+                    newTask.setDate(mDate.getText().toString());
                     newTask.setFamily(mFamily.isChecked());
 
                     List<? extends ChipInterface> tags = mTagInput.getSelectedChipList();
@@ -146,6 +149,7 @@ public class NewTaskDialogFrag extends DialogFragment implements OnCompleteListe
                     // If mTask was already set, the dialog was to edit it.
                     // Make sure the other values carry over and aren't set to default.
                     if (mTask != null) {
+                        newTask.setId(mTask.getId());
                         newTask.setComplete(mTask.isComplete());
                         // If this is different, we need to change the access id to the right one.
                         if (newTask.isFamily() != mTask.isFamily()) {
@@ -171,12 +175,31 @@ public class NewTaskDialogFrag extends DialogFragment implements OnCompleteListe
 
                     mTask = newTask;
                     mListener.onDialogPositiveClick(mTask);
-                }).setNeutralButton("TEST", (dialog, which) -> {
-            Log.v(LOG_TAG, "onCreateDialog - neutral button click.");
                 }).setNegativeButton("DISMISS", (dialog, which) -> {
                     Log.v(LOG_TAG, "onCreateDialog - negative button click.");
                     mListener.onDialogNegativeClick();
                 });
+
+        if (mTask != null) {
+            Log.v(LOG_TAG, "onCreateDialog - mTask is not null. Editing task. Adding delete button to dialog.");
+
+            builder.setNeutralButton("DELETE TASK", (dialog, which) -> {
+                AlertDialog.Builder conf_builder = new AlertDialog.Builder(getContext());
+                conf_builder.setTitle("Are you sure?")
+                        .setMessage("You are about to delete task " + mTask.getName() + ". Are you sure?") // Not using the edit field text because those changes haven't been saved.
+                        .setPositiveButton("DELETE", (conf_dialog, conf_which) -> {
+                            Log.v(LOG_TAG, "onCreateDialog, confirm delete positive click listener - deleting task: " + mTask.getName());
+                            FirebaseFirestore db = FirebaseFirestore.getInstance();
+                            db.collection(Task.TASKS_ID)
+                                    .document(mTask.getId())
+                                    .delete();
+                        }).setNegativeButton("CANCEL", (conf_dialog, conf_which) -> {
+
+                        });
+
+                conf_builder.create().show();
+            });
+        }
 
         return builder.create();
     }
@@ -193,8 +216,9 @@ public class NewTaskDialogFrag extends DialogFragment implements OnCompleteListe
         // Update the views
         mName.setText(mTask.getName());
         mFamily.setChecked(mTask.isFamily());
-        mDate.setText(mTask.getDateStr());
-        mDate.setOnClickListener(this);
+        mDate.setText(mTask.getDate());
+        mDate.setEnabled(false);
+        mDatePickerBtn.setOnClickListener(this);
         mDesc.setText(mTask.getDesc());
 
         mTagInput.removeAllViews();
@@ -225,16 +249,22 @@ public class NewTaskDialogFrag extends DialogFragment implements OnCompleteListe
 
     @Override
     public void onClick(View v) {
+        Log.v(LOG_TAG, "onClick - view clicked. Id: " + v.getId());
         if (v.getId() == R.id.dialog_date_btn) {
-            // Open calendar chooser dialog then update date edit text.
+            Log.v(LOG_TAG, "onClick - Date button has been clicked. Setting it to today, for now...");
+            Date current = Calendar.getInstance().getTime();
+            String today = new SimpleDateFormat("mm/DD/yyyy", Locale.US).format(current);
+            mDate.setText(today);
+
+            // TODO: Launch dialog with calendar picker widget....
         } else {
             Log.w(LOG_TAG, "onClick - view id not recognized. id: " + v.getId());
         }
     }
 
-
     public interface NewTaskDialogListener {
         void onDialogPositiveClick(Task task);
         void onDialogNegativeClick();
+        void deleteTask(Task task);
     }
 }

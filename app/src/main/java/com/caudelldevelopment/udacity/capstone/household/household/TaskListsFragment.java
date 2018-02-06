@@ -28,8 +28,10 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QuerySnapshot;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -166,13 +168,13 @@ public class TaskListsFragment extends Fragment
     }
 
     // Probably won't need this. Will add a task to Firebase, then the listener will trigger onEvent.
-//    public void addNewTask(Task task) {
-//        if (task.isFamily()) {
-//            mFamilyFrag.addTask(task);
-//        } else {
-//            mPersonalFrag.addTask(task);
-//        }
-//    }
+    public void addNewTask(Task task) {
+        mDatabase.collection(Task.TASKS_ID)
+                .add(task.toMap())
+                .addOnCompleteListener(comp_task -> {
+                    Log.v(LOG_TAG, "addNewTask, onCompleteListener - added task to Firebase!!!!!");
+                });
+    }
 
     @Override
     public void onFragmentInteraction() {
@@ -188,6 +190,21 @@ public class TaskListsFragment extends Fragment
     public void onPersonalFragAttach() {
         // I don't need to set this here, because the fragment is still new, and therefore will run onCreateView shortly.
 //        mPersonalFrag.setData(mPersonalTasks);
+    }
+
+    @Override
+    public void onPersonalTaskCheckClick(Task task, int pos) {
+        Map<String, Object> map = new HashMap<>();
+        map.put(Task.COMP_ID, task.isComplete());
+
+        mDatabase.collection(Task.TASKS_ID)
+                .document(task.getId())
+                .update(map);
+    }
+
+    @Override
+    public void onPersonalTaskClick(Task task, int pos) {
+        mListener.onTaskClick(task, "Personal");
     }
 
 //    @Override
@@ -281,8 +298,8 @@ public class TaskListsFragment extends Fragment
             boolean fam = false;
             for (DocumentChange dc : documentSnapshots.getDocumentChanges()) {
 
-                Log.v(LOG_TAG, "onEvent - Document change Collection path: " + dc.getDocument().getReference().getParent().getPath());
-                Log.v(LOG_TAG, "onEvent - Document change type: " + dc.getType());
+//                Log.v(LOG_TAG, "onEvent - Document change Collection path: " + dc.getDocument().getReference().getParent().getPath());
+//                Log.v(LOG_TAG, "onEvent - Document change type: " + dc.getType());
 
                 switch (dc.getType()) {
                     case ADDED:
@@ -291,6 +308,7 @@ public class TaskListsFragment extends Fragment
                         added.getReference().getParent().getPath();
 
                         Task added_task = added.toObject(Task.class);
+                        added_task.setId(added.getId());
                         if (added_task.isFamily()) {
                             mFamilyTasks.add(added_task);
                             fam = true;
@@ -298,10 +316,16 @@ public class TaskListsFragment extends Fragment
                             mPersonalTasks.add(added_task);
                             pers = true;
                         }
+
+//                        Log.v(LOG_TAG, "onEvent, added - task.id: " + added_task.getId());
+
                         break;
                     case MODIFIED:
                         DocumentSnapshot mod = dc.getDocument();
                         Task mod_task = mod.toObject(Task.class);
+                        mod_task.setId(mod.getId());
+
+                        Log.v(LOG_TAG, "onEvent, modified - task: " + mod_task.getName() + ", " + (mod_task.isComplete() ? "completed" : "not complete"));
 
                         // Figure out if the access_id is different than before
                         // Is it going from personal to family, or family to personal?
@@ -311,6 +335,7 @@ public class TaskListsFragment extends Fragment
 
                         break;
                     case REMOVED:
+                        Log.v(LOG_TAG, "onEvent - Removed task event is running.");
                         DocumentSnapshot removed = dc.getDocument();
                         Task removed_task = removed.toObject(Task.class);
                         if (removed_task.isFamily()) {
@@ -326,10 +351,10 @@ public class TaskListsFragment extends Fragment
                 }
             }
 
-            Log.v(LOG_TAG, "onEvent tasks - fam and pers booleans: " + fam + ", " + pers);
-            Log.v(LOG_TAG, "onEvent tasks - mFamFrag and mPersFrag null: " + (mFamilyFrag == null) + ", " + (mPersonalFrag == null));
-            Log.v(LOG_TAG, "onEvent tasks - mFamTasks and mPersTasks null: " + (mFamilyTasks == null) + ", " + (mPersonalTasks == null));
-            Log.v(LOG_TAG, "onEvent tasks - mFamTasks and mPersTasks size: " + mFamilyTasks.size() + ", " + mPersonalTasks.size());
+//            Log.v(LOG_TAG, "onEvent tasks - fam and pers booleans: " + fam + ", " + pers);
+//            Log.v(LOG_TAG, "onEvent tasks - mFamFrag and mPersFrag null: " + (mFamilyFrag == null) + ", " + (mPersonalFrag == null));
+//            Log.v(LOG_TAG, "onEvent tasks - mFamTasks and mPersTasks null: " + (mFamilyTasks == null) + ", " + (mPersonalTasks == null));
+//            Log.v(LOG_TAG, "onEvent tasks - mFamTasks and mPersTasks size: " + mFamilyTasks.size() + ", " + mPersonalTasks.size());
 
             if (fam && mFamilyFrag != null) mFamilyFrag.setData(mFamilyTasks);
             if (pers && mPersonalFrag != null) mPersonalFrag.setData(mPersonalTasks);
@@ -361,6 +386,11 @@ public class TaskListsFragment extends Fragment
         }
     }
 
+//    @Override
+//    public void onComplete(@NonNull com.google.android.gms.tasks.Task<Void> task) {
+//        task.getResult()
+//    }
+
 
     /**
      * This interface must be implemented by activities that contain this
@@ -373,9 +403,10 @@ public class TaskListsFragment extends Fragment
      * >Communicating with Other Fragments</a> for more information.
      */
     public interface OnListsFragmentListener {
-        // TODO: Update argument type and name
-        void onAddTask(String tab);
         void onListsFragAttach();
+
+        void onAddTask(String tab);
+        void onTaskClick(Task task, String tab);
     }
 
 

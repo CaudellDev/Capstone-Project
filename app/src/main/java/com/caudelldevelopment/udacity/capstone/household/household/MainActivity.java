@@ -1,5 +1,6 @@
 package com.caudelldevelopment.udacity.capstone.household.household;
 
+import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
@@ -80,17 +81,33 @@ public class MainActivity extends AppCompatActivity
             dialog.show(getSupportFragmentManager(), "new_task_dialog");
 
         } else {
-            Log.w(LOG_TAG, "onAddTask, but task title could not be retrieved.");
+            Log.w(LOG_TAG, "onAddTask, but tab title could not be retrieved.");
+        }
+    }
+
+    @Override
+    public void onTaskClick(Task task, String tab) {
+        if (tab != null && task != null) {
+            boolean family = tab.equals("Family");
+            NewTaskDialogFrag dialog = NewTaskDialogFrag.newInstance(family, mUser, task);
+            dialog.show(getSupportFragmentManager(), "new_task_dialog");
+        } else {
+            Log.w(LOG_TAG, "onTaskClick, but tab title or edit task could not be retrieved.");
         }
     }
 
     @Override
     public void onDialogPositiveClick(Task task) {
-//        mListFragment.addNewTask(task);
+        mListFragment.addNewTask(task);
     }
 
     @Override
     public void onDialogNegativeClick() {
         // Do nothing?
+    }
+
+    @Override
+    public void deleteTask(Task task) {
+        Log.v(LOG_TAG, "deleteTask - deleting task: " + task.getId() + ", " + task.getName());
     }
 }

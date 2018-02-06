@@ -1,7 +1,6 @@
 package com.caudelldevelopment.udacity.capstone.household.household;
 
 import android.content.Context;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.DividerItemDecoration;
@@ -19,7 +18,6 @@ import com.caudelldevelopment.udacity.capstone.household.household.data.Task;
 import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
-import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.pchmn.materialchips.ChipView;
@@ -242,7 +240,7 @@ public class FamilyListFragment extends Fragment implements EventListener<QueryS
             Task curr = data.get(position);
 
             holder.title.setText(curr.getName());
-            holder.date.setText(curr.getDateStr());
+            holder.date.setText(curr.getDate());
             holder.desc.setText(curr.getDesc());
             holder.comp.setChecked(curr.isComplete());
 

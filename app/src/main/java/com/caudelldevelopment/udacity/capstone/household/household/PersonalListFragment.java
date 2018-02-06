@@ -13,16 +13,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.caudelldevelopment.udacity.capstone.household.household.data.Task;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
-import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
-import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.pchmn.materialchips.ChipView;
@@ -240,25 +239,47 @@ public class PersonalListFragment extends Fragment implements EventListener<Quer
 
     }
 
-    public class PersonalTaskViewHolder extends RecyclerView.ViewHolder {
-
+    public class PersonalTaskViewHolder extends RecyclerView.ViewHolder
+                                        implements CompoundButton.OnCheckedChangeListener, View.OnClickListener {
+        private View item;
         private TextView title;
         private TextView date;
         private TextView desc;
         private CheckBox comp;
-//        private ChipsInput tags;
 
         private LinearLayout tags_layout;
 
         public PersonalTaskViewHolder(View itemView) {
             super(itemView);
+            item = itemView;
             title = itemView.findViewById(R.id.task_title);
             date = itemView.findViewById(R.id.task_date);
             desc = itemView.findViewById(R.id.task_desc);
             comp = itemView.findViewById(R.id.task_checkbox);
-//            tags = itemView.findViewById(R.id.task_tags_ci);
-
             tags_layout = itemView.findViewById(R.id.task_tags_ll);
+
+            comp.setOnCheckedChangeListener(this);
+            item.setOnClickListener(this);
+        }
+
+        @Override
+        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+            int pos = getAdapterPosition();
+            Task curr = mAdapter.data.get(pos);
+
+            curr.setComplete(isChecked);
+
+            mListener.onPersonalTaskCheckClick(curr, pos);
+        }
+
+        @Override
+        public void onClick(View v) {
+            int pos = getAdapterPosition();
+            Task curr = mAdapter.data.get(pos);
+
+            Log.v(LOG_TAG, "onClick - task, pos: " + curr.getName() + ", " + pos);
+
+            mListener.onPersonalTaskClick(curr, pos);
         }
     }
 
@@ -278,7 +299,7 @@ public class PersonalListFragment extends Fragment implements EventListener<Quer
             Task curr = data.get(position);
 
             holder.title.setText(curr.getName());
-            holder.date.setText(curr.getDateStr());
+            holder.date.setText(curr.getDate());
             holder.desc.setText(curr.getDesc());
             holder.comp.setChecked(curr.isComplete());
 
@@ -316,5 +337,7 @@ public class PersonalListFragment extends Fragment implements EventListener<Quer
         void onFragmentInteraction();
 
         void onPersonalFragAttach();
+        void onPersonalTaskCheckClick(Task task, int pos);
+        void onPersonalTaskClick(Task task, int pos);
     }
 }

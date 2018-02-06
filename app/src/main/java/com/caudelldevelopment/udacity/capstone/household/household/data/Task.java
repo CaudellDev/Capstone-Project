@@ -2,15 +2,18 @@ package com.caudelldevelopment.udacity.capstone.household.household.data;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.Log;
 
 import com.google.firebase.firestore.DocumentSnapshot;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 /**
  * Created by caude on 12/25/2017.
@@ -22,6 +25,7 @@ public class Task implements Parcelable {
 
     public static final String TAG = "task_tag";
     public static final String TASKS_ID = "tasks";
+    public static final String ID = "id";
     public static final String ACCESS_ID = "access_id";
     public static final String COMP_ID = "complete";
     public static final String DATE_ID = "date";
@@ -45,34 +49,6 @@ public class Task implements Parcelable {
         family = false;
     }
 
-    public Task(DocumentSnapshot doc) {
-        try {
-            id = doc.getId();
-            access_id = doc.getString(ACCESS_ID);
-            name = doc.getString("name");
-            desc = doc.getString("desc");
-            date = doc.getDate("date").toString();
-            complete = doc.getBoolean("complete");
-            family = doc.getBoolean("family");
-
-            tag_ids = new LinkedList<>();
-
-//            Object temp = doc.get("tag_ids");
-//            LinkedList<String> temp_list = (LinkedList<String>) temp;
-//
-//            if (temp_list != null) {
-//                tag_ids.addAll(temp_list);
-//                Log.v(LOG_TAG, "new Task(DocumentSnapshot) - tag_ids have been added. Count: " + tag_ids.size());
-//            } else {
-//                Log.w(LOG_TAG, "new Task(DocumentSnapshot) -  casting doc.get(\"tag_ids\" to String list returns null!!!!");
-//            }
-
-            // Work on Tag reference conversion. Should I change Firebase to store an array of Strings?
-        } catch (NullPointerException e) {
-            e.printStackTrace();
-        }
-    }
-
     private Task(Parcel in) {
         tag_ids = new LinkedList<>();
 
@@ -83,6 +59,21 @@ public class Task implements Parcelable {
         date = in.readString();
         family = in.readByte() == 1;
         in.readStringList(tag_ids);
+    }
+
+    public Map<String, Object> toMap() {
+        Map<String, Object> map = new HashMap<>();
+
+        map.put(ID, id);
+        map.put(ACCESS_ID, access_id);
+        map.put(NAME_ID, name);
+        map.put(DESC_ID, desc);
+        map.put(COMP_ID, complete);
+        map.put(FAM_ID, family);
+        map.put(DATE_ID, date);
+        map.put(TAGS_ID, tag_ids);
+
+        return map;
     }
 
     public java.lang.String getId() {
@@ -113,43 +104,28 @@ public class Task implements Parcelable {
         this.desc = desc;
     }
 
-    public String getDateStr() {
-        String result;
+    public String getDate() {
+        String result = date;
 
-        try {
-            Date temp = new SimpleDateFormat("dd/MM/yyyy", Locale.US).parse(date);
-            result = temp.toString();
-        } catch (ParseException e) {
-            e.printStackTrace();
-            result = date;
-        }
+//        try {
+//            Date temp = new SimpleDateFormat("dd/MM/yyyy", Locale.US).parse(date);
+//            result = temp.toString();
+//        } catch (ParseException e) {
+//            e.printStackTrace();
+//            result = date;
+//        }
 
+//        Log.v(LOG_TAG, "getDate - result: " + ((result != null) ? result : "null"));
         return result;
     }
 
-    public Date getDate() {
-        Date result = null;
-        try {
-            result = new SimpleDateFormat("dd/MM/yyyy", Locale.US).parse(date);
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-        return result;
-    }
-
-    public void setDateStr(String date) {
+    public void setDate(String date) {
         this.date = date;
     }
-    public void setDate(Date date) { this.date = date.toString(); }
 
     public boolean isComplete() {
         return complete;
     }
-
-    // Possibly required by Firebase Firestore
-//    public boolean getComplete() {
-//        return complete;
-//    }
 
     public void setComplete(boolean complete) {
         this.complete = complete;
@@ -158,10 +134,6 @@ public class Task implements Parcelable {
     public boolean isFamily() {
         return family;
     }
-
-//    public boolean getFamily() {
-//        return family;
-//    }
 
     public void setFamily(boolean family) {
         this.family = family;
