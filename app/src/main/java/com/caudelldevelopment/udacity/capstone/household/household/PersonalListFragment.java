@@ -308,7 +308,7 @@ public class PersonalListFragment extends Fragment implements EventListener<Quer
                 // Check if the tag already exists before adding
                 ChipView check = (ChipView) holder.tags_layout.getChildAt(i);
                 if (check != null && check.getLabel().equals(curr.getTag(i))) {
-                    break;
+                    continue;
                 }
 
                 ChipView tag = new ChipView(getContext());
