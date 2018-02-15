@@ -7,9 +7,13 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
+import android.support.v7.widget.CardView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Switch;
@@ -76,10 +80,7 @@ public class NewTaskDialogFrag extends DialogFragment implements OnCompleteListe
         mChips = new LinkedList<>();
         accessIdChange = false;
 
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("tags")
-            .get()
-            .addOnCompleteListener(this);
+
     }
 
     @Override
@@ -102,19 +103,73 @@ public class NewTaskDialogFrag extends DialogFragment implements OnCompleteListe
         mListener = null;
     }
 
+    @Nullable
+    @Override
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View rootView = null;
+
+        if (!getShowsDialog()) {
+            super.onCreateView(inflater, container, savedInstanceState);
+
+            rootView = inflater.inflate(R.layout.dialog_frag_container, container, false);
+
+            initViews(rootView);
+
+//            CardView cardView = rootView.findViewById(R.id.dialog_container_cv);
+//            if (container != null) {
+//                Log.v(LOG_TAG, "onCreateView - Starting CardView animation!!!!");
+//
+//                Animation animation = AnimationUtils.makeInAnimation(getContext(), false);
+//                animation.setDuration(5000);
+//
+//                cardView.startAnimation(animation);
+//            }
+
+            Button pos = rootView.findViewById(R.id.dialog_container_pos_btn);
+            Button neg = rootView.findViewById(R.id.dialog_container_neg_btn);
+
+            pos.setOnClickListener(v -> {
+                Log.v(LOG_TAG, "onCreateView - positive dialog onClick listener");
+            });
+
+            neg.setOnClickListener(v -> {
+                Log.v(LOG_TAG, "onCreateView - negative dialog onClick listener");
+                mListener.onDialogNegativeClick();
+            });
+        } else {
+            return super.onCreateView(inflater, container, savedInstanceState);
+        }
+
+        return rootView;
+    }
+
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
+        Log.v(LOG_TAG, "onCreateDialog has started!!!!");
+
         LayoutInflater inflater = LayoutInflater.from(getContext());
         View rootView = inflater.inflate(R.layout.new_task_dialog_frag, null, false);
 
-        mName = rootView.findViewById(R.id.dialog_name_tv);
-        mFamily = rootView.findViewById(R.id.dialog_family_switch);
-        mDate = rootView.findViewById(R.id.dialog_date_tv);
-        mDatePickerBtn = rootView.findViewById(R.id.dialog_date_btn);
-        mDesc = rootView.findViewById(R.id.dialog_desc_tv);
-        mTagInput = rootView.findViewById(R.id.dialog_tag_ci);
+        initViews(rootView);
 
+//        mName = rootView.findViewById(R.id.dialog_name_tv);
+//        mFamily = rootView.findViewById(R.id.dialog_family_switch);
+//        mDate = rootView.findViewById(R.id.dialog_date_tv);
+//        mDatePickerBtn = rootView.findViewById(R.id.dialog_date_btn);
+//        mDesc = rootView.findViewById(R.id.dialog_desc_tv);
+//        mTagInput = rootView.findViewById(R.id.dialog_tag_ci);
+//
+//        mDate.setEnabled(false);
+//        mDatePickerBtn.setOnClickListener(this);
+//
+//        FirebaseFirestore db = FirebaseFirestore.getInstance();
+//        db.collection("tags")
+//                .get()
+//                .addOnCompleteListener(this);
+
+
+        // Building dialog starts here below here...
         Bundle args = getArguments();
 
         User user = args.getParcelable("user");
@@ -189,8 +244,8 @@ public class NewTaskDialogFrag extends DialogFragment implements OnCompleteListe
                         .setMessage("You are about to delete task " + mTask.getName() + ". Are you sure?") // Not using the edit field text because those changes haven't been saved.
                         .setPositiveButton("DELETE", (conf_dialog, conf_which) -> {
                             Log.v(LOG_TAG, "onCreateDialog, confirm delete positive click listener - deleting task: " + mTask.getName());
-                            FirebaseFirestore db = FirebaseFirestore.getInstance();
-                            db.collection(Task.TASKS_ID)
+                            FirebaseFirestore db_task = FirebaseFirestore.getInstance();
+                            db_task.collection(Task.TASKS_ID)
                                     .document(mTask.getId())
                                     .delete();
                         }).setNegativeButton("CANCEL", (conf_dialog, conf_which) -> {
@@ -204,6 +259,11 @@ public class NewTaskDialogFrag extends DialogFragment implements OnCompleteListe
         return builder.create();
     }
 
+    @Override
+    public Animation onCreateAnimation(int transit, boolean enter, int nextAnim) {
+        return super.onCreateAnimation(transit, enter, nextAnim);
+    }
+
     public Task getTask() {
         return mTask;
     }
@@ -212,13 +272,28 @@ public class NewTaskDialogFrag extends DialogFragment implements OnCompleteListe
         return accessIdChange;
     }
 
+    private void initViews(View rootView) {
+        mName = rootView.findViewById(R.id.dialog_name_tv);
+        mFamily = rootView.findViewById(R.id.dialog_family_switch);
+        mDate = rootView.findViewById(R.id.dialog_date_tv);
+        mDatePickerBtn = rootView.findViewById(R.id.dialog_date_btn);
+        mDesc = rootView.findViewById(R.id.dialog_desc_tv);
+        mTagInput = rootView.findViewById(R.id.dialog_tag_ci);
+
+        mDate.setEnabled(false);
+        mDatePickerBtn.setOnClickListener(this);
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("tags")
+                .get()
+                .addOnCompleteListener(this);
+    }
+
     private void updateViews() {
         // Update the views
         mName.setText(mTask.getName());
         mFamily.setChecked(mTask.isFamily());
         mDate.setText(mTask.getDate());
-        mDate.setEnabled(false);
-        mDatePickerBtn.setOnClickListener(this);
         mDesc.setText(mTask.getDesc());
 
         mTagInput.removeAllViews();
@@ -245,6 +320,11 @@ public class NewTaskDialogFrag extends DialogFragment implements OnCompleteListe
         mChips = chips;
 
         mTagInput.setFilterableList(mChips);
+
+        // We only need this when starting an animation.
+        if (!getShowsDialog()) {
+            mListener.onFragmentReady();
+        }
     }
 
     @Override
@@ -265,6 +345,7 @@ public class NewTaskDialogFrag extends DialogFragment implements OnCompleteListe
     public interface NewTaskDialogListener {
         void onDialogPositiveClick(Task task);
         void onDialogNegativeClick();
+        void onFragmentReady();
         void deleteTask(Task task);
     }
 }

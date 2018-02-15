@@ -1,28 +1,20 @@
 package com.caudelldevelopment.udacity.capstone.household.household;
 
-import android.content.Context;
 import android.content.Intent;
-import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.CardView;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.animation.AnimationUtils;
 
 import com.caudelldevelopment.udacity.capstone.household.household.data.Task;
 import com.caudelldevelopment.udacity.capstone.household.household.data.User;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QuerySnapshot;
-
-import java.util.LinkedList;
 
 public class MainActivity extends AppCompatActivity
                           implements View.OnClickListener,
@@ -33,18 +25,21 @@ public class MainActivity extends AppCompatActivity
 
     private TaskListsFragment mListFragment;
     private FloatingActionButton mAddTaskBtn;
+    private boolean wide_layout;
 
     private User mUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.v(LOG_TAG, "onCreate has been started.");
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         mAddTaskBtn = findViewById(R.id.main_add_task);
         mAddTaskBtn.setOnClickListener(this);
+
+        View view_holder = findViewById(R.id.main_view_holder);
+        wide_layout = (view_holder != null);
+        Log.v(LOG_TAG, "onCreate - Is the sw600dp layout being used: " + wide_layout);
 
         Intent intent = getIntent();
         mUser = intent.getParcelableExtra(User.DOC_TAG);
@@ -61,36 +56,52 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onClick(View view) {
-        // Open DialogFragment
-        // Save Task Value
-        // Add Task to Firebase
-        // Update the Fragment
+        if (wide_layout) {
+            FragmentManager manager = getSupportFragmentManager();
+            FragmentTransaction transaction = manager.beginTransaction();
+            NewTaskDialogFrag dialog =  NewTaskDialogFrag.newInstance(false, mUser, null);
 
-        // Get the selected tab or fragment from the TaskListsFragment and display snackbar
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        TaskListsFragment rootFrag = (TaskListsFragment) fragmentManager.findFragmentById(R.id.main_task_lists);
-        rootFrag.onAddTaskPressed();
+//            transaction.setCustomAnimations(R.anim.right_in, R.anim.right_out);
+            transaction.replace(R.id.main_view_holder, dialog, "new_task_fragment");
+            transaction.commit();
+
+//            ViewGroup container = findViewById(R.id.main_view_holder);
+//            container.setVisibility(View.VISIBLE);
+//            container.startAnimation(AnimationUtils.loadAnimation(this, R.anim.right_in));
+        } else {
+            // Get the selected tab or fragment from the TaskListsFragment and display the dialog
+//            FragmentManager fragmentManager = getSupportFragmentManager();
+//            TaskListsFragment rootFrag = (TaskListsFragment) fragmentManager.findFragmentById(R.id.main_task_lists);
+            mListFragment.onAddTaskPressed();
+        }
     }
 
     @Override
     public void onAddTask(String tab) {
         if (tab != null) {
-//            Snackbar.make(mAddTaskBtn, "onAddTask in " + tab, Snackbar.LENGTH_SHORT).show();
             boolean family = tab.equals("Family");
             NewTaskDialogFrag dialog = NewTaskDialogFrag.newInstance(family, mUser, null);
             dialog.show(getSupportFragmentManager(), "new_task_dialog");
-
         } else {
             Log.w(LOG_TAG, "onAddTask, but tab title could not be retrieved.");
         }
     }
 
     @Override
+    public void onAddTaskComplete() {
+        Snackbar.make(findViewById(R.id.appBarLayout), "Task added succesfully.", Snackbar.LENGTH_SHORT).show();
+    }
+
+    @Override
     public void onTaskClick(Task task, String tab) {
         if (tab != null && task != null) {
-            boolean family = tab.equals("Family");
-            NewTaskDialogFrag dialog = NewTaskDialogFrag.newInstance(family, mUser, task);
-            dialog.show(getSupportFragmentManager(), "new_task_dialog");
+            if (wide_layout) {
+                // TODO: Made a NewTaskDialogFrag and start a fragment transaction.
+            } else {
+                boolean family = tab.equals("Family");
+                NewTaskDialogFrag dialog = NewTaskDialogFrag.newInstance(family, mUser, task);
+                dialog.show(getSupportFragmentManager(), "new_task_dialog");
+            }
         } else {
             Log.w(LOG_TAG, "onTaskClick, but tab title or edit task could not be retrieved.");
         }
@@ -103,7 +114,26 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onDialogNegativeClick() {
-        // Do nothing?
+        if (wide_layout) {
+            FragmentManager manager = getSupportFragmentManager();
+            NewTaskDialogFrag dialog = (NewTaskDialogFrag) manager.findFragmentByTag("new_task_fragment");
+
+            if (dialog != null) {
+                FragmentTransaction transaction = manager.beginTransaction();
+
+                transaction.remove(dialog);
+                transaction.commit();
+            }
+        }
+    }
+
+    @Override
+    public void onFragmentReady() {
+        if (wide_layout) {
+            ViewGroup container = findViewById(R.id.main_view_holder);
+            container.setVisibility(View.VISIBLE);
+            container.startAnimation(AnimationUtils.loadAnimation(this, R.anim.right_in));
+        }
     }
 
     @Override

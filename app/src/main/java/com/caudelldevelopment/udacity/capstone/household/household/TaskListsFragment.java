@@ -173,6 +173,7 @@ public class TaskListsFragment extends Fragment
                 .add(task.toMap())
                 .addOnCompleteListener(comp_task -> {
                     Log.v(LOG_TAG, "addNewTask, onCompleteListener - added task to Firebase!!!!!");
+                    mListener.onAddTaskComplete();
                 });
     }
 
@@ -406,6 +407,7 @@ public class TaskListsFragment extends Fragment
         void onListsFragAttach();
 
         void onAddTask(String tab);
+        void onAddTaskComplete();
         void onTaskClick(Task task, String tab);
     }
 

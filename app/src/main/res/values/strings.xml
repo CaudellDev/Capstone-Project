@@ -22,5 +22,7 @@
     <string name="no_network_title">Network Error: Not Connected</string>
     <string name="name">Name</string>
     <string name="description">Description</string>
+    <string name="dialog_confirm_pos">SAVE</string>
+    <string name="dialog_confirm_neg">DISMISS</string>
 
 </resources>

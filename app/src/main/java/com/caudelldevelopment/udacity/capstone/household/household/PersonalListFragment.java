@@ -25,6 +25,7 @@ import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.pchmn.materialchips.ChipView;
+import com.pchmn.materialchips.model.Chip;
 
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -304,15 +305,16 @@ public class PersonalListFragment extends Fragment implements EventListener<Quer
             holder.comp.setChecked(curr.isComplete());
 
             for (int i = 0; i < curr.getTag_ids().size(); i++) {
-//                holder.tags.addChip(curr.getTag(i), "");
+                // Check if the tag already exists before adding
+                ChipView check = (ChipView) holder.tags_layout.getChildAt(i);
+                if (check != null && check.getLabel().equals(curr.getTag(i))) {
+                    break;
+                }
 
-                // Trying to avoid using a ChipInput. The user doesn't need to type here
-                // and it would improve performance to have a ViewGroup with ChipViews.
-                ChipView chipView = new ChipView(getContext());
-                chipView.setLabel(curr.getTag(i));
-                chipView.setPadding(4, 4, 4, 4);
-
-                holder.tags_layout.addView(chipView);
+                ChipView tag = new ChipView(getContext());
+                tag.setLabel(curr.getTag(i));
+                tag.setPadding(4, 4, 4, 4);
+                holder.tags_layout.addView(tag);
             }
         }
 
