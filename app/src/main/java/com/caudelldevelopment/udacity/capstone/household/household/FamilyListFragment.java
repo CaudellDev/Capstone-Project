@@ -2,7 +2,10 @@ package com.caudelldevelopment.udacity.capstone.household.household;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Parcelable;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -15,6 +18,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.caudelldevelopment.udacity.capstone.household.household.data.Task;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
@@ -35,7 +39,7 @@ import java.util.List;
  * Use the {@link FamilyListFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class FamilyListFragment extends Fragment implements EventListener<QuerySnapshot> {
+public class FamilyListFragment extends Fragment implements EventListener<QuerySnapshot>, OnCompleteListener<QuerySnapshot> {
 
     private static final String LOG_TAG = FamilyListFragment.class.getSimpleName();
     private static final String FAML_TASK_LIST = "family_task_list";
@@ -45,7 +49,7 @@ public class FamilyListFragment extends Fragment implements EventListener<QueryS
     private FamilyAdapter mAdapter;
     private boolean search;
 
-    private OnFamilyFragListener mListener;
+    private TaskListsFragment mListener;
 
     public FamilyListFragment() {
         // Required empty public constructor
@@ -77,8 +81,15 @@ public class FamilyListFragment extends Fragment implements EventListener<QueryS
         data = new LinkedList<>();
 
         if (getArguments() != null) {
-            Task[] task_arr = (Task[]) getArguments().getParcelableArray(FAML_TASK_LIST);
-            data = new LinkedList<>(Arrays.asList(task_arr));
+            Parcelable[] temp_arr = getArguments().getParcelableArray(FAML_TASK_LIST);
+
+            if (temp_arr != null && temp_arr.length > 0) {
+                Task[] task_arr = (Task[]) getArguments().getParcelableArray(FAML_TASK_LIST);
+                data = new LinkedList<>(Arrays.asList(task_arr));
+            } else {
+                Log.w(LOG_TAG, "onCreate - List of tasks could not be retrieved.");
+                data = new LinkedList<>();
+            }
         }
     }
 
@@ -100,31 +111,19 @@ public class FamilyListFragment extends Fragment implements EventListener<QueryS
         mTaskList.setAdapter(mAdapter);
         mAdapter.notifyDataSetChanged();
 
-        // This should initialize the list, in addition to updating changes.
-//        FirebaseFirestore db = FirebaseFirestore.getInstance();
-//        db.collection("tasks")
-//                .whereEqualTo("family", true)
-//                .addSnapshotListener(this);
-
         return rootView;
-    }
-
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed() {
-        if (mListener != null) {
-            mListener.onFragmentInteraction();
-        }
     }
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
 
-        Fragment parent = getParentFragment();
+        FragmentManager fm = getFragmentManager();
+        Fragment parent = fm.findFragmentById(R.id.main_task_lists);
 
         if (parent != null) {
-            if (parent instanceof OnFamilyFragListener) {
-                mListener = (OnFamilyFragListener) context;
+            if (parent instanceof TaskListsFragment) {
+                mListener = (TaskListsFragment) parent;
             } else {
                 throw new RuntimeException(context.toString()
                         + " must implement OnListsFragmentListener");
@@ -156,6 +155,8 @@ public class FamilyListFragment extends Fragment implements EventListener<QueryS
 
     @Override
     public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException e) {
+        Log.v(LOG_TAG, "onEvent has started!!!");
+
         // Check if there was an exception first...
         if (e != null) {
             Log.w(LOG_TAG, "Firebase listener - onEvent, exception: " + e);
@@ -202,6 +203,19 @@ public class FamilyListFragment extends Fragment implements EventListener<QueryS
 
         mAdapter.data = data;
         mAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void onComplete(@NonNull com.google.android.gms.tasks.Task<QuerySnapshot> task) {
+        Log.v(LOG_TAG, "onComplete has started!!!");
+        if (task.isSuccessful()) {
+            data = new LinkedList<>();
+            for (DocumentSnapshot doc : task.getResult()) {
+                Task curr = doc.toObject(Task.class);
+                data.add(curr);
+            }
+            mAdapter.notifyDataSetChanged();
+        }
     }
 
     private class FamilyTaskViewHolder extends RecyclerView.ViewHolder {
@@ -274,9 +288,7 @@ public class FamilyListFragment extends Fragment implements EventListener<QueryS
      * >Communicating with Other Fragments</a> for more information.
      */
     public interface OnFamilyFragListener {
-        // TODO: Update argument type and name
-        void onFragmentInteraction();
-
-        void onFamilyFragAttach();
+        void onFamilyTaskCheckClick(Task task, int pos);
+        void onFamilyTaskClick(Task task, int pos);
     }
 }

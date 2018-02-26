@@ -23,7 +23,18 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".MainActivity"></activity>
+        <activity android:name=".MainActivity" />
+        <activity
+            android:name=".TagsActivity"
+            android:label="@string/title_activity_tags"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/AppTheme">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.caudelldevelopment.udacity.capstone.household.household.MainActivity" />
+        </activity>
+        <activity android:name=".SettingsActivity" />
+        <activity android:name=".FamilyActivity"></activity>
     </application>
 
 </manifest>

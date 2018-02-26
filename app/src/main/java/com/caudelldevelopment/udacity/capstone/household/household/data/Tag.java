@@ -1,12 +1,20 @@
 package com.caudelldevelopment.udacity.capstone.household.household.data;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by caude on 12/25/2017.
  */
 public class Tag {
+
+    public static final String COL_TAG = "tags";
+    public static final String DOC_TAG = "tag";
+
+    public static final String NAME_ID = "name";
+    public static final String TASKS_ID = "task_ids";
 
     private String name;
     private String id;
@@ -18,12 +26,28 @@ public class Tag {
         count = 0;
     }
 
+    public Tag(String name) {
+        this.name = name;
+        id = name.toLowerCase().replace(" ", "_");
+        task_ids = new LinkedList<>();
+        count = 0;
+    }
+
+    public Map<String, String> toMap() {
+        Map<String, String> result = new HashMap<>();
+
+        result.put(NAME_ID, name);
+
+        return result;
+    }
+
     public String getName() {
         return name;
     }
 
     public void setName(String name) {
         this.name = name;
+        this.id = name.toLowerCase().replace(" ", "_");
     }
 
     public String getId() {
@@ -31,7 +55,7 @@ public class Tag {
     }
 
     public void setId(String id) {
-        this.id = id;
+        this.id = id.toLowerCase().replace(" ", "_");
     }
 
     public int getCount() {

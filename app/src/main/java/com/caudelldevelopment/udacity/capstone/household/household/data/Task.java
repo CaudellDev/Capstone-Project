@@ -23,8 +23,10 @@ public class Task implements Parcelable {
 
     private static final String LOG_TAG = Task.class.getSimpleName();
 
+    public static final String COL_TAG = "tasks";
+    public static final String DOC_TAG = "task";
+
     public static final String TAG = "task_tag";
-    public static final String TASKS_ID = "tasks";
     public static final String ID = "id";
     public static final String ACCESS_ID = "access_id";
     public static final String COMP_ID = "complete";
@@ -42,6 +44,19 @@ public class Task implements Parcelable {
     private boolean complete;
     private boolean family;
     private List<String> tag_ids;
+
+    public static Task fromDoc(DocumentSnapshot doc, User user) {
+        Task task = doc.toObject(Task.class);
+        task.setId(doc.getId());
+
+        if (task.isFamily()) {
+            task.setAccess_id(user.getFamily());
+        } else {
+            task.setAccess_id(user.getId());
+        }
+
+        return task;
+    }
 
     public Task() {
         tag_ids = new LinkedList<>();

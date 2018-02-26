@@ -5,21 +5,12 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <include layout="@layout/new_task_dialog_frag"/>
+    <include layout="@layout/base_entry_dialog"/>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
-
-        <Button
-            android:id="@+id/dialog_container_neu_btn"
-            android:text="@string/dialog_confirm_neu"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="start|center_horizontal"
-            android:visibility="gone"
-            style="@style/Widget.AppCompat.Button.Borderless.Colored" />
 
         <View
             android:layout_width="0dp"

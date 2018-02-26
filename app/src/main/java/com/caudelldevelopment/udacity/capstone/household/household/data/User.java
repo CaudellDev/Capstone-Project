@@ -3,8 +3,12 @@ package com.caudelldevelopment.udacity.capstone.household.household.data;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.google.firebase.firestore.DocumentSnapshot;
+
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by caude on 12/25/2017.
@@ -15,10 +19,20 @@ public class User implements Parcelable {
     public static final String COL_TAG = "users";
     public static final String DOC_TAG = "user";
 
+    public static final String NAME_ID = "name";
+    public static final String FAMILY_ID = "family";
+    public static final String TASKS_ID = "task_ids";
+
     private String name;
     private String id;
     private String family;
     private List<String> task_ids;
+
+    public static User fromDoc(DocumentSnapshot doc) {
+        User user = doc.toObject(User.class);
+        user.setId(doc.getId());
+        return user;
+    }
 
     public User() {
         task_ids = new LinkedList<>();
@@ -29,6 +43,16 @@ public class User implements Parcelable {
         id = in.readString();
         family = in.readString();
         task_ids = in.createStringArrayList();
+    }
+
+    public Map<String, Object> toMap() {
+        Map<String, Object> result = new HashMap<>();
+
+        result.put(NAME_ID, name);
+        result.put(FAMILY_ID, family);
+        result.put(TASKS_ID, task_ids);
+
+        return result;
     }
 
     public String getName() {

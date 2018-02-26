@@ -91,7 +91,7 @@ public class LoginActivity extends AppCompatActivity {
 
                     if (documentSnapshot.exists()) {
                         // Launch activity with user object
-                        user = documentSnapshot.toObject(User.class);
+                        user = User.fromDoc(documentSnapshot);
                         startMainActivity(user);
                     } else {
                         // User must not exist yet. Create it, then...
@@ -116,7 +116,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void startMainActivity(User user) {
-        Log.v(LOG_TAG, "Starting MainActivity!!!!");
+        Log.v(LOG_TAG, "Starting MainActivity!!!! user == null: " + (user == null));
         Intent intent = new Intent(this, MainActivity.class);
         intent.putExtra(User.DOC_TAG, user);
 
