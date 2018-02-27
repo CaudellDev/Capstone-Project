@@ -3,16 +3,13 @@ package com.caudelldevelopment.udacity.capstone.household.household.data;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-/**
- * Created by caude on 12/25/2017.
- */
 
 public class User implements Parcelable {
 
@@ -36,6 +33,17 @@ public class User implements Parcelable {
 
     public User() {
         task_ids = new LinkedList<>();
+        family = "";
+    }
+
+    public User(FirebaseUser user) {
+        id = user.getUid();
+        name = user.getDisplayName();
+
+
+//        user.setId(firebaseUser.getUid());
+//        user.setName(firebaseUser.getDisplayName());
+//        user.setFamily("");
     }
 
     private User(Parcel in) {

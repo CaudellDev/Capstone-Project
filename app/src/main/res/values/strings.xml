@@ -38,5 +38,6 @@
     <string name="new_family_title">Add new Family</string>
     <string name="new_tag_title">Add new Tag</string>
     <string name="family_add_failure">Family was not successfully added. Please try again.</string>
+    <string name="login_user_null">Login failed. Could not retrieve user information.</string>
 
 </resources>
