@@ -40,13 +40,19 @@ public class LoginActivity extends AppCompatActivity implements OnSuccessListene
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        startActivityForResult(
-                AuthUI.getInstance()
-                    .createSignInIntentBuilder()
-                    .setAvailableProviders(providers)
-                    .build(),
-                SIGN_IN_REQ_CODE
-        );
+        FirebaseUser fireUser = FirebaseAuth.getInstance().getCurrentUser();
+
+        if (fireUser != null) {
+            doLogin();
+        } else {
+            startActivityForResult(
+                    AuthUI.getInstance()
+                            .createSignInIntentBuilder()
+                            .setAvailableProviders(providers)
+                            .build(),
+                    SIGN_IN_REQ_CODE
+            );
+        }
     }
 
     @Override
@@ -56,6 +62,8 @@ public class LoginActivity extends AppCompatActivity implements OnSuccessListene
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.v(LOG_TAG, "onActivityResult has started!!! requestCode: " + requestCode);
+
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == SIGN_IN_REQ_CODE) {
@@ -72,7 +80,7 @@ public class LoginActivity extends AppCompatActivity implements OnSuccessListene
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-        if (firebaseUser == null) {
+        if (firebaseUser != null) {
             db.collection(User.COL_TAG)
                     .document(firebaseUser.getUid())
                     .get()
@@ -83,6 +91,7 @@ public class LoginActivity extends AppCompatActivity implements OnSuccessListene
     }
 
     private void startMainActivity(User user) {
+        Log.v(LOG_TAG, "startMainActivity has started!!!");
         Intent intent = new Intent(this, MainActivity.class);
         intent.putExtra(User.DOC_TAG, user);
 

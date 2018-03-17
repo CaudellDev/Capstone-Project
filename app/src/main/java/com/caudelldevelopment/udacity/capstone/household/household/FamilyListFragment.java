@@ -39,7 +39,7 @@ import java.util.List;
  * Use the {@link FamilyListFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class FamilyListFragment extends Fragment implements EventListener<QuerySnapshot>, OnCompleteListener<QuerySnapshot> {
+public class FamilyListFragment extends Fragment implements  OnCompleteListener<QuerySnapshot> {
 
     private static final String LOG_TAG = FamilyListFragment.class.getSimpleName();
     private static final String FAML_TASK_LIST = "family_task_list";
@@ -84,7 +84,7 @@ public class FamilyListFragment extends Fragment implements EventListener<QueryS
             Parcelable[] temp_arr = getArguments().getParcelableArray(FAML_TASK_LIST);
 
             if (temp_arr != null && temp_arr.length > 0) {
-                Task[] task_arr = (Task[]) getArguments().getParcelableArray(FAML_TASK_LIST);
+                Task[] task_arr = Arrays.copyOf(temp_arr, temp_arr.length, Task[].class);
                 data = new LinkedList<>(Arrays.asList(task_arr));
             } else {
                 Log.w(LOG_TAG, "onCreate - List of tasks could not be retrieved.");
@@ -153,57 +153,57 @@ public class FamilyListFragment extends Fragment implements EventListener<QueryS
         }
     }
 
-    @Override
-    public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException e) {
-        Log.v(LOG_TAG, "onEvent has started!!!");
-
-        // Check if there was an exception first...
-        if (e != null) {
-            Log.w(LOG_TAG, "Firebase listener - onEvent, exception: " + e);
-            e.printStackTrace();
-            return;
-        }
-
-        for (DocumentChange dc : documentSnapshots.getDocumentChanges()) {
-            switch (dc.getType()) {
-                case ADDED:
-                    DocumentSnapshot added = dc.getDocument();
-                    Task added_task = added.toObject(Task.class);
-                    Log.v(LOG_TAG, "Firebase listener - onEvent, curr task added: " + added_task.getName() + ", " + added_task.getDesc());
-                    data.add(added_task);
-                    break;
-                case REMOVED:
-                    DocumentSnapshot removed = dc.getDocument();
-                    Task removed_task = removed.toObject(Task.class);
-                    data.remove(removed_task);
-                    break;
-                case MODIFIED:
-                    // TODO
-
-                    DocumentSnapshot modified = dc.getDocument();
-                    Task mod_task = modified.toObject(Task.class);
-
-                    Task old_ind = data.get(dc.getOldIndex());
-                    Task new_ind = data.get(dc.getNewIndex());
-
-                    Log.v(LOG_TAG, "Firebase listener - onEvent, task modified. " +
-                            "Old task " + dc.getOldIndex() +
-                            ", new task " + dc.getNewIndex() +
-                            ", mod task: " + old_ind.getName() +
-                            ", " + new_ind.getName() +
-                            ", " + mod_task.getName());
-
-                    // Probably didn't change positions?
-                    data.set(dc.getOldIndex(), mod_task);
-                    break;
-                default:
-                    Log.w(LOG_TAG, "onEvent - document change type not recognized! dc.getType: " + dc.getType());
-            }
-        }
-
-        mAdapter.data = data;
-        mAdapter.notifyDataSetChanged();
-    }
+//    @Override
+//    public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException e) {
+//        Log.v(LOG_TAG, "onEvent has started!!!");
+//
+//        // Check if there was an exception first...
+//        if (e != null) {
+//            Log.w(LOG_TAG, "Firebase listener - onEvent, exception: " + e);
+//            e.printStackTrace();
+//            return;
+//        }
+//
+//        for (DocumentChange dc : documentSnapshots.getDocumentChanges()) {
+//            switch (dc.getType()) {
+//                case ADDED:
+//                    DocumentSnapshot added = dc.getDocument();
+//                    Task added_task = added.toObject(Task.class);
+//                    Log.v(LOG_TAG, "Firebase listener - onEvent, curr task added: " + added_task.getName() + ", " + added_task.getDesc());
+//                    data.add(added_task);
+//                    break;
+//                case REMOVED:
+//                    DocumentSnapshot removed = dc.getDocument();
+//                    Task removed_task = removed.toObject(Task.class);
+//                    data.remove(removed_task);
+//                    break;
+//                case MODIFIED:
+//                    // TODO
+//
+//                    DocumentSnapshot modified = dc.getDocument();
+//                    Task mod_task = modified.toObject(Task.class);
+//
+//                    Task old_ind = data.get(dc.getOldIndex());
+//                    Task new_ind = data.get(dc.getNewIndex());
+//
+//                    Log.v(LOG_TAG, "Firebase listener - onEvent, task modified. " +
+//                            "Old task " + dc.getOldIndex() +
+//                            ", new task " + dc.getNewIndex() +
+//                            ", mod task: " + old_ind.getName() +
+//                            ", " + new_ind.getName() +
+//                            ", " + mod_task.getName());
+//
+//                    // Probably didn't change positions?
+//                    data.set(dc.getOldIndex(), mod_task);
+//                    break;
+//                default:
+//                    Log.w(LOG_TAG, "onEvent - document change type not recognized! dc.getType: " + dc.getType());
+//            }
+//        }
+//
+//        mAdapter.data = data;
+//        mAdapter.notifyDataSetChanged();
+//    }
 
     @Override
     public void onComplete(@NonNull com.google.android.gms.tasks.Task<QuerySnapshot> task) {

@@ -2,6 +2,7 @@ package com.caudelldevelopment.udacity.capstone.household.household;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -20,6 +21,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QuerySnapshot;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.zip.Inflater;
@@ -36,6 +38,7 @@ import java.util.zip.Inflater;
 public class SelectFamilyFrag extends Fragment implements EventListener<QuerySnapshot> {
 
     private static final String LOG_TAG = SelectFamilyFrag.class.getSimpleName();
+    private static final String SEL_FAM_LIST = "select_family_list";
 
     private User mUser;
 
@@ -47,30 +50,34 @@ public class SelectFamilyFrag extends Fragment implements EventListener<QuerySna
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @return A new instance of fragment SelectFamilyFrag.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static SelectFamilyFrag newInstance(User user) {
-        SelectFamilyFrag fragment = new SelectFamilyFrag();
+    public static SelectFamilyFrag newInstance(List<Family> data) {
+        SelectFamilyFrag result = new SelectFamilyFrag();
+
+        Family[] temp_list = new Family[data.size()];
+        temp_list = data.toArray(temp_list);
 
         Bundle args = new Bundle();
-        args.putParcelable(User.DOC_TAG, user);
-        fragment.setArguments(args);
+        args.putParcelableArray(SEL_FAM_LIST, temp_list);
 
-        return fragment;
+        result.setArguments(args);
+
+        return result;
     }
+
+//    public static SelectFamilyFrag newInstance(User user) {
+//        SelectFamilyFrag fragment = new SelectFamilyFrag();
+//
+//        Bundle args = new Bundle();
+//        args.putParcelable(User.DOC_TAG, user);
+//        fragment.setArguments(args);
+//
+//        return fragment;
+//    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            Bundle args = getArguments();
-            mUser = args.getParcelable(User.DOC_TAG);
-        }
+
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection(Family.COL_TAG)
@@ -86,6 +93,23 @@ public class SelectFamilyFrag extends Fragment implements EventListener<QuerySna
 
         mAdapter = new SelectAdapter();
         mFamilyList.setAdapter(mAdapter);
+
+        if (getArguments() != null) {
+            Bundle args = getArguments();
+            Parcelable[] temp_arr = args.getParcelableArray(SEL_FAM_LIST);
+
+            if (temp_arr != null) {
+                List<Family> fam_arr = new LinkedList<>();
+                for (Parcelable curr : temp_arr) {
+                    fam_arr.add((Family) curr);
+                }
+
+                setData(fam_arr);
+
+            } else {
+                Log.w(LOG_TAG, "onCreate - Parcelable array was null! args contains SEL_FAM_LIST: " + args.containsKey(SEL_FAM_LIST));
+            }
+        }
 
         return rootView;
     }
@@ -108,6 +132,14 @@ public class SelectFamilyFrag extends Fragment implements EventListener<QuerySna
     public void onDetach() {
         super.onDetach();
         mListener = null;
+    }
+
+    public void setData(List<Family> data) {
+        Log.v(LOG_TAG, "setData has started!!! ");
+        if (mAdapter != null) {
+            mAdapter.data = data;
+            mAdapter.notifyDataSetChanged();
+        }
     }
 
     @Override

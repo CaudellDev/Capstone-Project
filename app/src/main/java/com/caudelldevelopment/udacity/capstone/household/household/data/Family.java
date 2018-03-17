@@ -1,5 +1,8 @@
 package com.caudelldevelopment.udacity.capstone.household.household.data;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import com.google.firebase.firestore.DocumentSnapshot;
 
 import java.util.HashMap;
@@ -11,7 +14,7 @@ import java.util.Map;
  * Created by caude on 12/25/2017.
  */
 
-public class Family {
+public class Family implements Parcelable {
 
     public static final String COL_TAG = "families";
     public static final String DOC_TAG = "family";
@@ -41,6 +44,17 @@ public class Family {
         task_ids = new LinkedList<>();
         members = new LinkedList<>();
         members.add(user.getId());
+    }
+
+    public Family(Parcel in) {
+        id = in.readString();
+        name = in.readString();
+
+        members = new LinkedList<>();
+        in.readStringList(members);
+
+        task_ids = new LinkedList<>();
+        in.readStringList(task_ids);
     }
 
     public Map<String, Object> toMap() {
@@ -84,4 +98,34 @@ public class Family {
     public void setMembers(List<String> members) {
         this.members = members;
     }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(id);
+        dest.writeString(name);
+
+        String[] mem_arr = new String[members.size()];
+        dest.writeArray(members.toArray(mem_arr));
+
+        String[] task_arr = new String[task_ids.size()];
+        dest.writeArray(task_ids.toArray(task_arr));
+    }
+
+    public static final Parcelable.Creator<Family> CREATOR = new Parcelable.Creator<Family>() {
+
+        @Override
+        public Family createFromParcel(Parcel source) {
+            return new Family(source);
+        }
+
+        @Override
+        public Family[] newArray(int size) {
+            return new Family[size];
+        }
+    };
 }

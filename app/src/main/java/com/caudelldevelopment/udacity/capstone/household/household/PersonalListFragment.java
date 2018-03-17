@@ -42,7 +42,7 @@ import java.util.List;
  * Use the {@link PersonalListFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class PersonalListFragment extends Fragment implements EventListener<QuerySnapshot>, OnCompleteListener<QuerySnapshot>, OnFailureListener {
+public class PersonalListFragment extends Fragment implements OnCompleteListener<QuerySnapshot>, OnFailureListener {
 
     private static final String LOG_TAG = PersonalListFragment.class.getSimpleName();
     private static final String PERS_TASK_LIST = "parsonal_task_list";
@@ -159,18 +159,18 @@ public class PersonalListFragment extends Fragment implements EventListener<Quer
         }
     }
 
-    @Override
-    public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException e) {
-        Log.v(LOG_TAG, "onEvent has started!!!");
-
-        // Check if there was an exception first...
-        if (e != null) {
-            Log.w(LOG_TAG, "Firebase listener - onEvent, exception: " + e);
-            e.printStackTrace();
-            return;
-        }
-
-//        for (DocumentChange dc : documentSnapshots.getDocumentChanges()) {
+//    @Override
+//    public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException e) {
+//        Log.v(LOG_TAG, "onEvent has started!!!");
+//
+//        // Check if there was an exception first...
+//        if (e != null) {
+//            Log.w(LOG_TAG, "Firebase listener - onEvent, exception: " + e);
+//            e.printStackTrace();
+//            return;
+//        }
+//
+////        for (DocumentChange dc : documentSnapshots.getDocumentChanges()) {
 //            switch (dc.getType()) {
 //                case ADDED:
 //                    DocumentSnapshot added = dc.getDocument();
@@ -211,7 +211,7 @@ public class PersonalListFragment extends Fragment implements EventListener<Quer
 //
 //        mAdapter.data = data;
 //        mAdapter.notifyDataSetChanged();
-    }
+//    }
 
     @Override
     public void onComplete(@NonNull com.google.android.gms.tasks.Task<QuerySnapshot> task) {

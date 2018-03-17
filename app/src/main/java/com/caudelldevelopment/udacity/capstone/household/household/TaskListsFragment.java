@@ -1,6 +1,8 @@
 package com.caudelldevelopment.udacity.capstone.household.household;
 
+import android.appwidget.AppWidgetManager;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -18,9 +20,11 @@ import com.caudelldevelopment.udacity.capstone.household.household.data.Family;
 import com.caudelldevelopment.udacity.capstone.household.household.data.Tag;
 import com.caudelldevelopment.udacity.capstone.household.household.data.Task;
 import com.caudelldevelopment.udacity.capstone.household.household.data.User;
+import com.caudelldevelopment.udacity.capstone.household.household.widget.TasksWidget;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -63,6 +67,7 @@ public class TaskListsFragment extends Fragment
 
     private List<Task> mPersonalTasks;
     private List<Task> mFamilyTasks;
+    private List<Family> mFamiliesList;
     private List<Tag> mTags;
 
     private MainActivity mListener;
@@ -97,18 +102,29 @@ public class TaskListsFragment extends Fragment
 
         if (mPersonalTasks == null) mPersonalTasks = new LinkedList<>();
         if (mFamilyTasks   == null) mFamilyTasks   = new LinkedList<>();
+        if (mFamiliesList  == null) mFamiliesList  = new LinkedList<>();
 
         mDatabase = FirebaseFirestore.getInstance();
 
         // Listener for the personal tasks
         mDatabase.collection(Task.COL_TAG)
                 .whereEqualTo(Task.FAM_ID, false)
+                .whereEqualTo(Task.ACCESS_ID, mUser.getId())
+                .orderBy(Task.DATE_ID)
                 .addSnapshotListener(this);
 
-        // Listener for the family tasks
-        mDatabase.collection(Task.COL_TAG)
-                .whereEqualTo(Task.FAM_ID, true)
-                .addSnapshotListener(this);
+        if (mNoFamily) {
+            mDatabase.collection(Family.COL_TAG)
+                    .orderBy(Family.NAME_ID)
+                    .addSnapshotListener(this);
+        } else {
+            // Listener for the family tasks
+            mDatabase.collection(Task.COL_TAG)
+                    .whereEqualTo(Task.FAM_ID, true)
+                    .whereEqualTo(Task.ACCESS_ID, mUser.getFamily())
+                    .orderBy(Task.DATE_ID)
+                    .addSnapshotListener(this);
+        }
     }
 
     @Override
@@ -166,6 +182,8 @@ public class TaskListsFragment extends Fragment
         super.onSaveInstanceState(outState);
     }
 
+
+    // Would this be better in a WorkerThread or AsyncTask? Is this thread safe?
     public void addNewTask(Task task) {
         // Added this to check if this triggers when a task has been edited.
         Log.v(LOG_TAG, "addNewTask has started!!! task: " + task.getName() + ", id: " + task.getId());
@@ -245,44 +263,55 @@ public class TaskListsFragment extends Fragment
             return;
         }
 
-        if (result instanceof QuerySnapshot) { // Event from Tasks collection
+        if (result instanceof QuerySnapshot) { // Event from Tasks and Family collection
             QuerySnapshot documentSnapshots = (QuerySnapshot) result;
 
             boolean pers = false;
             boolean fam = false;
+            boolean sel_fam = false;
             for (DocumentChange dc : documentSnapshots.getDocumentChanges()) {
 
                 switch (dc.getType()) {
                     case ADDED:
                         DocumentSnapshot added = dc.getDocument();
 
-                        Task added_task = Task.fromDoc(added, mUser);
-                        if (added_task.isFamily()) {
-                            mFamilyTasks.add(added_task);
-                            fam = true;
+                        if (isDocFamily(added)) {
+                            Family added_fam = Family.fromDoc(added);
+                            mFamiliesList.add(added_fam);
+                            sel_fam = true;
                         } else {
-                            mPersonalTasks.add(added_task);
-                            pers = true;
+                            Task added_task = Task.fromDoc(added, mUser);
+                            if (added_task.isFamily()) {
+                                mFamilyTasks.add(added_task);
+                                fam = true;
+                            } else {
+                                mPersonalTasks.add(added_task);
+                                pers = true;
+                            }
                         }
                         break;
                     case MODIFIED:
                         DocumentSnapshot mod = dc.getDocument();
-                        Task mod_task = Task.fromDoc(mod, mUser);
-                        Log.v(LOG_TAG, "onEvent, modified - task: " + mod_task.getName() + ", " + (mod_task.isComplete() ? "completed" : "not complete"));
 
-                        // Change in access id is already handled.
-                        if (mod_task.isFamily()) {
-                            mFamilyTasks.add(mod_task);
-                            fam = true;
+                        if (isDocFamily(mod)) {
+                            Family mod_fam = Family.fromDoc(mod);
+                            mFamiliesList.add(mod_fam);
+                            sel_fam = true;
                         } else {
-                            mPersonalTasks.add(mod_task);
-                            pers = true;
+                            Task mod_task = Task.fromDoc(mod, mUser);
+                            if (mod_task.isFamily()) { // Change in access id is already handled.
+                                mFamilyTasks.add(mod_task);
+                                fam = true;
+                            } else {
+                                mPersonalTasks.add(mod_task);
+                                pers = true;
+                            }
                         }
-
                         break;
                     case REMOVED:
-                        Log.v(LOG_TAG, "onEvent - Removed task event is running.");
+                        // Families won't be removed, so we can ignore them here.
                         DocumentSnapshot removed = dc.getDocument();
+
                         Task removed_task = Task.fromDoc(removed, mUser);
                         if (removed_task.isFamily()) {
                             mFamilyTasks.remove(removed_task);
@@ -297,8 +326,16 @@ public class TaskListsFragment extends Fragment
                 }
             }
 
-            if (fam && mFamilyFrag != null) mFamilyFrag.setData(mFamilyTasks);
-            if (pers && mPersonalFrag != null) mPersonalFrag.setData(mPersonalTasks);
+            if (fam && mFamilyFrag != null) {
+                mFamilyFrag.setData(mFamilyTasks);
+                updateWidget(false);
+            }
+            if (pers && mPersonalFrag != null) {
+                mPersonalFrag.setData(mPersonalTasks);
+                updateWidget(true);
+            }
+
+            if (sel_fam && mSelectFrag != null) mSelectFrag.setData(mFamiliesList);
 
         } else if (result instanceof DocumentSnapshot) { // Event from Families and Users collection
             DocumentSnapshot documentSnapshot = (DocumentSnapshot) result;
@@ -325,6 +362,20 @@ public class TaskListsFragment extends Fragment
         } else {
             Log.w(LOG_TAG, "onEvent - result type not recognized! result.class.name: " + result.getClass().getName());
         }
+    }
+
+    private boolean isDocFamily(DocumentSnapshot doc) {
+        CollectionReference famRef = mDatabase.collection(Family.COL_TAG);
+        CollectionReference testRef = doc.getReference().getParent();
+
+        Log.v(LOG_TAG, "isDocFamily - result: " + (famRef == testRef) + ", path: " + doc.getReference().getPath());
+        return famRef == testRef;
+    }
+
+    private void updateWidget(boolean personal) {
+        Intent intent = new Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+        intent.putExtra(TasksWidget.IS_PERSONAL, personal);
+        getContext().sendBroadcast(intent);
     }
 
     @Override
@@ -453,7 +504,7 @@ public class TaskListsFragment extends Fragment
 
                 if (mNoFamily) {
                     if (mSelectFrag == null) {
-                        result = SelectFamilyFrag.newInstance(mUser);
+                        result = SelectFamilyFrag.newInstance(mFamiliesList);
                         mSelectFrag = (SelectFamilyFrag) result;
                     } else {
                         // No data to update?
