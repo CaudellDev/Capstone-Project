@@ -46,12 +46,32 @@
             </intent-filter>
 
             <intent-filter>
-                <action android:name="com.caudelldevelopment.udacity.capstone.household.household.TasksWidget.SWAP_CLICK_TAG"/>
+                <action android:name="household.widget.TasksWidget.PERS_CLICK_TAG"/>
                 <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
 
             <intent-filter>
-                <action android:name="@string/widget_data_updated"/>
+                <action android:name="household.widget.TasksWidget.FAM_CLICK_TAG"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="household.widget.PersonalWidgetRemoteViewsService.PERS_EMPTY_LIST_TAG"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="household.widget.FamilyWidgetRemoteViewsService.FAM_EMPTY_LIST_TAG"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="household.widget.PersonalWidgetRemoteViewsService.PERS_WIDGET_UPDATE"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="household.widget.FamilyWidgetRemoteViewsService.FAM_WIDGET_UPDATE"/>
                 <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
 

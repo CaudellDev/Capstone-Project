@@ -6,22 +6,24 @@ import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.util.Log;
 import android.view.View;
 import android.widget.RemoteViews;
 
 import com.caudelldevelopment.udacity.capstone.household.household.R;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 
 public class TasksWidget extends AppWidgetProvider {
 
     private static final String LOG_TAG = TasksWidget.class.getSimpleName();
 
-    public static final String PERS_CLICK_TAG = "personal_button_clicked";
-    public static final String FAM_CLICK_TAG = "family_button_clicked";
-    public static final String SWAP_CLICK_TAG = "swap_button_clicked";
-    public static final String WIDGET_DATA_UPDATED = "app_widget_data_updated_intent_tag";
+    public static final String PERS_CLICK_TAG = "household.widget.TasksWidget.PERS_CLICK_TAG";
+    public static final String FAM_CLICK_TAG  = "household.widget.TasksWidget.FAM_CLICK_TAG";
     public static final String IS_PERSONAL = "persomal_boolean_service_intent_tag";
 
 //    private boolean personal;
@@ -35,7 +37,7 @@ public class TasksWidget extends AppWidgetProvider {
         // Construct the RemoteViews object
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.tasks_widget);
 
-        views.setTextViewText(R.id.widget_date_tv, "11/02-11/08");
+        views.setTextViewText(R.id.widget_date_tv, getDateRange());
         views.setOnClickPendingIntent(R.id.widget_swap_btn_pers, getPendingSelfIntent(context, true));
         views.setOnClickPendingIntent(R.id.widget_swap_btn_fam,  getPendingSelfIntent(context, false));
         views.setRemoteAdapter(R.id.widget_task_list, getRemoteAdapterIntent(context, true)); // Default is personal
@@ -56,13 +58,20 @@ public class TasksWidget extends AppWidgetProvider {
         return PendingIntent.getBroadcast(context, 0, intent, 0);
     }
 
-//    private String getDateRange() {
-//        String result;
-//
-//        Date today = System.n
-//
-//        return result;
-//    }
+    private String getDateRange() {
+        String result;
+
+        Calendar cal = Calendar.getInstance();
+        Date today = cal.getTime();
+
+        cal.add(Calendar.DATE, 7);
+        Date in_week = cal.getTime();
+
+        String today_str = new SimpleDateFormat("MM/dd", Locale.US).format(today);
+        String week_str  = new SimpleDateFormat("MM/dd", Locale.US).format(in_week);
+
+        return today_str + "-" + week_str;
+    }
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
@@ -78,34 +87,69 @@ public class TasksWidget extends AppWidgetProvider {
 
         Log.v(LOG_TAG, "onReceive - intent.getAction: " + intent.getAction());
 
-
+        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.tasks_widget);
         AppWidgetManager manager = AppWidgetManager.getInstance(context);
-        int[] widgetIds = manager.getAppWidgetIds(new ComponentName(context, getClass()));
+        String action = intent.getAction();
 
-        if (PERS_CLICK_TAG.equals(intent.getAction())) {
-            RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.tasks_widget);
-
-            views.setViewVisibility(R.id.widget_swap_btn_pers, View.GONE);
-            views.setViewVisibility(R.id.widget_swap_btn_fam, View.VISIBLE);
-            views.setRemoteAdapter(R.id.widget_task_list, getRemoteAdapterIntent(context, false));
-
-            manager.notifyAppWidgetViewDataChanged(widgetIds, R.id.widget_task_list);
-            manager.updateAppWidget(widgetIds, views);
-        } else if (FAM_CLICK_TAG.equals(intent.getAction())) {
-            RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.tasks_widget);
-
-            views.setViewVisibility(R.id.widget_swap_btn_fam, View.GONE);
-            views.setViewVisibility(R.id.widget_swap_btn_pers, View.VISIBLE);
-            views.setRemoteAdapter(R.id.widget_task_list, getRemoteAdapterIntent(context, true));
-
-            manager.notifyAppWidgetViewDataChanged(widgetIds, R.id.widget_task_list);
-            manager.updateAppWidget(widgetIds, views);
-        } else if (AppWidgetManager.ACTION_APPWIDGET_UPDATE.equals(intent.getAction())) {
-            manager.notifyAppWidgetViewDataChanged(widgetIds, R.id.widget_task_list);
+        if (action != null) {
+            switch (action) {
+                case PERS_CLICK_TAG:
+                    doButtonSwap(manager, views, context, false);
+                    break;
+                case FAM_CLICK_TAG:
+                    doButtonSwap(manager, views, context, true);
+                    break;
+                case PersonalWidgetRemoteViewsService.PERS_EMPTY_LIST_TAG:
+                case FamilyWidgetRemoteViewsService.FAM_EMPTY_LIST_TAG:
+                    showEmptyList(manager, views, context);
+                    break;
+                case PersonalWidgetRemoteViewsService.PERS_WIDGET_UPDATE:
+                case FamilyWidgetRemoteViewsService.FAM_WIDGET_UPDATE:
+                    doWidgetListUpdate(manager, views, context);
+                    break;
+            }
         }
     }
 
+    private void doButtonSwap(AppWidgetManager manager, RemoteViews views, Context context, boolean personal) {
+        int[] widgetIds = manager.getAppWidgetIds(new ComponentName(context, getClass()));
+
+        if (personal) {
+            views.setViewVisibility(R.id.widget_swap_btn_fam, View.GONE);
+            views.setViewVisibility(R.id.widget_swap_btn_pers, View.VISIBLE);
+        } else {
+            views.setViewVisibility(R.id.widget_swap_btn_pers, View.GONE);
+            views.setViewVisibility(R.id.widget_swap_btn_fam, View.VISIBLE);
+        }
+
+        views.setRemoteAdapter(R.id.widget_task_list, getRemoteAdapterIntent(context, personal));
+
+        manager.notifyAppWidgetViewDataChanged(widgetIds, R.id.widget_task_list);
+        manager.updateAppWidget(widgetIds, views);
+    }
+
+    private void showEmptyList(AppWidgetManager manager, RemoteViews views, Context context) {
+        int[] widgetIds = manager.getAppWidgetIds(new ComponentName(context, getClass()));
+
+        views.setViewVisibility(R.id.widget_task_list, View.GONE);
+        views.setViewVisibility(R.id.widget_empty_tv, View.VISIBLE);
+
+        manager.updateAppWidget(widgetIds, views);
+    }
+
+    private void doWidgetListUpdate(AppWidgetManager manager, RemoteViews views, Context context) {
+        int[] widgetIds = manager.getAppWidgetIds(new ComponentName(context, getClass()));
+
+        views.setViewVisibility(R.id.widget_task_list, View.VISIBLE);
+        views.setViewVisibility(R.id.widget_empty_tv, View.GONE);
+
+        manager.notifyAppWidgetViewDataChanged(widgetIds, R.id.widget_task_list);
+        manager.updateAppWidget(widgetIds, views);
+    }
+
     private Intent getRemoteAdapterIntent(Context context, boolean personal) {
+        Log.v(LOG_TAG, "getRemoteAdapterIntent has started!!! personal: " + personal);
+
         Intent intent;
 
         // I tried this app using one RemoteViewsService, but I couldn't figure out how

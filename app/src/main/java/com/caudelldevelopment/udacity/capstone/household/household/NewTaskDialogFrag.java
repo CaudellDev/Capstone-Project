@@ -291,7 +291,7 @@ public class NewTaskDialogFrag extends DialogFragment
         if (v.getId() == R.id.dialog_date_btn) {
             Log.v(LOG_TAG, "onClick - Date button has been clicked. Setting it to today, for now...");
             Date current = Calendar.getInstance().getTime();
-            String today = new SimpleDateFormat("mm/DD/yyyy", Locale.US).format(current);
+            String today = new SimpleDateFormat("MM/dd/yyyy", Locale.US).format(current);
             mDate.setText(today);
 
             // TODO: Launch dialog with calendar picker widget....

@@ -43,5 +43,7 @@
     <string name="add_widget">Add widget</string>
 
     <string name="widget_data_updated">app_widget_data_updated_intent_tag</string>
+    <string name="widget_empty_text">No items in list.</string>
+    <string name="widget_err_user_fail">Cannot get your user info.</string>
 
 </resources>
