@@ -15,7 +15,7 @@
 
         <TextView
             android:id="@+id/widget_date_tv"
-            android:text="12/24-12/31"
+            android:text="@string/widget_date_init"
             android:textSize="18sp"
             android:textStyle="bold"
             android:textColor="@color/black"

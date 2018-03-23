@@ -71,6 +71,8 @@ public class LoginActivity extends AppCompatActivity implements OnSuccessListene
                 doLogin();
             } else {
                 Log.w(LOG_TAG, "onActivityResult - Error Logging in user. ResultCode: " + resultCode);
+
+                Snackbar.make(findViewById(R.id.login_root_layout), R.string.login_error_snackbar, Snackbar.LENGTH_INDEFINITE).show();
             }
         }
     }

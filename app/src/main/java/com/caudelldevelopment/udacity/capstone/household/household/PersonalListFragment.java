@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.DividerItemDecoration;
@@ -50,8 +51,6 @@ public class PersonalListFragment extends Fragment implements OnCompleteListener
     private List<Task> data;
     private RecyclerView mTaskList;
     private PersonalAdapter mAdapter;
-    private boolean search;
-
     private TaskListsFragment mListener;
 
     public PersonalListFragment() {
@@ -101,7 +100,6 @@ public class PersonalListFragment extends Fragment implements OnCompleteListener
         // Inflate the layout for this fragment
         View rootView = inflater.inflate(R.layout.fragment_personal_list, container, false);
 
-        search = false;
         mTaskList = rootView.findViewById(R.id.personal_list_rv);
         DividerItemDecoration itemDecoration = new DividerItemDecoration(getContext(), DividerItemDecoration.VERTICAL);
         itemDecoration.setDrawable(getContext().getDrawable(R.drawable.list_divider));
@@ -117,13 +115,50 @@ public class PersonalListFragment extends Fragment implements OnCompleteListener
     }
 
     @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+        if (savedInstanceState != null) {
+            Log.v(LOG_TAG, "onActivityCreated - restoring fragment state.");
+
+            Parcelable[] stored = savedInstanceState.getParcelableArray(PERS_TASK_LIST);
+
+            if (stored != null) {
+                Task[] temp_arr;
+                temp_arr = Arrays.copyOf(stored, stored.length, Task[].class);
+                data = Arrays.asList(temp_arr);
+
+                if (mAdapter == null) mAdapter = new PersonalAdapter();
+                mAdapter.data = data;
+                mAdapter.notifyDataSetChanged();
+            }
+
+            // Get array from bundle
+            // Create adapter and give it the data
+            // Scroll position?
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        Task[] temp_arr = new Task[0];
+        temp_arr = data.toArray(temp_arr);
+
+        Parcelable[] store;
+        store = Arrays.copyOf(temp_arr, temp_arr.length, Parcelable[].class);
+        outState.putParcelableArray(PERS_TASK_LIST, store);
+
+        // Keep scroll position?
+    }
+
+    @Override
     public void onAttach(Context context) {
         super.onAttach(context);
 
         FragmentManager fm = getFragmentManager();
         Fragment parent = fm.findFragmentById(R.id.main_task_lists);
-
-        Log.w(LOG_TAG, "onAttach - parent fragment == null: " + (parent == null));
 
         if (parent != null) {
             if (parent instanceof TaskListsFragment) {
@@ -141,14 +176,6 @@ public class PersonalListFragment extends Fragment implements OnCompleteListener
         mListener = null;
     }
 
-    public void addTask(Task task) {
-        data.add(task);
-        if (mAdapter != null) {
-            mAdapter.data = data;
-            mAdapter.notifyDataSetChanged();
-        }
-    }
-
     public void setData(List<Task> data) {
         Log.v(LOG_TAG, "setDate - mAdapter == null: " + (mAdapter == null));
 
@@ -158,60 +185,6 @@ public class PersonalListFragment extends Fragment implements OnCompleteListener
             mAdapter.notifyDataSetChanged();
         }
     }
-
-//    @Override
-//    public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException e) {
-//        Log.v(LOG_TAG, "onEvent has started!!!");
-//
-//        // Check if there was an exception first...
-//        if (e != null) {
-//            Log.w(LOG_TAG, "Firebase listener - onEvent, exception: " + e);
-//            e.printStackTrace();
-//            return;
-//        }
-//
-////        for (DocumentChange dc : documentSnapshots.getDocumentChanges()) {
-//            switch (dc.getType()) {
-//                case ADDED:
-//                    DocumentSnapshot added = dc.getDocument();
-//                    Task added_task = added.toObject(Task.class);
-//                    Log.v(LOG_TAG, "Firebase listener - onEvent, curr task added: " + added_task.getName() + ", " + added_task.getDesc());
-//                    data.add(added_task);
-//
-//                    break;
-//                case REMOVED:
-//                    DocumentSnapshot removed = dc.getDocument();
-//                    Task removed_task = removed.toObject(Task.class);
-//                    data.remove(removed_task);
-//                    break;
-//                case MODIFIED:
-//                    // TODO
-//
-//                    DocumentSnapshot modified = dc.getDocument();
-//                    Task mod_task = modified.toObject(Task.class);
-//
-//                    Task old_ind = data.get(dc.getOldIndex());
-//                    Task new_ind = data.get(dc.getNewIndex());
-//
-//                    Log.v(LOG_TAG, "Firebase listener - onEvent, task modified. " +
-//                            "Old task " + dc.getOldIndex() +
-//                            ", new task " + dc.getNewIndex() +
-//                            ", mod task: " + old_ind.getName() +
-//                            ", " + new_ind.getName() +
-//                            ", " + mod_task.getName());
-//
-//                    // Probably didn't change positions?
-//                    data.set(dc.getOldIndex(), mod_task);
-//
-//                    break;
-//                default:
-//                    Log.w(LOG_TAG, "onEvent - document change type not recognized! dc.getType: " + dc.getType());
-//            }
-//        }
-//
-//        mAdapter.data = data;
-//        mAdapter.notifyDataSetChanged();
-//    }
 
     @Override
     public void onComplete(@NonNull com.google.android.gms.tasks.Task<QuerySnapshot> task) {
@@ -289,6 +262,9 @@ public class PersonalListFragment extends Fragment implements OnCompleteListener
         @Override
         public void onBindViewHolder(PersonalTaskViewHolder holder, int position) {
             Task curr = data.get(position);
+
+            Log.v(LOG_TAG, "PersonalAdapter, onBindViewHolder - task count: " + data.size());
+            Log.v(LOG_TAG, "PersonalAdapter, onBindViewHolder - task at " + position + " is null: " + (curr == null));
 
             holder.title.setText(curr.getName());
             holder.date.setText(curr.getDate());

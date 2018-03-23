@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.DividerItemDecoration;
@@ -112,6 +113,46 @@ public class FamilyListFragment extends Fragment implements  OnCompleteListener<
         mAdapter.notifyDataSetChanged();
 
         return rootView;
+    }
+
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+        if (savedInstanceState != null) {
+            Log.v(LOG_TAG, "onActivityCreated - restoring fragment state.");
+
+            Parcelable[] stored = savedInstanceState.getParcelableArray(FAML_TASK_LIST);
+
+            if (stored != null) {
+                Task[] temp_arr;
+                temp_arr = Arrays.copyOf(stored, stored.length, Task[].class);
+                data = Arrays.asList(temp_arr);
+
+                if (mAdapter == null) mAdapter = new FamilyAdapter();
+                mAdapter.data = data;
+                mAdapter.notifyDataSetChanged();
+            }
+
+            // Get array from bundle
+            // Create adapter and give it the data
+            // Scroll position?
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        Task[] temp_arr = new Task[0];
+        temp_arr = data.toArray(temp_arr);
+
+        Parcelable[] store;
+        store = Arrays.copyOf(temp_arr, temp_arr.length, Parcelable[].class);
+        outState.putParcelableArray(FAML_TASK_LIST, store);
+
+        // Keep scroll position?
     }
 
     @Override

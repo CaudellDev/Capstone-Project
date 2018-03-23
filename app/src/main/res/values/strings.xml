@@ -45,5 +45,7 @@
     <string name="widget_data_updated">app_widget_data_updated_intent_tag</string>
     <string name="widget_empty_text">No items in list.</string>
     <string name="widget_err_user_fail">Cannot get your user info.</string>
+    <string name="widget_date_init">Loading...</string>
+    <string name="login_error_snackbar">There was an error logging you in. Please try again.</string>
 
 </resources>
