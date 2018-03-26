@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -89,6 +90,9 @@ public class SelectFamilyFrag extends Fragment implements EventListener<QuerySna
         View rootView = inflater.inflate(R.layout.fragment_select_family, container, false);
 
         mFamilyList = rootView.findViewById(R.id.family_select_list_rv);
+        DividerItemDecoration itemDecoration = new DividerItemDecoration(getContext(), DividerItemDecoration.VERTICAL);
+        itemDecoration.setDrawable(getContext().getDrawable(R.drawable.list_divider));
+        mFamilyList.addItemDecoration(itemDecoration);
         mFamilyList.setLayoutManager(new LinearLayoutManager(getContext()));
 
         mAdapter = new SelectAdapter();

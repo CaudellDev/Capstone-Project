@@ -34,6 +34,7 @@ public class TagsActivity extends AppCompatActivity implements BaseEntryDialog.E
         setContentView(R.layout.activity_tags);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(view -> {
@@ -65,7 +66,6 @@ public class TagsActivity extends AppCompatActivity implements BaseEntryDialog.E
                     mAdapter.notifyDataSetChanged();
                 });
 
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
 
     @Override

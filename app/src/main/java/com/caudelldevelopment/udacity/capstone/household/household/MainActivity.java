@@ -33,6 +33,7 @@ public class MainActivity extends AppCompatActivity
                                      BaseEntryDialog.EntryDialogListener {
 
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
+    public static final int FAMILY_REQ_CODE = 100;
 
     private TaskListsFragment mListFragment;
     private FloatingActionButton mAddTaskBtn;
@@ -76,6 +77,16 @@ public class MainActivity extends AppCompatActivity
     public boolean onOptionsItemSelected(MenuItem item) {
 
         switch(item.getItemId()) {
+            case R.id.menu_family:
+                if (mNoFamily) {
+                    Snackbar.make(findViewById(R.id.appBarLayout), R.string.no_family_snackbar, Snackbar.LENGTH_SHORT).show();
+                } else {
+                    Intent family = new Intent(this, FamilyActivity.class);
+                    family.putExtra(FamilyActivity.USER_EXTRA, mUser);
+//                    startActivity(family);
+                    startActivityForResult(family, FAMILY_REQ_CODE);
+                }
+                return true;
             case R.id.menu_tags:
                 Intent tags = new Intent(this, TagsActivity.class);
                 startActivity(tags);
@@ -90,6 +101,23 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == FAMILY_REQ_CODE) {
+            if (resultCode == RESULT_OK) {
+                if (data.hasExtra(FamilyActivity.LEFT_FAMILY)) {
+                    boolean left_fam = data.getBooleanExtra(FamilyActivity.LEFT_FAMILY, false);
+
+                    if (left_fam) {
+                        mListFragment.onFamilyLeft();
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
     public void onListsFragAttach() {
         mListFragment = (TaskListsFragment) getSupportFragmentManager().findFragmentById(R.id.main_task_lists);
         Log.v(LOG_TAG, "onListsFragAttach - lists fragment == null: " + (mListFragment == null));
@@ -98,6 +126,7 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    @Override
     public User getUser() {
         return mUser;
     }
@@ -237,6 +266,7 @@ public class MainActivity extends AppCompatActivity
         mListFragment.onFamilyEntered(name);
     }
 
+    @Override
     public void doSnackbar(int message) {
         Snackbar.make(findViewById(R.id.appBarLayout), message, Snackbar.LENGTH_LONG).show();
     }
