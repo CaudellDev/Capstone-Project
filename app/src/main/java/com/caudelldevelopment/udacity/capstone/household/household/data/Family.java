@@ -99,6 +99,10 @@ public class Family implements Parcelable {
         this.members = members;
     }
 
+    public void removeMember(String member) {
+        members.remove(member);
+    }
+
     @Override
     public int describeContents() {
         return 0;

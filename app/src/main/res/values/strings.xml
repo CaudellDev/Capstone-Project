@@ -27,7 +27,7 @@
     <string name="dialog_confirm_neu">DELETE TASK</string>
     <string name="tags_title">View All Tags</string>
     <string name="settings_title">Settings</string>
-    <string name="title_activity_tags">TagsActivity</string>
+    <string name="title_activity_tags">All Tags</string>
     <string name="new_tag_title_hint">Tag Title</string>
     <string name="logout_key">logout_preference</string>
     <string name="acc_key">account_category</string>
@@ -47,5 +47,7 @@
     <string name="widget_err_user_fail">Cannot get your user info.</string>
     <string name="widget_date_init">Loading...</string>
     <string name="login_error_snackbar">There was an error logging you in. Please try again.</string>
+    <string name="no_family_snackbar">Please select a family in the family tab.</string>
+    <string name="leave_family_btn">Leave Family</string>
 
 </resources>
