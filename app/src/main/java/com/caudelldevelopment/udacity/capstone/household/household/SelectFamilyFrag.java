@@ -36,16 +36,15 @@ import java.util.zip.Inflater;
  * Use the {@link SelectFamilyFrag#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class SelectFamilyFrag extends Fragment implements EventListener<QuerySnapshot> {
+public class SelectFamilyFrag extends Fragment {
 
     private static final String LOG_TAG = SelectFamilyFrag.class.getSimpleName();
     private static final String SEL_FAM_LIST = "select_family_list";
 
     private User mUser;
 
-    private RecyclerView mFamilyList;
     private SelectAdapter mAdapter;
-    private TaskListsFragment mListener;
+    private OnSelectFamilyListener mListener;
 
     public SelectFamilyFrag() {
         // Required empty public constructor
@@ -79,17 +78,16 @@ public class SelectFamilyFrag extends Fragment implements EventListener<QuerySna
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection(Family.COL_TAG)
-            .addSnapshotListener(this);
+//        FirebaseFirestore db = FirebaseFirestore.getInstance();
+//        db.collection(Family.COL_TAG)
+//            .addSnapshotListener(this);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_select_family, container, false);
 
-        mFamilyList = rootView.findViewById(R.id.family_select_list_rv);
+        RecyclerView mFamilyList = rootView.findViewById(R.id.family_select_list_rv);
         DividerItemDecoration itemDecoration = new DividerItemDecoration(getContext(), DividerItemDecoration.VERTICAL);
         itemDecoration.setDrawable(getContext().getDrawable(R.drawable.list_divider));
         mFamilyList.addItemDecoration(itemDecoration);
@@ -146,38 +144,38 @@ public class SelectFamilyFrag extends Fragment implements EventListener<QuerySna
         }
     }
 
-    @Override
-    public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException e) {
-        List<Family> familyList = new LinkedList<>();
-
-        for (DocumentChange dc : documentSnapshots.getDocumentChanges()) {
-            switch (dc.getType()) {
-                case ADDED:
-                    DocumentSnapshot added = dc.getDocument();
-                    Family added_family = Family.fromDoc(added);
-                    familyList.add(added_family);
-                    break;
-                case MODIFIED:
-                    // This could be more efficient, but this will do for now.
-                    DocumentSnapshot mod = dc.getDocument();
-                    Family mod_family = Family.fromDoc(mod);
-                    familyList.add(mod_family);
-                    break;
-                case REMOVED:
-                    // Family members won't be removable for now.
-                    break;
-                default:
-                    Log.w(LOG_TAG, "onEvent - document change not recognized!!! Type: " + dc.getType());
-            }
-        }
-
-        for (Family curr : familyList) {
-            Log.v(LOG_TAG, "onEvent - family: " + curr.getName());
-        }
-
-        mAdapter.data = familyList;
-        mAdapter.notifyDataSetChanged();
-    }
+//    @Override
+//    public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException e) {
+//        List<Family> familyList = new LinkedList<>();
+//
+//        for (DocumentChange dc : documentSnapshots.getDocumentChanges()) {
+//            switch (dc.getType()) {
+//                case ADDED:
+//                    DocumentSnapshot added = dc.getDocument();
+//                    Family added_family = Family.fromDoc(added);
+//                    familyList.add(added_family);
+//                    break;
+//                case MODIFIED:
+//                    // This could be more efficient, but this will do for now.
+//                    DocumentSnapshot mod = dc.getDocument();
+//                    Family mod_family = Family.fromDoc(mod);
+//                    familyList.add(mod_family);
+//                    break;
+//                case REMOVED:
+//                    // Family members won't be removable for now.
+//                    break;
+//                default:
+//                    Log.w(LOG_TAG, "onEvent - document change not recognized!!! Type: " + dc.getType());
+//            }
+//        }
+//
+//        for (Family curr : familyList) {
+//            Log.v(LOG_TAG, "onEvent - family: " + curr.getName());
+//        }
+//
+//        mAdapter.data = familyList;
+//        mAdapter.notifyDataSetChanged();
+//    }
 
     /**
      * This interface must be implemented by activities that contain this
@@ -207,6 +205,7 @@ public class SelectFamilyFrag extends Fragment implements EventListener<QuerySna
             View root = itemView.findViewById(R.id.family_item_layout);
             root.setOnClickListener(v -> {
                 Family family = mAdapter.data.get(getAdapterPosition());
+                Log.v(LOG_TAG, "SelectHolder constructor, item onClick - family: " + family.getName() + ", member 0: " + family.getMembers().get(0));
                 mListener.onFamilyItemClick(family);
             });
         }

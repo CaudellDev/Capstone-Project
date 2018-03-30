@@ -1,6 +1,7 @@
 package com.caudelldevelopment.udacity.capstone.household.household;
 
 import android.content.Intent;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -8,6 +9,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 
+import com.caudelldevelopment.udacity.capstone.household.household.data.Family;
 import com.caudelldevelopment.udacity.capstone.household.household.data.User;
 import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -34,6 +36,9 @@ public class LoginActivity extends AppCompatActivity implements OnSuccessListene
             new AuthUI.IdpConfig.Builder(AuthUI.GOOGLE_PROVIDER).build(),
             new AuthUI.IdpConfig.Builder(AuthUI.EMAIL_PROVIDER).build()
     );
+
+    private User mUser;
+    private Family mFamily;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,9 +85,9 @@ public class LoginActivity extends AppCompatActivity implements OnSuccessListene
     private void doLogin() {
         // Get the user object. If it doesn't exist, create one.
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
 
         if (firebaseUser != null) {
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
             db.collection(User.COL_TAG)
                     .document(firebaseUser.getUid())
                     .get()
@@ -92,10 +97,15 @@ public class LoginActivity extends AppCompatActivity implements OnSuccessListene
         }
     }
 
-    private void startMainActivity(User user) {
+    private void startMainActivity() {
         Log.v(LOG_TAG, "startMainActivity has started!!!");
+
         Intent intent = new Intent(this, MainActivity.class);
-        intent.putExtra(User.DOC_TAG, user);
+
+        // For some reason, if I passed these as Parcelable Extras,
+        // the mUser (or one of any two Parcelable objects) would be null.
+        // Putting them into a bundle didn't work either.
+        intent.putExtra("user_data", new Parcelable[] {mUser, mFamily});
 
         startActivity(intent);
     }
@@ -104,22 +114,32 @@ public class LoginActivity extends AppCompatActivity implements OnSuccessListene
     public void onSuccess(DocumentSnapshot documentSnapshot) {
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-        User user;
 
         if (documentSnapshot.exists()) {
             // Launch activity with user object
-            user = User.fromDoc(documentSnapshot);
-            startMainActivity(user);
+            mUser = User.fromDoc(documentSnapshot);
+            Log.v(LOG_TAG, "onSuccess, doc exists - mUser == null: " + (mUser == null));
+
+            if (mUser.getFamily() != null && !mUser.getFamily().isEmpty()) {
+                db.collection(Family.COL_TAG)
+                        .document(mUser.getFamily())
+                        .get()
+                        .addOnSuccessListener(famSnapshot -> {
+                            mFamily = Family.fromDoc(famSnapshot);
+                            startMainActivity();
+                        });
+            } else {
+                startMainActivity();
+            }
         } else {
             // User must not exist yet. Create it, then...
-            user = new User(firebaseUser);
-             // Dialog to ask about the family at login?
+            mUser = new User(firebaseUser);
 
             // ... submit it to Firestore. Once complete, launch MainActivity.
             db.collection(User.COL_TAG)
-                    .document(user.getId())
-                    .set(user)
-                    .addOnCompleteListener(task -> startMainActivity(user))
+                    .document(mUser.getId())
+                    .set(mUser)
+                    .addOnSuccessListener(task -> startMainActivity())
                     .addOnFailureListener(Throwable::printStackTrace);
         }
     }

@@ -23,7 +23,7 @@ public class User implements Parcelable {
     private String name;
     private String id;
     private String family;
-    private List<String> task_ids;
+//    private List<String> task_ids;
 
     public static User fromDoc(DocumentSnapshot doc) {
         User user = doc.toObject(User.class);
@@ -32,7 +32,6 @@ public class User implements Parcelable {
     }
 
     public User() {
-        task_ids = new LinkedList<>();
         family = "";
     }
 
@@ -50,7 +49,7 @@ public class User implements Parcelable {
         name = in.readString();
         id = in.readString();
         family = in.readString();
-        task_ids = in.createStringArrayList();
+//        task_ids = in.createStringArrayList();
     }
 
     public Map<String, Object> toMap() {
@@ -58,7 +57,7 @@ public class User implements Parcelable {
 
         result.put(NAME_ID, name);
         result.put(FAMILY_ID, family);
-        result.put(TASKS_ID, task_ids);
+//        result.put(TASKS_ID, task_ids);
 
         return result;
     }
@@ -87,22 +86,6 @@ public class User implements Parcelable {
         this.family = family;
     }
 
-    public List<String> getTask_ids() {
-        return task_ids;
-    }
-
-    public String getTask(int i) {
-        return task_ids.get(i);
-    }
-
-    public void setTask_ids(List<String> task_ids) {
-        this.task_ids = task_ids;
-    }
-
-    public void setTask(int pos, String id) {
-        task_ids.set(pos, id);
-    }
-
     @Override
     public int describeContents() {
         return 0;
@@ -113,7 +96,6 @@ public class User implements Parcelable {
         out.writeString(name);
         out.writeString(id);
         out.writeString(family);
-        out.writeStringList(task_ids);
     }
 
     public static final Parcelable.Creator<User> CREATOR = new Parcelable.Creator<User>() {

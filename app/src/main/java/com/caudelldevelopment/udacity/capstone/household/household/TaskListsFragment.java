@@ -10,6 +10,7 @@ import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -67,10 +68,7 @@ public class TaskListsFragment extends Fragment
     private List<Family> mFamiliesList;
 
     private OnListsFragmentListener mListener;
-
-    private ViewPager mListsPager;
     private TaskListsPagerAdapter mTaskAdapter;
-
     private TabLayout mTabLayout;
 
     private PersonalListFragment mPersonalFrag;
@@ -93,23 +91,14 @@ public class TaskListsFragment extends Fragment
         mDatabase = FirebaseFirestore.getInstance();
 
         // Listener for the personal tasks
-        mDatabase.collection(Task.COL_TAG)
-                .whereEqualTo(Task.FAM_ID, false)
-                .whereEqualTo(Task.ACCESS_ID, mUser.getId())
-                .orderBy(Task.DATE_ID)
-                .addSnapshotListener(this::doPersonalTasks);
+        startPersonalQuery();
+        startFamiliesQuery();
 
         if (mNoFamily) {
-            mDatabase.collection(Family.COL_TAG)
-                    .orderBy(Family.NAME_ID)
-                    .addSnapshotListener(this::doFamilies);
+//            startFamiliesQuery();
         } else {
             // Listener for the family tasks
-            mDatabase.collection(Task.COL_TAG)
-                    .whereEqualTo(Task.FAM_ID, true)
-                    .whereEqualTo(Task.ACCESS_ID, mUser.getFamily())
-                    .orderBy(Task.DATE_ID)
-                    .addSnapshotListener(this::doFamilyTasks);
+            startFamilyQuery();
         }
     }
 
@@ -121,7 +110,7 @@ public class TaskListsFragment extends Fragment
         FragmentManager fragmentManager = getFragmentManager();
         mTaskAdapter = new TaskListsPagerAdapter(fragmentManager);
 
-        mListsPager = rootView.findViewById(R.id.main_view_pager);
+        ViewPager mListsPager = rootView.findViewById(R.id.main_view_pager);
         mTabLayout  = rootView.findViewById(R.id.main_tab_layout);
 
         mListsPager.setAdapter(mTaskAdapter);
@@ -151,13 +140,16 @@ public class TaskListsFragment extends Fragment
 
     @Override
     public void onAttach(Context context) {
+        Log.v(LOG_TAG, "onAttach has started!!!");
         super.onAttach(context);
 
         if (context instanceof OnListsFragmentListener) {
             mListener = (OnListsFragmentListener) context;
             mUser = mListener.getUser();
-            mNoFamily = (mUser.getFamily() == null) || (mUser.getFamily().isEmpty());
+            mFamily = mListener.getFamily();
+            mNoFamily = (mFamily == null);
             mListener.onListsFragAttach();
+            Log.v(LOG_TAG, "onAttach - global variables have been set. User == null: " + (mUser == null) + ", Family == null: " + (mFamily == null));
         } else {
             throw new RuntimeException(context.toString()
                     + " must implement OnListsFragmentListener");
@@ -170,10 +162,10 @@ public class TaskListsFragment extends Fragment
         mListener = null;
     }
 
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-    }
+//    @Override
+//    public void onSaveInstanceState(Bundle outState) {
+//        super.onSaveInstanceState(outState);
+//    }
 
 
     // Would this be better in a WorkerThread or AsyncTask? Is this thread safe?
@@ -204,24 +196,24 @@ public class TaskListsFragment extends Fragment
         }
 
         // Add the task id to the list of tasks in the family or user
-        if (task.isFamily()) {
-            DocumentReference famRef = mDatabase.collection(Family.COL_TAG).document(task.getAccess_id());
-            List<String> task_ids = mFamily.getTask_ids();
-
-            // Check if the new task already exists to avoid duplicates.
-            if (!task_ids.contains(taskRef.getId())) {
-                task_ids.add(taskRef.getId());
-                batch.update(famRef, Family.TASKS_ID, task_ids);
-            }
-        } else {
-            DocumentReference persRef = mDatabase.collection(User.COL_TAG).document(task.getAccess_id());
-            List<String> task_ids = mUser.getTask_ids();
-
-            if (!task_ids.contains(taskRef.getId())) {
-                task_ids.add(taskRef.getId());
-                batch.update(persRef, User.TASKS_ID, task_ids);
-            }
-        }
+//        if (task.isFamily()) {
+//            DocumentReference famRef = mDatabase.collection(Family.COL_TAG).document(task.getAccess_id());
+//            List<String> task_ids = mFamily.getTask_ids();
+//
+//            // Check if the new task already exists to avoid duplicates.
+//            if (!task_ids.contains(taskRef.getId())) {
+//                task_ids.add(taskRef.getId());
+//                batch.update(famRef, Family.TASKS_ID, task_ids);
+//            }
+//        } else {
+//            DocumentReference persRef = mDatabase.collection(User.COL_TAG).document(task.getAccess_id());
+//            List<String> task_ids = mUser.getTask_ids();
+//
+//            if (!task_ids.contains(taskRef.getId())) {
+//                task_ids.add(taskRef.getId());
+//                batch.update(persRef, User.TASKS_ID, task_ids);
+//            }
+//        }
 
         batch.commit()
                 .addOnSuccessListener(Void -> mListener.onAddTaskComplete())
@@ -242,6 +234,28 @@ public class TaskListsFragment extends Fragment
         }
 
         addNewTask(task);
+    }
+
+    private void startPersonalQuery() {
+        mDatabase.collection(Task.COL_TAG)
+                .whereEqualTo(Task.FAM_ID, false)
+                .whereEqualTo(Task.ACCESS_ID, mUser.getId())
+                .orderBy(Task.DATE_ID)
+                .addSnapshotListener(this::doPersonalTasks);
+    }
+
+    private void startFamilyQuery() {
+        mDatabase.collection(Task.COL_TAG)
+                .whereEqualTo(Task.FAM_ID, true)
+                .whereEqualTo(Task.ACCESS_ID, mUser.getFamily())
+                .orderBy(Task.DATE_ID)
+                .addSnapshotListener(this::doFamilyTasks);
+    }
+
+    private void startFamiliesQuery() {
+        mDatabase.collection(Family.COL_TAG)
+                .orderBy(Family.NAME_ID)
+                .addSnapshotListener(this::doFamilies);
     }
 
     private void doPersonalTasks(QuerySnapshot query, FirebaseFirestoreException e) {
@@ -296,13 +310,21 @@ public class TaskListsFragment extends Fragment
                     DocumentSnapshot added = dc.getDocument();
                     Task added_task = Task.fromDoc(added, mUser);
 
-                    mFamilyTasks.add(added_task);
+                    if (!mFamilyTasks.contains(added_task)) {
+                        mFamilyTasks.add(added_task);
+                    }
                     break;
                 case MODIFIED:
                     DocumentSnapshot mod = dc.getDocument();
                     Task mod_task = Task.fromDoc(mod, mUser);
 
-                    mFamilyTasks.add(mod_task);
+                    for (int i = 0; i < mFamilyTasks.size(); i++) {
+                        Task curr = mFamilyTasks.get(i);
+                        if (curr.equals(mod_task)) {
+                            mFamilyTasks.set(i, mod_task);
+                            break;
+                        }
+                    }
                     break;
                 case REMOVED:
                     DocumentSnapshot removed = dc.getDocument();
@@ -334,6 +356,9 @@ public class TaskListsFragment extends Fragment
                 case ADDED:
                     DocumentSnapshot added = dc.getDocument();
                     Family added_fam = Family.fromDoc(added);
+
+                    Log.v(LOG_TAG, "doFamilies, ADDED change - family list contains added: " + mFamiliesList.contains(added_fam));
+
                     mFamiliesList.add(added_fam);
                     break;
                 case MODIFIED:
@@ -352,128 +377,6 @@ public class TaskListsFragment extends Fragment
             mSelectFrag.setData(mFamiliesList);
         }
     }
-
-//    @Override
-//    public void onEvent(QuerySnapshot result, FirebaseFirestoreException e) {
-//        if (e != null) {
-//            Log.w(LOG_TAG, "onEvent - Firebase Exception: " + e.getMessage());
-//            e.printStackTrace();
-//            return;
-//        }
-//
-//        if (result instanceof QuerySnapshot) { // Event from Tasks and Family collection
-//            QuerySnapshot documentSnapshots = (QuerySnapshot) result;
-//
-//            boolean pers = false;
-//            boolean fam = false;
-//            boolean sel_fam = false;
-//            for (DocumentChange dc : documentSnapshots.getDocumentChanges()) {
-//
-//                Log.v(LOG_TAG, "onEvent, Tasks/Family collections - change type: " + dc.getType() + ", document path: " + dc.getDocument().getReference().getPath());
-//
-//                switch (dc.getType()) {
-//
-//                    case ADDED:
-//                        DocumentSnapshot added = dc.getDocument();
-//
-//                        if (isDocFamily(added)) {
-//                            Family added_fam = Family.fromDoc(added);
-//                            mFamiliesList.add(added_fam);
-//                            sel_fam = true;
-//                        } else {
-//                            Task added_task = Task.fromDoc(added, mUser);
-//                            if (added_task.isFamily()) {
-//                                mFamilyTasks.add(added_task);
-//                                fam = true;
-//                            } else {
-//                                mPersonalTasks.add(added_task);
-//                                pers = true;
-//                            }
-//                        }
-//                        break;
-//                    case MODIFIED:
-//                        DocumentSnapshot mod = dc.getDocument();
-//
-//                        if (isDocFamily(mod)) {
-//                            Family mod_fam = Family.fromDoc(mod);
-//                            mFamiliesList.add(mod_fam);
-//                            sel_fam = true;
-//                        } else {
-//                            Task mod_task = Task.fromDoc(mod, mUser);
-//                            if (mod_task.isFamily()) { // Change in access id is already handled.
-//                                mFamilyTasks.add(mod_task);
-//                                fam = true;
-//                            } else {
-//                                mPersonalTasks.add(mod_task);
-//                                pers = true;
-//                            }
-//                        }
-//                        break;
-//                    case REMOVED:
-//                        // Families won't be removed, so we can ignore them here.
-//                        DocumentSnapshot removed = dc.getDocument();
-//
-//                        Task removed_task = Task.fromDoc(removed, mUser);
-//                        if (removed_task.isFamily()) {
-//                            mFamilyTasks.remove(removed_task);
-//                            fam = true;
-//                        } else {
-//                            mPersonalTasks.remove(removed_task);
-//                            pers = true;
-//                        }
-//                        break;
-//                    default:
-//                        Log.w(LOG_TAG, "onEvent - document change not recognized!!! Type: " + dc.getType());
-//                }
-//            }
-//
-//            if (fam && mFamilyFrag != null) {
-//                mFamilyFrag.setData(mFamilyTasks);
-//                updateWidget(false);
-//            }
-//
-//            if (pers && mPersonalFrag != null) {
-//                mPersonalFrag.setData(mPersonalTasks);
-//                updateWidget(true);
-//            }
-//
-//            if (sel_fam && mSelectFrag != null) mSelectFrag.setData(mFamiliesList);
-//
-//        } else if (result instanceof DocumentSnapshot) { // Event from Families and Users collection
-//            DocumentSnapshot documentSnapshot = (DocumentSnapshot) result;
-//
-//            Log.v(LOG_TAG, "onEvent, DocumentSnapshot contains family: " + documentSnapshot.contains(User.FAMILY_ID));
-//
-//            if (documentSnapshot.contains(User.FAMILY_ID)) { // Users
-//
-//
-//                mUser = User.fromDoc(documentSnapshot);
-//
-//                Log.v(LOG_TAG, "onEvent, DocumentSnapshot - user id: " + mUser.getName() + ", " + mUser.getId() + ", " + mUser.getFamily());
-//
-//                // Now that I know the family id, I can query for that family object.
-//                if (mUser.getFamily() != null && !mUser.getFamily().isEmpty()) {
-//                    mDatabase.collection(Family.COL_TAG)
-//                            .document(mUser.getFamily())
-//                            .addSnapshotListener(this);
-//                } else {
-//                    // User hasn't chosen a family yet...
-//                }
-//
-//            } else if (documentSnapshot.contains(Family.MEMBERS_ID)) { // Families
-//                mFamily = Family.fromDoc(documentSnapshot);
-//            }
-//        } else {
-//            Log.w(LOG_TAG, "onEvent - result type not recognized! result.class.name: " + result.getClass().getName());
-//        }
-//    }
-//    private boolean isDocFamily(DocumentSnapshot doc) {
-//        CollectionReference famRef = mDatabase.collection(Family.COL_TAG);
-//        CollectionReference testRef = doc.getReference().getParent();
-//
-//        Log.v(LOG_TAG, "isDocFamily - result: " + (famRef == testRef) + ", path: " + doc.getReference().getPath());
-//        return famRef == testRef;
-//    }
 
     private void updateWidget(boolean personal) {
         Intent intent = new Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
@@ -495,56 +398,62 @@ public class TaskListsFragment extends Fragment
 
     @Override
     public void onPersonalTaskCheckClick(Task task, int pos) {
-        Map<String, Object> map = new HashMap<>();
-        map.put(Task.COMP_ID, task.isComplete());
-
         mDatabase.collection(Task.COL_TAG)
                 .document(task.getId())
-                .update(map);
+                .update(Task.COMP_ID, task.isComplete());
     }
 
     @Override
     public void onFamilyTaskCheckClick(Task task, int pos) {
-        Map<String, Object> map = new HashMap<>();
-        map.put(Task.COMP_ID, task.isComplete());
-
         mDatabase.collection(Task.COL_TAG)
                 .document(task.getId())
-                .update(map);
+                .update(Task.COMP_ID, task.isComplete());
     }
 
     public void onFamilyLeft() {
-        mNoFamily = true;
         mUser.setFamily("");
-        mFamily.removeMember(mUser.getId());
+        Family temp_family = mFamily;
+        temp_family.removeMember(mUser.getId());
+
+        for (String member : temp_family.getMembers()) Log.v(LOG_TAG, "onFamilyLeft - member: " + member);
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection(Family.COL_TAG)
-                .document(mFamily.getId())
-                .update(mFamily.toMap());
+        WriteBatch batch = db.batch();
 
-        db.collection(User.COL_TAG)
-                .document(mUser.getId())
-                .update(User.FAMILY_ID, mUser.getFamily());
+        DocumentReference famRef = db.collection(Family.COL_TAG).document(temp_family.getId());
+        batch.set(famRef, temp_family.toMap());
 
+        DocumentReference userRef = db.collection(User.COL_TAG).document(mUser.getId());
+        batch.set(userRef, mUser.toMap());
 
+        batch.commit()
+                .addOnSuccessListener(v -> notifyFamiliesUpdate());
+
+        startFamiliesQuery();
     }
 
     public void onFamilyEntered(String name) {
         Family family = new Family(name, mUser);
-        saveSelectedFamily(family);
+        saveSelectedFamily(family, true);
     }
 
     @Override
     public void onFamilyItemClick(Family family) {
-        saveSelectedFamily(family);
+        saveSelectedFamily(family, false);
     }
 
-    private void saveSelectedFamily(Family family) {
+    private void saveSelectedFamily(Family family, boolean isNewFamily) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         WriteBatch batch = db.batch();
 
-        DocumentReference famRef = db.collection(Family.COL_TAG).document();
+        DocumentReference famRef;
+        if (isNewFamily) {
+            famRef = db.collection(Family.COL_TAG).document();
+        } else {
+            famRef = db.collection(Family.COL_TAG).document(family.getId());
+            family.addMember(mUser.getId());
+        }
+
         mFamily = family;
         batch.set(famRef, mFamily.toMap());
 
@@ -553,8 +462,28 @@ public class TaskListsFragment extends Fragment
         batch.set(userRef, mUser.toMap());
 
         batch.commit()
-                .addOnCompleteListener(this)
+                .addOnCompleteListener(task -> notifyFamilyUpdate())
                 .addOnFailureListener(this);
+    }
+
+    // Erase the unused fragment and data at some point?
+
+    private void notifyFamilyUpdate() {
+        mNoFamily = false;
+        mFamiliesList.clear();
+        mSelectFrag = null;
+        mListener.onFamilyChange(mFamily);
+        mTaskAdapter.notifyDataSetChanged();
+        startFamilyQuery();
+    }
+
+    private void notifyFamiliesUpdate() {
+        mFamily = null;
+        mNoFamily = true;
+        mFamilyFrag = null;
+        mListener.onFamilyChange(mFamily);
+        mTaskAdapter.notifyDataSetChanged();
+//        startFamiliesQuery();
     }
 
     @Override
@@ -587,13 +516,15 @@ public class TaskListsFragment extends Fragment
         void onAddTaskComplete();
         void onTaskClick(Task task, String tab);
         User getUser();
+        Family getFamily();
+        void onFamilyChange(Family family);
         void doSnackbar(int str_res);
     }
 
 
     // ####---- View Pager ----####
 
-    private class TaskListsPagerAdapter extends FragmentPagerAdapter {
+    private class TaskListsPagerAdapter extends FragmentStatePagerAdapter {
 
         public TaskListsPagerAdapter(FragmentManager fm) {
             super(fm);
@@ -647,6 +578,10 @@ public class TaskListsFragment extends Fragment
             // If the object is still of SelectFamilyFrag and user now has a family, then we need to change the fragment.
             // POSITION_NONE should call getItem again and will return a FamilyListFragment
             if (object instanceof SelectFamilyFrag && !mNoFamily) {
+                return POSITION_NONE;
+            }
+
+            if (object instanceof FamilyListFragment && mNoFamily) {
                 return POSITION_NONE;
             }
 

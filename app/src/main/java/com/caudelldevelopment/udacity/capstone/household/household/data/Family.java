@@ -2,6 +2,7 @@ package com.caudelldevelopment.udacity.capstone.household.household.data;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.Log;
 
 import com.google.firebase.firestore.DocumentSnapshot;
 
@@ -16,6 +17,8 @@ import java.util.Map;
 
 public class Family implements Parcelable {
 
+    private static final String LOG_TAG = Family.class.getSimpleName();
+
     public static final String COL_TAG = "families";
     public static final String DOC_TAG = "family";
 
@@ -25,7 +28,7 @@ public class Family implements Parcelable {
 
     private String name;
     private String id;
-    private List<String> task_ids;
+//    private List<String> task_ids;
     private List<String> members;
 
     public static Family fromDoc(DocumentSnapshot doc) {
@@ -35,13 +38,11 @@ public class Family implements Parcelable {
     }
 
     public Family() {
-        task_ids = new LinkedList<>();
         members = new LinkedList<>();
     }
 
     public Family(String name, User user) {
         this.name = name;
-        task_ids = new LinkedList<>();
         members = new LinkedList<>();
         members.add(user.getId());
     }
@@ -52,9 +53,6 @@ public class Family implements Parcelable {
 
         members = new LinkedList<>();
         in.readStringList(members);
-
-        task_ids = new LinkedList<>();
-        in.readStringList(task_ids);
     }
 
     public Map<String, Object> toMap() {
@@ -62,7 +60,7 @@ public class Family implements Parcelable {
 
         result.put(NAME_ID, name);
         result.put(MEMBERS_ID, members);
-        result.put(TASKS_ID, task_ids);
+//        result.put(TASKS_ID, task_ids);
 
         return result;
     }
@@ -83,14 +81,6 @@ public class Family implements Parcelable {
         this.id = id;
     }
 
-    public List<String> getTask_ids() {
-        return task_ids;
-    }
-
-    public void setTask_ids(List<String> task_ids) {
-        this.task_ids = task_ids;
-    }
-
     public List<String> getMembers() {
         return members;
     }
@@ -100,7 +90,24 @@ public class Family implements Parcelable {
     }
 
     public void removeMember(String member) {
+        Log.v(LOG_TAG, "removeMember - removing: " + member);
+        for (String curr : members) Log.v(LOG_TAG, "removeMember - before remove: " + curr);
         members.remove(member);
+        for (String curr : members) Log.v(LOG_TAG, "removeMember - after remove: " + curr);
+    }
+
+    public void addMember(String member) {
+        members.add(member);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof Family) {
+            Family temp = (Family) o;
+            return id.equals(temp.getId());
+        } else {
+            return false;
+        }
     }
 
     @Override
@@ -115,9 +122,6 @@ public class Family implements Parcelable {
 
         String[] mem_arr = new String[members.size()];
         dest.writeArray(members.toArray(mem_arr));
-
-        String[] task_arr = new String[task_ids.size()];
-        dest.writeArray(task_ids.toArray(task_arr));
     }
 
     public static final Parcelable.Creator<Family> CREATOR = new Parcelable.Creator<Family>() {

@@ -178,6 +178,16 @@ public class Task implements Parcelable {
         tag_ids.remove(tag);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof Task) {
+            Task temp = (Task) o;
+            return id.equals(temp.getId());
+        } else {
+            return false;
+        }
+    }
+
     // ###----- Parcelable ----###
 
     @Override

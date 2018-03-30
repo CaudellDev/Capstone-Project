@@ -1,7 +1,9 @@
 package com.caudelldevelopment.udacity.capstone.household.household;
 
 import android.content.Intent;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.FragmentManager;
@@ -33,10 +35,12 @@ public class MainActivity extends AppCompatActivity
                                      BaseEntryDialog.EntryDialogListener {
 
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
+    private static final String USER_SAVE_STATE = "user_save_state_key";
+    private static final String FAMILY_SAVE_STATE = "family_save_state_key";
+
     public static final int FAMILY_REQ_CODE = 100;
 
     private TaskListsFragment mListFragment;
-    private FloatingActionButton mAddTaskBtn;
     private boolean wide_layout;
 
     private User mUser;
@@ -47,23 +51,41 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Intent intent = getIntent();
-        mUser = intent.getParcelableExtra(User.DOC_TAG);
-        Log.v(LOG_TAG, "onCreate - mUser == null: " + (mUser == null));
-        if (mUser != null) Log.v(LOG_TAG, "onCreate - mUser.name: " + mUser.getName() + ", id: " + mUser.getId());
-        mNoFamily = (mUser.getFamily() == null) || (mUser.getFamily().isEmpty());
+        if (savedInstanceState != null) {
+            mUser = savedInstanceState.getParcelable(USER_SAVE_STATE);
+            mFamily = savedInstanceState.getParcelable(FAMILY_SAVE_STATE);
+            mNoFamily = (mFamily == null);
+        } else {
+            Parcelable[] user_data = getIntent().getParcelableArrayExtra("user_data");
+            mUser = (User) user_data[0];
+            mFamily = (Family) user_data[1];
+            mNoFamily = (mFamily == null);
+
+            if (!mNoFamily) {
+                for (String member : mFamily.getMembers()) Log.v(LOG_TAG, "onCreate - family member: " + member);
+            }
+        }
 
         setContentView(R.layout.activity_main);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        mAddTaskBtn = findViewById(R.id.main_add_task);
+        FloatingActionButton mAddTaskBtn = findViewById(R.id.main_add_task);
         mAddTaskBtn.setOnClickListener(this);
 
         View view_holder = findViewById(R.id.main_view_holder);
         wide_layout = (view_holder != null);
-        Log.v(LOG_TAG, "onCreate - Is the sw600dp layout being used: " + wide_layout);
+    }
+
+
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putParcelable(USER_SAVE_STATE, mUser);
+        outState.putParcelable(FAMILY_SAVE_STATE, mFamily);
+
+        super.onSaveInstanceState(outState);
     }
 
     @Override
@@ -120,15 +142,23 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onListsFragAttach() {
         mListFragment = (TaskListsFragment) getSupportFragmentManager().findFragmentById(R.id.main_task_lists);
-        Log.v(LOG_TAG, "onListsFragAttach - lists fragment == null: " + (mListFragment == null));
-        if (mListFragment != null) {
-//            mListFragment.setUser(mUser);
-        }
     }
 
     @Override
     public User getUser() {
         return mUser;
+    }
+
+    @Override
+    @Nullable
+    public Family getFamily() {
+        return mFamily;
+    }
+
+    @Override
+    public void onFamilyChange(Family family) {
+        mFamily = family;
+        mNoFamily = (mFamily == null);
     }
 
     @Override
