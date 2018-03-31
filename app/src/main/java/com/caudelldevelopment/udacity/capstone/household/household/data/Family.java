@@ -28,7 +28,6 @@ public class Family implements Parcelable {
 
     private String name;
     private String id;
-//    private List<String> task_ids;
     private List<String> members;
 
     public static Family fromDoc(DocumentSnapshot doc) {
@@ -90,10 +89,7 @@ public class Family implements Parcelable {
     }
 
     public void removeMember(String member) {
-        Log.v(LOG_TAG, "removeMember - removing: " + member);
-        for (String curr : members) Log.v(LOG_TAG, "removeMember - before remove: " + curr);
         members.remove(member);
-        for (String curr : members) Log.v(LOG_TAG, "removeMember - after remove: " + curr);
     }
 
     public void addMember(String member) {
@@ -119,9 +115,7 @@ public class Family implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(id);
         dest.writeString(name);
-
-        String[] mem_arr = new String[members.size()];
-        dest.writeArray(members.toArray(mem_arr));
+        dest.writeStringList(members);
     }
 
     public static final Parcelable.Creator<Family> CREATOR = new Parcelable.Creator<Family>() {

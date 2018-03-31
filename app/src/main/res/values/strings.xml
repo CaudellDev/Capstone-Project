@@ -49,5 +49,8 @@
     <string name="login_error_snackbar">There was an error logging you in. Please try again.</string>
     <string name="no_family_snackbar">Please select a family in the family tab.</string>
     <string name="leave_family_btn">Leave Family</string>
+    <string name="pers_fab_desc">Add Personal Task</string>
+    <string name="fam_fab_desc">Add Family</string>
+    <string name="new_fam_fab_desc">Add Family Task</string>
 
 </resources>

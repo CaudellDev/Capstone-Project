@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
@@ -115,6 +116,20 @@ public class TaskListsFragment extends Fragment
 
         mListsPager.setAdapter(mTaskAdapter);
         mTabLayout.setupWithViewPager(mListsPager);
+
+        mTabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                mListener.updateFabDesc();
+            }
+
+            @Override public void onTabUnselected(TabLayout.Tab tab) {
+
+            }
+            @Override public void onTabReselected(TabLayout.Tab tab) {
+
+            }
+        });
 
         return rootView;
     }
@@ -277,7 +292,13 @@ public class TaskListsFragment extends Fragment
                     DocumentSnapshot mod = dc.getDocument();
                     Task mod_task = Task.fromDoc(mod, mUser);
 
-                    mPersonalTasks.add(mod_task);
+                    for (int i = 0; i < mPersonalTasks.size(); i++) {
+                        Task curr = mPersonalTasks.get(i);
+                        if (curr.equals(mod_task)) {
+                            mPersonalTasks.set(i, mod_task);
+                            break;
+                        }
+                    }
                     break;
                 case REMOVED:
                     DocumentSnapshot removed = dc.getDocument();
@@ -363,6 +384,18 @@ public class TaskListsFragment extends Fragment
                     break;
                 case MODIFIED:
                     Log.v(LOG_TAG, "doFamilies - families modified.");
+
+                    DocumentSnapshot mod = dc.getDocument();
+                    Family mod_fam = Family.fromDoc(mod);
+
+
+                    for (int i = 0; i < mFamiliesList.size(); i++) {
+                        Family curr = mFamiliesList.get(i);
+                        if (curr.equals(mod_fam)) {
+                            mFamiliesList.set(i, mod_fam);
+                            break;
+                        }
+                    }
                     break;
                 case REMOVED:
                     // Families won't be removed. Ignore this.
@@ -415,7 +448,8 @@ public class TaskListsFragment extends Fragment
         Family temp_family = mFamily;
         temp_family.removeMember(mUser.getId());
 
-        for (String member : temp_family.getMembers()) Log.v(LOG_TAG, "onFamilyLeft - member: " + member);
+        for (String member : temp_family.getMembers()) Log.v(LOG_TAG, "onFamilyLeft - temp_family member: " + member);
+        for (String member : mFamily.getMembers())     Log.v(LOG_TAG, "onFamilyLeft - mFamily member:     " + member);
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         WriteBatch batch = db.batch();
@@ -471,8 +505,9 @@ public class TaskListsFragment extends Fragment
     private void notifyFamilyUpdate() {
         mNoFamily = false;
         mFamiliesList.clear();
-        mSelectFrag = null;
+//        mSelectFrag = null;
         mListener.onFamilyChange(mFamily);
+        mListener.updateFabDesc();
         mTaskAdapter.notifyDataSetChanged();
         startFamilyQuery();
     }
@@ -480,10 +515,12 @@ public class TaskListsFragment extends Fragment
     private void notifyFamiliesUpdate() {
         mFamily = null;
         mNoFamily = true;
-        mFamilyFrag = null;
-        mListener.onFamilyChange(mFamily);
+        mFamilyTasks.clear();
+//        mFamilyFrag = null;
+        mListener.onFamilyChange(null);
+        mListener.updateFabDesc();
         mTaskAdapter.notifyDataSetChanged();
-//        startFamiliesQuery();
+        startFamiliesQuery();
     }
 
     @Override
@@ -517,7 +554,8 @@ public class TaskListsFragment extends Fragment
         void onTaskClick(Task task, String tab);
         User getUser();
         Family getFamily();
-        void onFamilyChange(Family family);
+        void onFamilyChange(@Nullable Family family);
+        void updateFabDesc();
         void doSnackbar(int str_res);
     }
 
@@ -555,7 +593,8 @@ public class TaskListsFragment extends Fragment
                         result = SelectFamilyFrag.newInstance(mFamiliesList);
                         mSelectFrag = (SelectFamilyFrag) result;
                     } else {
-                        // No data to update?
+                        mSelectFrag.setData(mFamiliesList);
+                        result = mSelectFrag;
                     }
                 } else {
                     if (mFamilyFrag == null) {

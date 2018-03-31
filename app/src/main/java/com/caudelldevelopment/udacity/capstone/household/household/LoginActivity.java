@@ -31,6 +31,8 @@ public class LoginActivity extends AppCompatActivity implements OnSuccessListene
 
     private static final String LOG_TAG = LoginActivity.class.getSimpleName();
 
+    private static final int MAIN_ACTIVITY_REQ_CODE = 234;
+
     private static final int SIGN_IN_REQ_CODE = 123;
     private List<AuthUI.IdpConfig> providers = Arrays.asList(
             new AuthUI.IdpConfig.Builder(AuthUI.GOOGLE_PROVIDER).build(),
@@ -50,19 +52,8 @@ public class LoginActivity extends AppCompatActivity implements OnSuccessListene
         if (fireUser != null) {
             doLogin();
         } else {
-            startActivityForResult(
-                    AuthUI.getInstance()
-                            .createSignInIntentBuilder()
-                            .setAvailableProviders(providers)
-                            .build(),
-                    SIGN_IN_REQ_CODE
-            );
+            showLogin();
         }
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
     }
 
     @Override
@@ -79,7 +70,30 @@ public class LoginActivity extends AppCompatActivity implements OnSuccessListene
 
                 Snackbar.make(findViewById(R.id.login_root_layout), R.string.login_error_snackbar, Snackbar.LENGTH_INDEFINITE).show();
             }
+        } else if (requestCode == MAIN_ACTIVITY_REQ_CODE) {
+            if (resultCode == RESULT_OK) {
+                boolean sign_out_clicked = data.getBooleanExtra(SettingsActivity.SIGN_OUT_CLICKED, false);
+                if (sign_out_clicked) doSignOut();
+
+                boolean back_btn_clicked = data.getBooleanExtra(MainActivity.ON_UP_CLICKED, false);
+                if (back_btn_clicked) finish();
+            }
         }
+    }
+
+    private void doSignOut() {
+        FirebaseAuth.getInstance().signOut();
+        showLogin();
+    }
+
+    private void showLogin() {
+        startActivityForResult(
+                AuthUI.getInstance()
+                        .createSignInIntentBuilder()
+                        .setAvailableProviders(providers)
+                        .build(),
+                SIGN_IN_REQ_CODE
+        );
     }
 
     private void doLogin() {
@@ -107,7 +121,7 @@ public class LoginActivity extends AppCompatActivity implements OnSuccessListene
         // Putting them into a bundle didn't work either.
         intent.putExtra("user_data", new Parcelable[] {mUser, mFamily});
 
-        startActivity(intent);
+        startActivityForResult(intent, MAIN_ACTIVITY_REQ_CODE);
     }
 
     @Override

@@ -2,7 +2,6 @@ package com.caudelldevelopment.udacity.capstone.household.household;
 
 import android.content.Intent;
 import android.os.Parcelable;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -22,11 +21,6 @@ import android.view.animation.AnimationUtils;
 import com.caudelldevelopment.udacity.capstone.household.household.data.Family;
 import com.caudelldevelopment.udacity.capstone.household.household.data.Task;
 import com.caudelldevelopment.udacity.capstone.household.household.data.User;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.firebase.firestore.DocumentReference;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.WriteBatch;
 
 public class MainActivity extends AppCompatActivity
                           implements View.OnClickListener,
@@ -39,8 +33,11 @@ public class MainActivity extends AppCompatActivity
     private static final String FAMILY_SAVE_STATE = "family_save_state_key";
 
     public static final int FAMILY_REQ_CODE = 100;
+    public static final int SETTING_REQ_CODE = 200;
+    public static final String ON_UP_CLICKED = "on_up_button_clicked_key";
 
     private TaskListsFragment mListFragment;
+    private FloatingActionButton mAddTaskBtn;
     private boolean wide_layout;
 
     private User mUser;
@@ -71,7 +68,7 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton mAddTaskBtn = findViewById(R.id.main_add_task);
+        mAddTaskBtn = findViewById(R.id.main_add_task);
         mAddTaskBtn.setOnClickListener(this);
 
         View view_holder = findViewById(R.id.main_view_holder);
@@ -115,7 +112,7 @@ public class MainActivity extends AppCompatActivity
                 return true;
             case R.id.menu_settings:
                 Intent settings = new Intent(this, SettingsActivity.class);
-                startActivity(settings);
+                startActivityForResult(settings, SETTING_REQ_CODE);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -136,7 +133,28 @@ public class MainActivity extends AppCompatActivity
                     }
                 }
             }
+        } else if (requestCode == SETTING_REQ_CODE) {
+            if (resultCode == RESULT_OK) {
+                boolean sign_out_clicked = data.getBooleanExtra(SettingsActivity.SIGN_OUT_CLICKED, false);
+
+                if (sign_out_clicked) {
+                    Intent sign_out_data = new Intent();
+                    sign_out_data.putExtra(SettingsActivity.SIGN_OUT_CLICKED, true);
+                    setResult(RESULT_OK, sign_out_data);
+                    finish();
+                }
+            }
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+//        super.onBackPressed();
+
+        Intent on_up_pressed_data = new Intent();
+        on_up_pressed_data.putExtra(ON_UP_CLICKED, true);
+        setResult(RESULT_OK, on_up_pressed_data);
+        finish();
     }
 
     @Override
@@ -294,6 +312,21 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onEntrySave(String name) {
         mListFragment.onFamilyEntered(name);
+    }
+
+    // This is just to make sure Talk Back will be clear and stay updated when the app changes.
+    @Override
+    public void updateFabDesc() {
+        String tab = mListFragment.getSelectedTab();
+        if (tab.equals(getString(R.string.personal_title))) {
+            mAddTaskBtn.setContentDescription(getString(R.string.pers_fab_desc));
+        } else if (tab.equals(getString(R.string.family_title))) {
+            if (mNoFamily) {
+                mAddTaskBtn.setContentDescription(getString(R.string.fam_fab_desc));
+            } else {
+                mAddTaskBtn.setContentDescription(getString(R.string.new_fam_fab_desc));
+            }
+        }
     }
 
     @Override

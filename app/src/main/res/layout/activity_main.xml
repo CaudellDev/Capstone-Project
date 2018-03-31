@@ -35,6 +35,7 @@
         android:layout_margin="16dp"
         android:layout_marginBottom="8dp"
         android:layout_marginEnd="8dp"
+        android:contentDescription="@string/pers_fab_desc"
         android:src="@drawable/ic_add_black_24dp" />
 
 </android.support.design.widget.CoordinatorLayout>
