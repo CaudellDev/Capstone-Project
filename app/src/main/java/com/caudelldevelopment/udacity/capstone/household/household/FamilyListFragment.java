@@ -15,6 +15,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -40,17 +41,18 @@ import java.util.List;
  * Use the {@link FamilyListFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class FamilyListFragment extends Fragment implements  OnCompleteListener<QuerySnapshot> {
+public class FamilyListFragment extends Fragment {
+//    implements OnCompleteListener<QuerySnapshot> {
 
     private static final String LOG_TAG = FamilyListFragment.class.getSimpleName();
     private static final String FAML_TASK_LIST = "family_task_list";
 
-    private List<Task> data;
+//    private List<Task> data;
     private RecyclerView mTaskList;
     private FamilyAdapter mAdapter;
-    private boolean search;
+    private TextView mEmptyView;
 
-    private TaskListsFragment mListener;
+    private OnFamilyFragListener mListener;
 
     public FamilyListFragment() {
         // Required empty public constructor
@@ -79,7 +81,7 @@ public class FamilyListFragment extends Fragment implements  OnCompleteListener<
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        data = new LinkedList<>();
+        List<Task> data = new LinkedList<>();
 
         if (getArguments() != null) {
             Parcelable[] temp_arr = getArguments().getParcelableArray(FAML_TASK_LIST);
@@ -92,6 +94,9 @@ public class FamilyListFragment extends Fragment implements  OnCompleteListener<
                 data = new LinkedList<>();
             }
         }
+
+        if (mAdapter == null) mAdapter = new FamilyAdapter();
+        mAdapter.data = data;
     }
 
     @Override
@@ -100,17 +105,18 @@ public class FamilyListFragment extends Fragment implements  OnCompleteListener<
         // Inflate the layout for this fragment
         View rootView = inflater.inflate(R.layout.fragment_family_list, container, false);
 
-        search = false;
         mTaskList = rootView.findViewById(R.id.family_list_rv);
         DividerItemDecoration itemDecoration = new DividerItemDecoration(getContext(), DividerItemDecoration.VERTICAL);
         itemDecoration.setDrawable(getContext().getDrawable(R.drawable.list_divider));
         mTaskList.addItemDecoration(itemDecoration);
         mTaskList.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        mAdapter = new FamilyAdapter();
-        mAdapter.data = data;
         mTaskList.setAdapter(mAdapter);
         mAdapter.notifyDataSetChanged();
+
+        mEmptyView = rootView.findViewById(R.id.family_empty_tv);
+
+        updateEmpty();
 
         return rootView;
     }
@@ -128,16 +134,11 @@ public class FamilyListFragment extends Fragment implements  OnCompleteListener<
             if (stored != null) {
                 Task[] temp_arr;
                 temp_arr = Arrays.copyOf(stored, stored.length, Task[].class);
-                data = Arrays.asList(temp_arr);
 
                 if (mAdapter == null) mAdapter = new FamilyAdapter();
-                mAdapter.data = data;
+                mAdapter.data = Arrays.asList(temp_arr);
                 mAdapter.notifyDataSetChanged();
             }
-
-            // Get array from bundle
-            // Create adapter and give it the data
-            // Scroll position?
         }
     }
 
@@ -146,13 +147,11 @@ public class FamilyListFragment extends Fragment implements  OnCompleteListener<
         super.onSaveInstanceState(outState);
 
         Task[] temp_arr = new Task[0];
-        temp_arr = data.toArray(temp_arr);
+        temp_arr = mAdapter.data.toArray(temp_arr);
 
         Parcelable[] store;
         store = Arrays.copyOf(temp_arr, temp_arr.length, Parcelable[].class);
         outState.putParcelableArray(FAML_TASK_LIST, store);
-
-        // Keep scroll position?
     }
 
     @Override
@@ -163,11 +162,11 @@ public class FamilyListFragment extends Fragment implements  OnCompleteListener<
         Fragment parent = fm.findFragmentById(R.id.main_task_lists);
 
         if (parent != null) {
-            if (parent instanceof TaskListsFragment) {
-                mListener = (TaskListsFragment) parent;
+            if (parent instanceof OnFamilyFragListener) {
+                mListener = (OnFamilyFragListener) parent;
             } else {
                 throw new RuntimeException(context.toString()
-                        + " must implement OnListsFragmentListener");
+                        + " must implement OnFamilyFragListener");
             }
         }
     }
@@ -178,104 +177,66 @@ public class FamilyListFragment extends Fragment implements  OnCompleteListener<
         mListener = null;
     }
 
-    public void addTask(Task task) {
-        data.add(task);
-        if (mAdapter != null) {
-            mAdapter.data = data;
-            mAdapter.notifyDataSetChanged();
-        }
-    }
-
     public void setData(List<Task> data) {
-        this.data = data;
-        if (mAdapter != null) {
-            mAdapter.data = this.data;
-            mAdapter.notifyDataSetChanged();
-        }
+        if (mAdapter == null) mAdapter = new FamilyAdapter();
+
+        mAdapter.data = data;
+        mAdapter.notifyDataSetChanged();
+
+        updateEmpty();
     }
 
-//    @Override
-//    public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException e) {
-//        Log.v(LOG_TAG, "onEvent has started!!!");
-//
-//        // Check if there was an exception first...
-//        if (e != null) {
-//            Log.w(LOG_TAG, "Firebase listener - onEvent, exception: " + e);
-//            e.printStackTrace();
-//            return;
-//        }
-//
-//        for (DocumentChange dc : documentSnapshots.getDocumentChanges()) {
-//            switch (dc.getType()) {
-//                case ADDED:
-//                    DocumentSnapshot added = dc.getDocument();
-//                    Task added_task = added.toObject(Task.class);
-//                    Log.v(LOG_TAG, "Firebase listener - onEvent, curr task added: " + added_task.getName() + ", " + added_task.getDesc());
-//                    data.add(added_task);
-//                    break;
-//                case REMOVED:
-//                    DocumentSnapshot removed = dc.getDocument();
-//                    Task removed_task = removed.toObject(Task.class);
-//                    data.remove(removed_task);
-//                    break;
-//                case MODIFIED:
-//                    // TODO
-//
-//                    DocumentSnapshot modified = dc.getDocument();
-//                    Task mod_task = modified.toObject(Task.class);
-//
-//                    Task old_ind = data.get(dc.getOldIndex());
-//                    Task new_ind = data.get(dc.getNewIndex());
-//
-//                    Log.v(LOG_TAG, "Firebase listener - onEvent, task modified. " +
-//                            "Old task " + dc.getOldIndex() +
-//                            ", new task " + dc.getNewIndex() +
-//                            ", mod task: " + old_ind.getName() +
-//                            ", " + new_ind.getName() +
-//                            ", " + mod_task.getName());
-//
-//                    // Probably didn't change positions?
-//                    data.set(dc.getOldIndex(), mod_task);
-//                    break;
-//                default:
-//                    Log.w(LOG_TAG, "onEvent - document change type not recognized! dc.getType: " + dc.getType());
-//            }
-//        }
-//
-//        mAdapter.data = data;
-//        mAdapter.notifyDataSetChanged();
-//    }
+    private void updateEmpty() {
+        boolean isEmpty = (mAdapter.data == null) || mAdapter.data.isEmpty();
 
-    @Override
-    public void onComplete(@NonNull com.google.android.gms.tasks.Task<QuerySnapshot> task) {
-        Log.v(LOG_TAG, "onComplete has started!!!");
-        if (task.isSuccessful()) {
-            data = new LinkedList<>();
-            for (DocumentSnapshot doc : task.getResult()) {
-                Task curr = doc.toObject(Task.class);
-                data.add(curr);
-            }
-            mAdapter.notifyDataSetChanged();
+        if (isEmpty) {
+            mTaskList.setVisibility(View.GONE);
+            mEmptyView.setText(R.string.empty_task_msg);
+            mEmptyView.setVisibility(View.VISIBLE);
+        } else {
+            mEmptyView.setVisibility(View.GONE);
+            mTaskList.setVisibility(View.VISIBLE);
         }
     }
 
     private class FamilyTaskViewHolder extends RecyclerView.ViewHolder {
 
+        private View item;
         private TextView title;
         private TextView date;
         private TextView desc;
         private CheckBox comp;
+
         private LinearLayout tags_layout;
 
         public FamilyTaskViewHolder(View itemView) {
             super(itemView);
+
+            item = itemView;
             title = itemView.findViewById(R.id.task_title);
             date = itemView.findViewById(R.id.task_date);
             desc = itemView.findViewById(R.id.task_desc);
             comp = itemView.findViewById(R.id.task_checkbox);
-//            tags = itemView.findViewById(R.id.task_tags_ci);
 
             tags_layout = itemView.findViewById(R.id.task_tags_ll);
+
+            comp.setOnCheckedChangeListener(this::onCompleteChanged);
+            item.setOnClickListener(this::onItemClick);
+        }
+
+        public void onCompleteChanged(CompoundButton btn, boolean isChecked) {
+            int pos = getAdapterPosition();
+            Task curr = mAdapter.data.get(pos);
+
+            curr.setComplete(isChecked);
+            mListener.onFamilyTaskCheckClick(curr, pos);
+        }
+
+        public void onItemClick(View v) {
+            int pos = getAdapterPosition();
+            Task curr = mAdapter.data.get(pos);
+
+            mListener.onFamilyTaskClick(curr, pos);
         }
     }
 
@@ -300,15 +261,21 @@ public class FamilyListFragment extends Fragment implements  OnCompleteListener<
             holder.comp.setChecked(curr.isComplete());
 
             for (int i = 0; i < curr.getTag_ids().size(); i++) {
-//                holder.tags.addChip(curr.getTag(i), "");
+                // Check if the tag already exists before adding
+                ChipView check = (ChipView) holder.tags_layout.getChildAt(i);
+                if (check != null && check.getLabel().equals(curr.getTag(i))) {
+                    continue;
+                }
 
                 // Trying to avoid using a ChipInput. The user doesn't need to type here
                 // and it would improve performance to have a ViewGroup with ChipViews.
-                ChipView chipView = new ChipView(getContext());
-                chipView.setLabel(curr.getTag(i));
-                chipView.setPadding(4, 4, 4, 4);
+                ChipView tag = new ChipView(getContext());
+                tag.setLabel(curr.getTag(i));
+                tag.setPadding(4, 4, 4, 4);
+                tag.setLabelColor(getResources().getColor(R.color.black));
+                tag.setChipBackgroundColor(getResources().getColor(R.color.colorAccent));
 
-                holder.tags_layout.addView(chipView);
+                holder.tags_layout.addView(tag);
             }
         }
 

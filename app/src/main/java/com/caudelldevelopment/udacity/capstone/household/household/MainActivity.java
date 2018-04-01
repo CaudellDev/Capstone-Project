@@ -1,6 +1,11 @@
 package com.caudelldevelopment.udacity.capstone.household.household;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Parcelable;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -39,6 +44,7 @@ public class MainActivity extends AppCompatActivity
     private TaskListsFragment mListFragment;
     private FloatingActionButton mAddTaskBtn;
     private boolean wide_layout;
+    private boolean isConnected;
 
     private User mUser;
     private Family mFamily;
@@ -73,6 +79,10 @@ public class MainActivity extends AppCompatActivity
 
         View view_holder = findViewById(R.id.main_view_holder);
         wide_layout = (view_holder != null);
+
+        NetworkReceiver receiver = new NetworkReceiver();
+        IntentFilter networkFilter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
+        registerReceiver(receiver, networkFilter);
     }
 
 
@@ -94,11 +104,15 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        if (!isConnected) {
+            doSnackbar(R.string.no_network_menu_msg);
+            return true;
+        }
 
         switch(item.getItemId()) {
             case R.id.menu_family:
                 if (mNoFamily) {
-                    Snackbar.make(findViewById(R.id.appBarLayout), R.string.no_family_snackbar, Snackbar.LENGTH_SHORT).show();
+                    doSnackbar(R.string.no_family_snackbar);
                 } else {
                     Intent family = new Intent(this, FamilyActivity.class);
                     family.putExtra(FamilyActivity.USER_EXTRA, mUser);
@@ -181,6 +195,11 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onClick(View view) {
+        if (!isConnected) {
+            doSnackbar(R.string.disconnected_click_msg);
+            return;
+        }
+
         // Get the selected tab or fragment from the TaskListsFragment and display the dialog
         String tab = mListFragment.getSelectedTab();
 
@@ -314,6 +333,17 @@ public class MainActivity extends AppCompatActivity
         mListFragment.onFamilyEntered(name);
     }
 
+    public void updateNetworkStatus() {
+//        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+//
+//        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+//        isConnected = (activeNetwork != null) && activeNetwork.isConnectedOrConnecting();
+
+        if (!isConnected) {
+            doSnackbar(R.string.main_not_connected_msg);
+        }
+    }
+
     // This is just to make sure Talk Back will be clear and stay updated when the app changes.
     @Override
     public void updateFabDesc() {
@@ -332,5 +362,28 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void doSnackbar(int message) {
         Snackbar.make(findViewById(R.id.appBarLayout), message, Snackbar.LENGTH_LONG).show();
+    }
+
+    protected class NetworkReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            if (intent != null) {
+                ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+                NetworkInfo netInfo = cm.getActiveNetworkInfo();
+
+                if (netInfo != null && netInfo.isConnectedOrConnecting()) {
+                    Log.v(LOG_TAG, "NetworkReceiver.onReceive: Network is connected!!!");
+
+                    isConnected = true;
+                    updateNetworkStatus();
+                } else {
+                    Log.v(LOG_TAG, "NetworkReceiver.onReceive:   ----!!!!!----   Network is not connected!!!!!!");
+
+                    isConnected = false;
+                    updateNetworkStatus();
+                }
+            }
+        }
     }
 }

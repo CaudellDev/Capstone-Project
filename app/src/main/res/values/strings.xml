@@ -52,5 +52,9 @@
     <string name="pers_fab_desc">Add Personal Task</string>
     <string name="fam_fab_desc">Add Family</string>
     <string name="new_fam_fab_desc">Add Family Task</string>
+    <string name="main_not_connected_msg">You are not connected. Tasks won\'t update.</string>
+    <string name="disconnected_click_msg">You cannot add without an internet connection.</string>
+    <string name="no_network_menu_msg">Please connect to a network before accessing these menus.</string>
+    <string name="empty_task_msg">There are no tasks to display.</string>
 
 </resources>

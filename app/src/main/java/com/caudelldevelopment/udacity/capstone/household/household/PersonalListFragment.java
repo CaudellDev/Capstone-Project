@@ -43,15 +43,17 @@ import java.util.List;
  * Use the {@link PersonalListFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class PersonalListFragment extends Fragment implements OnCompleteListener<QuerySnapshot>, OnFailureListener {
+public class PersonalListFragment extends Fragment {
+//        implements OnCompleteListener<QuerySnapshot>, OnFailureListener {
 
     private static final String LOG_TAG = PersonalListFragment.class.getSimpleName();
     private static final String PERS_TASK_LIST = "parsonal_task_list";
 
-    private List<Task> data;
     private RecyclerView mTaskList;
     private PersonalAdapter mAdapter;
-    private TaskListsFragment mListener;
+    private TextView mEmptyView;
+
+    private OnPersonalFragListener mListener;
 
     public PersonalListFragment() {
         // Required empty public constructor
@@ -79,7 +81,7 @@ public class PersonalListFragment extends Fragment implements OnCompleteListener
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        data = new LinkedList<>();
+        List<Task> data = new LinkedList<>();
 
         if (getArguments() != null) {
             Parcelable[] temp_arr = getArguments().getParcelableArray(PERS_TASK_LIST);
@@ -92,6 +94,12 @@ public class PersonalListFragment extends Fragment implements OnCompleteListener
                 data = new LinkedList<>();
             }
         }
+
+        if (mAdapter == null) {
+            mAdapter = new PersonalAdapter();
+        }
+
+        mAdapter.data = data;
     }
 
     @Override
@@ -106,10 +114,12 @@ public class PersonalListFragment extends Fragment implements OnCompleteListener
         mTaskList.addItemDecoration(itemDecoration);
         mTaskList.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        mAdapter = new PersonalAdapter();
-        mAdapter.data = data;
         mTaskList.setAdapter(mAdapter);
         mAdapter.notifyDataSetChanged();
+
+        mEmptyView = rootView.findViewById(R.id.personal_empty_tv);
+
+        updateEmpty();
 
         return rootView;
     }
@@ -126,16 +136,11 @@ public class PersonalListFragment extends Fragment implements OnCompleteListener
             if (stored != null) {
                 Task[] temp_arr;
                 temp_arr = Arrays.copyOf(stored, stored.length, Task[].class);
-                data = Arrays.asList(temp_arr);
 
                 if (mAdapter == null) mAdapter = new PersonalAdapter();
-                mAdapter.data = data;
+                mAdapter.data = Arrays.asList(temp_arr);
                 mAdapter.notifyDataSetChanged();
             }
-
-            // Get array from bundle
-            // Create adapter and give it the data
-            // Scroll position?
         }
     }
 
@@ -144,13 +149,11 @@ public class PersonalListFragment extends Fragment implements OnCompleteListener
         super.onSaveInstanceState(outState);
 
         Task[] temp_arr = new Task[0];
-        temp_arr = data.toArray(temp_arr);
+        temp_arr = mAdapter.data.toArray(temp_arr);
 
         Parcelable[] store;
         store = Arrays.copyOf(temp_arr, temp_arr.length, Parcelable[].class);
         outState.putParcelableArray(PERS_TASK_LIST, store);
-
-        // Keep scroll position?
     }
 
     @Override
@@ -161,11 +164,11 @@ public class PersonalListFragment extends Fragment implements OnCompleteListener
         Fragment parent = fm.findFragmentById(R.id.main_task_lists);
 
         if (parent != null) {
-            if (parent instanceof TaskListsFragment) {
-                mListener = (TaskListsFragment) parent;
+            if (parent instanceof OnPersonalFragListener) {
+                mListener = (OnPersonalFragListener) parent;
             } else {
                 throw new RuntimeException(parent.toString()
-                        + " must implement OnListsFragmentListener");
+                        + " must implement OnPersonalFragListener");
             }
         }
     }
@@ -177,35 +180,29 @@ public class PersonalListFragment extends Fragment implements OnCompleteListener
     }
 
     public void setData(List<Task> data) {
-        Log.v(LOG_TAG, "setDate - mAdapter == null: " + (mAdapter == null));
+        if (mAdapter == null) mAdapter = new PersonalAdapter();
 
-        this.data = data;
-        if (mAdapter != null) {
-            mAdapter.data = this.data;
-            mAdapter.notifyDataSetChanged();
+        mAdapter.data = data;
+        mAdapter.notifyDataSetChanged();
+
+        updateEmpty();
+    }
+
+    private void updateEmpty() {
+        boolean isEmpty = (mAdapter.data == null) || mAdapter.data.isEmpty();
+
+        if (isEmpty) {
+            mTaskList.setVisibility(View.GONE);
+            mEmptyView.setText(R.string.empty_task_msg);
+            mEmptyView.setVisibility(View.VISIBLE);
+        } else {
+            mEmptyView.setVisibility(View.GONE);
+            mTaskList.setVisibility(View.VISIBLE);
         }
     }
 
-    @Override
-    public void onComplete(@NonNull com.google.android.gms.tasks.Task<QuerySnapshot> task) {
-        Log.v(LOG_TAG, "onComplete has started!!!");
-        if (task.isSuccessful()) {
-            data = new LinkedList<>();
-            for (DocumentSnapshot doc : task.getResult()) {
-                Task curr = Task.fromDoc(doc, mListener.getUser());
-                data.add(curr);
-            }
-            mAdapter.notifyDataSetChanged();
-        }
-    }
+    public class PersonalTaskViewHolder extends RecyclerView.ViewHolder {
 
-    @Override
-    public void onFailure(@NonNull Exception e) {
-
-    }
-
-    public class PersonalTaskViewHolder extends RecyclerView.ViewHolder
-                                        implements CompoundButton.OnCheckedChangeListener, View.OnClickListener {
         private View item;
         private TextView title;
         private TextView date;
@@ -216,19 +213,20 @@ public class PersonalListFragment extends Fragment implements OnCompleteListener
 
         public PersonalTaskViewHolder(View itemView) {
             super(itemView);
+
             item = itemView;
             title = itemView.findViewById(R.id.task_title);
             date = itemView.findViewById(R.id.task_date);
             desc = itemView.findViewById(R.id.task_desc);
             comp = itemView.findViewById(R.id.task_checkbox);
+
             tags_layout = itemView.findViewById(R.id.task_tags_ll);
 
-            comp.setOnCheckedChangeListener(this);
-            item.setOnClickListener(this);
+            comp.setOnCheckedChangeListener(this::onCompleteChanged);
+            item.setOnClickListener(this::onItemClick);
         }
 
-        @Override
-        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        public void onCompleteChanged(CompoundButton buttonView, boolean isChecked) {
             int pos = getAdapterPosition();
             Task curr = mAdapter.data.get(pos);
 
@@ -237,12 +235,9 @@ public class PersonalListFragment extends Fragment implements OnCompleteListener
             mListener.onPersonalTaskCheckClick(curr, pos);
         }
 
-        @Override
-        public void onClick(View v) {
+        public void onItemClick(View v) {
             int pos = getAdapterPosition();
             Task curr = mAdapter.data.get(pos);
-
-            Log.v(LOG_TAG, "onClick - task, pos: " + curr.getName() + ", " + pos);
 
             mListener.onPersonalTaskClick(curr, pos);
         }
@@ -263,9 +258,6 @@ public class PersonalListFragment extends Fragment implements OnCompleteListener
         public void onBindViewHolder(PersonalTaskViewHolder holder, int position) {
             Task curr = data.get(position);
 
-            Log.v(LOG_TAG, "PersonalAdapter, onBindViewHolder - task count: " + data.size());
-            Log.v(LOG_TAG, "PersonalAdapter, onBindViewHolder - task at " + position + " is null: " + (curr == null));
-
             holder.title.setText(curr.getName());
             holder.date.setText(curr.getDate());
             holder.desc.setText(curr.getDesc());
@@ -281,6 +273,9 @@ public class PersonalListFragment extends Fragment implements OnCompleteListener
                 ChipView tag = new ChipView(getContext());
                 tag.setLabel(curr.getTag(i));
                 tag.setPadding(4, 4, 4, 4);
+                tag.setLabelColor(getResources().getColor(R.color.black));
+                tag.setChipBackgroundColor(getResources().getColor(R.color.colorAccent));
+
                 holder.tags_layout.addView(tag);
             }
         }

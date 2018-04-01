@@ -30,8 +30,11 @@
 
     <TextView
         android:id="@+id/family_select_empty_tv"
+        android:text="@string/no_network_title"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:layout_margin="16dp"
         android:visibility="gone"/>
 
     <android.support.v7.widget.RecyclerView

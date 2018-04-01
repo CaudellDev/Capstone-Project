@@ -91,31 +91,31 @@ public class Task implements Parcelable {
         return map;
     }
 
-    public java.lang.String getId() {
+    public String getId() {
         return id;
     }
-    public void setId(java.lang.String id) {
+    public void setId(String id) {
         this.id = id;
     }
 
-    public java.lang.String getAccess_id() {
+    public String getAccess_id() {
         return access_id;
     }
-    public void setAccess_id(java.lang.String id) {
+    public void setAccess_id(String id) {
         access_id = id;
     }
 
-    public java.lang.String getName() {
+    public String getName() {
         return name;
     }
-    public void setName(java.lang.String name) {
+    public void setName(String name) {
         this.name = name;
     }
 
     public String getDesc() {
         return desc;
     }
-    public void setDesc(java.lang.String desc) {
+    public void setDesc(String desc) {
         this.desc = desc;
     }
 
