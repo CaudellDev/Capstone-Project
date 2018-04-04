@@ -24,8 +24,10 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 
 import com.caudelldevelopment.udacity.capstone.household.household.data.Family;
+import com.caudelldevelopment.udacity.capstone.household.household.data.Tag;
 import com.caudelldevelopment.udacity.capstone.household.household.data.Task;
 import com.caudelldevelopment.udacity.capstone.household.household.data.User;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 public class MainActivity extends AppCompatActivity
                           implements View.OnClickListener,
@@ -220,7 +222,7 @@ public class MainActivity extends AppCompatActivity
         }
 
         if (wide_layout) {
-            NewTaskDialogFrag dialog =  NewTaskDialogFrag.newInstance(false, mUser, null);
+            NewTaskDialogFrag dialog =  NewTaskDialogFrag.newInstance(false, mListFragment.getAllTags(), mUser, null);
             FragmentManager manager = getSupportFragmentManager();
 
             manager.beginTransaction()
@@ -230,7 +232,7 @@ public class MainActivity extends AppCompatActivity
 
             if (tab != null) {
                 boolean family = tab.equals(getString(R.string.family_title));
-                NewTaskDialogFrag dialog = NewTaskDialogFrag.newInstance(family, mUser, null);
+                NewTaskDialogFrag dialog = NewTaskDialogFrag.newInstance(family, mListFragment.getAllTags(), mUser, null);
                 dialog.show(getSupportFragmentManager(), NewTaskDialogFrag.DIALOG_TAG);
             } else {
                 Log.w(LOG_TAG, "onClick, but tab title could not be retrieved.");
@@ -248,7 +250,7 @@ public class MainActivity extends AppCompatActivity
         if (tab != null && task != null) {
             if (wide_layout) {
                 boolean family = tab.equals("Family");
-                NewTaskDialogFrag dialog = NewTaskDialogFrag.newInstance(family, mUser, task);
+                NewTaskDialogFrag dialog = NewTaskDialogFrag.newInstance(family, mListFragment.getAllTags(), mUser, task);
                 FragmentManager manager = getSupportFragmentManager();
 
                 manager.beginTransaction()
@@ -256,7 +258,7 @@ public class MainActivity extends AppCompatActivity
                         .commit();
             } else {
                 boolean family = tab.equals("Family");
-                NewTaskDialogFrag dialog = NewTaskDialogFrag.newInstance(family, mUser, task);
+                NewTaskDialogFrag dialog = NewTaskDialogFrag.newInstance(family, mListFragment.getAllTags(), mUser, task);
                 dialog.show(getSupportFragmentManager(), NewTaskDialogFrag.DIALOG_TAG);
             }
         } else {

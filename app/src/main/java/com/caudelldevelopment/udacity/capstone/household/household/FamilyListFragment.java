@@ -19,6 +19,7 @@ import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.caudelldevelopment.udacity.capstone.household.household.data.Tag;
 import com.caudelldevelopment.udacity.capstone.household.household.data.Task;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.firebase.firestore.DocumentChange;
@@ -178,12 +179,16 @@ public class FamilyListFragment extends Fragment {
     }
 
     public void setData(List<Task> data) {
-        if (mAdapter == null) mAdapter = new FamilyAdapter();
+//        if (mAdapter == null) mAdapter = new FamilyAdapter();
 
         mAdapter.data = data;
         mAdapter.notifyDataSetChanged();
 
         updateEmpty();
+    }
+
+    public void updateTags() {
+        mAdapter.notifyDataSetChanged();
     }
 
     private void updateEmpty() {
@@ -208,6 +213,7 @@ public class FamilyListFragment extends Fragment {
         private CheckBox comp;
 
         private LinearLayout tags_layout;
+        private List<ChipView> tags_list;
 
         public FamilyTaskViewHolder(View itemView) {
             super(itemView);
@@ -219,6 +225,9 @@ public class FamilyListFragment extends Fragment {
             comp = itemView.findViewById(R.id.task_checkbox);
 
             tags_layout = itemView.findViewById(R.id.task_tags_ll);
+
+//            Task curr = mAdapter.data.get(getAdapterPosition());
+//            tags_list = getTagChipList(curr);
 
             comp.setOnCheckedChangeListener(this::onCompleteChanged);
             item.setOnClickListener(this::onItemClick);
@@ -238,6 +247,8 @@ public class FamilyListFragment extends Fragment {
 
             mListener.onFamilyTaskClick(curr, pos);
         }
+
+
     }
 
     public class FamilyAdapter extends RecyclerView.Adapter<FamilyTaskViewHolder> {
@@ -260,28 +271,79 @@ public class FamilyListFragment extends Fragment {
             holder.desc.setText(curr.getDesc());
             holder.comp.setChecked(curr.isComplete());
 
-            for (int i = 0; i < curr.getTag_ids().size(); i++) {
-                // Check if the tag already exists before adding
-                ChipView check = (ChipView) holder.tags_layout.getChildAt(i);
-                if (check != null && check.getLabel().equals(curr.getTag(i))) {
-                    continue;
-                }
+            List<ChipView> tags_list = getTagChipList(curr);
 
-                // Trying to avoid using a ChipInput. The user doesn't need to type here
-                // and it would improve performance to have a ViewGroup with ChipViews.
-                ChipView tag = new ChipView(getContext());
-                tag.setLabel(curr.getTag(i));
-                tag.setPadding(4, 4, 4, 4);
-                tag.setLabelColor(getResources().getColor(R.color.black));
-                tag.setChipBackgroundColor(getResources().getColor(R.color.colorAccent));
-
-                holder.tags_layout.addView(tag);
+            holder.tags_layout.removeAllViews();
+            for (ChipView curr_chip : tags_list) {
+                holder.tags_layout.addView(curr_chip);
             }
+
+//            for (int i = 0; i < holder.tags_list.size(); i++) {
+//                View layout_child = holder.tags_layout.getChildAt(i);
+//                if (layout_child instanceof ChipView) {
+//                    ChipView layout_chip = (ChipView) layout_child;
+//                    if (layout_chip.equals())
+//                }
+//            }
+
+//            Log.v(LOG_TAG, "FamilyAdapter.onBindViewHolder - curr.getTag_ids.size: " + curr.getTag_ids().size());
+//            for (int i = 0; i < curr.getTag_ids().size(); i++) {
+//                // Check if the tag already exists before adding
+//                ChipView check = (ChipView) holder.tags_layout.getChildAt(i);
+//                if (check != null && check.getLabel().equals(curr.getTag(i))) {
+//                    continue;
+//                }
+//
+//                // Trying to avoid using a ChipInput. The user doesn't need to type here
+//                // and it would improve performance to have a ViewGroup with ChipViews.
+//                Tag tag = mListener.getTag(curr.getTag(i));
+//
+//                if (tag != null) {
+//                    ChipView tag_chip = new ChipView(getContext());
+//                    tag_chip.setLabel(tag.getName());
+//                    tag_chip.setPadding(4, 4, 4, 4);
+//                    tag_chip.setLabelColor(getResources().getColor(R.color.black));
+//                    tag_chip.setChipBackgroundColor(getResources().getColor(R.color.colorAccent));
+//
+//                    holder.tags_layout.addView(tag_chip);
+//                }
+//            }
         }
 
         @Override
         public int getItemCount() {
             return data != null ? data.size() : 0;
+        }
+
+        private List<ChipView> getTagChipList(Task task) {
+            List<String> tagIdList = task.getTag_ids();
+
+            List<ChipView> result = new LinkedList<>();
+            for (String curr : tagIdList) {
+                Tag tag = mListener.getTag(curr);
+                String label;
+
+                Log.v(LOG_TAG, "FamilyAdapter.getTagChipList - tag from listener is null: " + (tag == null));
+
+                if (tag == null) {
+//                    label = curr;
+                    continue;
+                } else {
+                    label = tag.getName();
+                }
+
+                Log.v(LOG_TAG, "FamilyAdapter.getTagChipList - tag from listener label: " + label);
+
+                ChipView chip = new ChipView(getContext());
+                chip.setLabel(label);
+                chip.setPadding(4, 4, 4, 4);
+                chip.setLabelColor(getResources().getColor(R.color.black));
+                chip.setChipBackgroundColor(getResources().getColor(R.color.colorAccent));
+
+                result.add(chip);
+            }
+
+            return result;
         }
     }
 
@@ -298,5 +360,6 @@ public class FamilyListFragment extends Fragment {
     public interface OnFamilyFragListener {
         void onFamilyTaskCheckClick(Task task, int pos);
         void onFamilyTaskClick(Task task, int pos);
+        Tag getTag(String id);
     }
 }

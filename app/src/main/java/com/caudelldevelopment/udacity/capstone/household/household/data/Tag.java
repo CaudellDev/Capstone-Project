@@ -1,5 +1,10 @@
 package com.caudelldevelopment.udacity.capstone.household.household.data;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
+import com.google.firebase.firestore.DocumentSnapshot;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -8,7 +13,7 @@ import java.util.Map;
 /**
  * Created by caude on 12/25/2017.
  */
-public class Tag {
+public class Tag implements Parcelable {
 
     public static final String COL_TAG = "tags";
     public static final String DOC_TAG = "tag";
@@ -18,25 +23,36 @@ public class Tag {
 
     private String name;
     private String id;
-    private int count;
+//    private int count;
     private List<String> task_ids;
+
+    public static Tag fromDoc(DocumentSnapshot doc) {
+        Tag tag = doc.toObject(Tag.class);
+        tag.setId(doc.getId());
+        return tag;
+    }
 
     public Tag() {
         task_ids = new LinkedList<>();
-        count = 0;
+    }
+
+    private Tag(Parcel in) {
+        id = in.readString();
+        name = in.readString();
+        task_ids = new LinkedList<>();
+        in.readStringList(task_ids);
     }
 
     public Tag(String name) {
         this.name = name;
-        id = name.toLowerCase().replace(" ", "_");
         task_ids = new LinkedList<>();
-        count = 0;
     }
 
-    public Map<String, String> toMap() {
-        Map<String, String> result = new HashMap<>();
+    public Map<String, Object> toMap() {
+        Map<String, Object> result = new HashMap<>();
 
         result.put(NAME_ID, name);
+        result.put(TASKS_ID, task_ids);
 
         return result;
     }
@@ -47,7 +63,6 @@ public class Tag {
 
     public void setName(String name) {
         this.name = name;
-        this.id = name.toLowerCase().replace(" ", "_");
     }
 
     public String getId() {
@@ -55,11 +70,11 @@ public class Tag {
     }
 
     public void setId(String id) {
-        this.id = id.toLowerCase().replace(" ", "_");
+        this.id = id;
     }
 
     public int getCount() {
-        return count;
+        return task_ids.size();
     }
 
     public List<String> getTask_ids() {
@@ -80,16 +95,51 @@ public class Tag {
 
     public void addTask(String task) {
         task_ids.add(task);
-        count = task_ids.size();
     }
 
     public void removeTask(String task) {
         task_ids.remove(task);
-        count = task_ids.size();
     }
 
     public void removeTask(int pos) {
         task_ids.remove(pos);
-        count = task_ids.size();
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Tag) {
+            Tag temp = (Tag) obj;
+            String temp_id = temp.getId();
+            return (temp_id != null) && id.equals(temp_id);
+        } else {
+            return false;
+        }
+    }
+
+    // ###----- Parcelable -----###
+
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(id);
+        dest.writeString(name);
+        dest.writeStringList(task_ids);
+    }
+
+    public static final Parcelable.Creator<Tag> CREATOR = new Parcelable.Creator<Tag>() {
+        @Override
+        public Tag createFromParcel(Parcel source) {
+            return new Tag(source);
+        }
+
+        @Override
+        public Tag[] newArray(int size) {
+            return new Tag[size];
+        }
+    };
 }

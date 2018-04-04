@@ -20,6 +20,7 @@ import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.caudelldevelopment.udacity.capstone.household.household.data.Tag;
 import com.caudelldevelopment.udacity.capstone.household.household.data.Task;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -179,6 +180,8 @@ public class PersonalListFragment extends Fragment {
         mListener = null;
     }
 
+
+
     public void setData(List<Task> data) {
         if (mAdapter == null) mAdapter = new PersonalAdapter();
 
@@ -186,6 +189,12 @@ public class PersonalListFragment extends Fragment {
         mAdapter.notifyDataSetChanged();
 
         updateEmpty();
+    }
+
+    public void updateTags() {
+        Log.v(LOG_TAG, "updateTags has started!!!!");
+        if (mAdapter == null) mAdapter = new PersonalAdapter();
+        mAdapter.notifyDataSetChanged();
     }
 
     private void updateEmpty() {
@@ -263,26 +272,71 @@ public class PersonalListFragment extends Fragment {
             holder.desc.setText(curr.getDesc());
             holder.comp.setChecked(curr.isComplete());
 
-            for (int i = 0; i < curr.getTag_ids().size(); i++) {
-                // Check if the tag already exists before adding
-                ChipView check = (ChipView) holder.tags_layout.getChildAt(i);
-                if (check != null && check.getLabel().equals(curr.getTag(i))) {
-                    continue;
-                }
+            List<ChipView> tags_list = getTagChipList(curr);
 
-                ChipView tag = new ChipView(getContext());
-                tag.setLabel(curr.getTag(i));
-                tag.setPadding(4, 4, 4, 4);
-                tag.setLabelColor(getResources().getColor(R.color.black));
-                tag.setChipBackgroundColor(getResources().getColor(R.color.colorAccent));
-
-                holder.tags_layout.addView(tag);
+            holder.tags_layout.removeAllViews();
+            for (ChipView curr_chip : tags_list) {
+                Log.v(LOG_TAG, "PersonalAdapter.onBindViewHolder - curr_chip: " + curr_chip.getLabel());
+                holder.tags_layout.addView(curr_chip);
             }
+
+//            Log.v(LOG_TAG, "FamilyAdapter.onBindViewHolder - curr.getTag_ids.size: " + curr.getName() + ", " + curr.getTag_ids().size());
+//            for (int i = 0; i < curr.getTag_ids().size(); i++) {
+//                // Check if the tag already exists before adding
+//                ChipView check = (ChipView) holder.tags_layout.getChildAt(i);
+//                if (check != null && check.getLabel().equals(curr.getTag(i))) {
+//                    continue;
+//                }
+//
+//                Tag tag = mListener.getTag(curr.getTag(i));
+//
+//                if (tag != null) {
+//                    ChipView tag_chip = new ChipView(getContext());
+//                    tag_chip.setLabel(tag.getName());
+//                    tag_chip.setPadding(4, 4, 4, 4);
+//                    tag_chip.setLabelColor(getResources().getColor(R.color.black));
+//                    tag_chip.setChipBackgroundColor(getResources().getColor(R.color.colorAccent));
+//
+//                    holder.tags_layout.addView(tag_chip);
+//                }
+//            }
         }
 
         @Override
         public int getItemCount() {
             return data != null ? data.size() : 0;
+        }
+
+
+        private List<ChipView> getTagChipList(Task task) {
+            List<String> tagIdList = task.getTag_ids();
+
+            List<ChipView> result = new LinkedList<>();
+            for (String curr : tagIdList) {
+                Tag tag = mListener.getTag(curr);
+                String label;
+
+                Log.v(LOG_TAG, "PersonalAdapter.getTagChipList - tag from listener is null: " + (tag == null));
+
+                if (tag == null) {
+//                    label = curr;
+                    continue;
+                } else {
+                    label = tag.getName();
+                }
+
+                Log.v(LOG_TAG, "PersonalAdapter.getTagChipList - tag from listener label: " + label);
+
+                ChipView chip = new ChipView(getContext());
+                chip.setLabel(label);
+                chip.setPadding(4, 4, 4, 4);
+                chip.setLabelColor(getResources().getColor(R.color.black));
+                chip.setChipBackgroundColor(getResources().getColor(R.color.colorAccent));
+
+                result.add(chip);
+            }
+
+            return result;
         }
     }
 
@@ -299,5 +353,6 @@ public class PersonalListFragment extends Fragment {
     public interface OnPersonalFragListener {
         void onPersonalTaskCheckClick(Task task, int pos);
         void onPersonalTaskClick(Task task, int pos);
+        Tag getTag(String id);
     }
 }

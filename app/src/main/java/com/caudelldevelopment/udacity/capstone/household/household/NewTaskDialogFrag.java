@@ -1,10 +1,12 @@
 package com.caudelldevelopment.udacity.capstone.household.household;
 
 import android.app.AlertDialog;
+import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
@@ -14,7 +16,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.Switch;
 
 import com.caudelldevelopment.udacity.capstone.household.household.data.Family;
@@ -25,12 +29,16 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.pchmn.materialchips.ChipView;
 import com.pchmn.materialchips.ChipsInput;
 import com.pchmn.materialchips.model.Chip;
 import com.pchmn.materialchips.model.ChipInterface;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -58,7 +66,7 @@ public class NewTaskDialogFrag extends DialogFragment
     private EditText mName;
     private Switch mFamily;
     private EditText mDate;
-    private Button mDatePickerBtn;
+//    private Button mDatePickerBtn;
     private EditText mDesc;
     private ChipsInput mTagInput;
 
@@ -66,12 +74,18 @@ public class NewTaskDialogFrag extends DialogFragment
     private Button mNegConf;
     private Button mNeuConf;
 
-    public static NewTaskDialogFrag newInstance(boolean family, User user, @Nullable Task task) {
+    private ImageButton mDatePicker;
+
+    public static NewTaskDialogFrag newInstance(boolean family, List<Tag> all_tags, User user, @Nullable Task task) {
 
         Bundle args = new Bundle();
 
         args.putBoolean(Family.DOC_TAG, family);
         args.putParcelable(User.DOC_TAG, user);
+
+        Parcelable[] tag_arr = new Parcelable[all_tags.size()];
+        tag_arr = all_tags.toArray(tag_arr);
+        args.putParcelableArray("all_tags", tag_arr);
 
         // Task will usually be null. Will be used to handle ListItemClicks to edit existing tags.
         if (task != null) args.putParcelable(Task.TAG, task);
@@ -85,7 +99,8 @@ public class NewTaskDialogFrag extends DialogFragment
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mTags = new LinkedList<>();
+
+
         mChips = new LinkedList<>();
         accessIdChange = false;
     }
@@ -114,6 +129,49 @@ public class NewTaskDialogFrag extends DialogFragment
     public void onDestroy() {
         Log.v(LOG_TAG, "onDestroy has started!!!");
         super.onDestroy();
+    }
+
+    @Override
+    public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
+        super.onViewStateRestored(savedInstanceState);
+
+//        if (savedInstanceState != null) {
+//            String[] chip_labels = savedInstanceState.getStringArray("sel_tags");
+//
+//            if (chip_labels != null && chip_labels.length > 0) {
+//                for (String label : chip_labels) {
+//                    mTagInput.addChip(new Chip(label, ""));
+//                }
+//            }
+//        }
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+        if (savedInstanceState != null) {
+            String[] chip_labels = savedInstanceState.getStringArray("sel_tags");
+
+            if (chip_labels != null && chip_labels.length > 0) {
+                for (String label : chip_labels) {
+                    mTagInput.addChip(new Chip(label, ""));
+                }
+            }
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        List<? extends ChipInterface> sel_chips = mTagInput.getSelectedChipList();
+        String[] chip_labels = new String[sel_chips.size()];
+        for (int i = 0; i < sel_chips.size(); i++) {
+            chip_labels[i] = sel_chips.get(i).getLabel();
+        }
+
+        outState.putStringArray("sel_tags", chip_labels);
+
+        super.onSaveInstanceState(outState);
     }
 
     @Nullable
@@ -181,14 +239,29 @@ public class NewTaskDialogFrag extends DialogFragment
         mName = rootView.findViewById(R.id.dialog_name_tv);
         mFamily = rootView.findViewById(R.id.dialog_family_switch);
         mDate = rootView.findViewById(R.id.dialog_date_tv);
-        mDatePickerBtn = rootView.findViewById(R.id.dialog_date_btn);
+        mDatePicker = rootView.findViewById(R.id.dialog_date_imgbtn);
         mDesc = rootView.findViewById(R.id.dialog_desc_tv);
         mTagInput = rootView.findViewById(R.id.dialog_tag_ci);
 
         mDate.setEnabled(false);
-        mDatePickerBtn.setOnClickListener(this);
+        mDatePicker.setOnClickListener(this);
 
         Bundle args = getArguments();
+
+        Parcelable[] temp_arr = getArguments().getParcelableArray("all_tags");
+
+        mTags = new LinkedList<>();
+        if (temp_arr != null && temp_arr.length > 0) {
+            Tag[] tag_arr = Arrays.copyOf(temp_arr, temp_arr.length, Tag[].class);
+            mTags = new LinkedList<>(Arrays.asList(tag_arr));
+        }
+
+        for (Tag tag : mTags) {
+            Chip tag_chip = new Chip(tag.getName(), "");
+            mChips.add(tag_chip);
+        }
+
+        mTagInput.setFilterableList(mChips);
 
         // Disable the family switch if they haven't selected a family yet.
         User user = args.getParcelable(User.DOC_TAG);
@@ -226,11 +299,10 @@ public class NewTaskDialogFrag extends DialogFragment
             updateViews();
         }
 
-        // Get all of the available tags for the ChipInput.
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("tags")
-            .get()
-            .addOnCompleteListener(this);
+        // We only need this when starting an animation.
+        if (!getShowsDialog()) {
+            mListener.onFragmentReady();
+        }
     }
 
     private void updateViews() {
@@ -242,10 +314,17 @@ public class NewTaskDialogFrag extends DialogFragment
             mDesc.setText(mTask.getDesc());
 
 
-            Log.v(LOG_TAG, "updateViews - tag_ids length: " + mTask.getTag_ids().size());
-            for (String tag : mTask.getTag_ids()) {
-                Log.v(LOG_TAG, "updateViews, tag loop - tag: " + tag);
-                mTagInput.addChip(tag, null);
+            if (mTags != null && !mTags.isEmpty()) {
+                for (String tag_id : mTask.getTag_ids()) {
+                    Log.v(LOG_TAG, "updateViews, tag loop - tag: " + tag_id);
+
+                    for (Tag curr : mTags) {
+                        if (curr.getId().equals(tag_id)) {
+                            mTagInput.addChip(curr.getName(), null);
+                            break;
+                        }
+                    }
+                }
             }
 
             // If there's a task and using container, manually show delete task button.
@@ -268,7 +347,7 @@ public class NewTaskDialogFrag extends DialogFragment
         List<Chip> chips = new LinkedList<>();
 
         for (DocumentSnapshot doc : task.getResult()) {
-            Tag curr = doc.toObject(Tag.class);
+            Tag curr = Tag.fromDoc(doc);
             tags.add(curr);
             chips.add(new Chip(curr.getName(), null));
         }
@@ -287,14 +366,26 @@ public class NewTaskDialogFrag extends DialogFragment
 
     @Override
     public void onClick(View v) {
-        Log.v(LOG_TAG, "onClick - view clicked. Id: " + v.getId());
-        if (v.getId() == R.id.dialog_date_btn) {
-            Log.v(LOG_TAG, "onClick - Date button has been clicked. Setting it to today, for now...");
-            Date current = Calendar.getInstance().getTime();
-            String today = new SimpleDateFormat("MM/dd/yyyy", Locale.US).format(current);
-            mDate.setText(today);
+        if (v.getId() == R.id.dialog_date_imgbtn) {
 
-            // TODO: Launch dialog with calendar picker widget....
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                DatePickerDialog pickerDialog = new DatePickerDialog(getContext());
+                pickerDialog.setOnDateSetListener((view, year, month, dayOfMonth) -> {
+                    Calendar cal = Calendar.getInstance();
+                    cal.set(year, month, dayOfMonth);
+                    String date = new SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()).format(cal.getTime());
+                    mDate.setText(date);
+                });
+
+                pickerDialog.show();
+            } else {
+                Date current = Calendar.getInstance().getTime();
+                String today = new SimpleDateFormat("MM/dd/yyyy", Locale.US).format(current);
+                mDate.setText(today);
+
+                // Do something else... ?
+            }
+
         } else {
             Log.w(LOG_TAG, "onClick - view id not recognized. id: " + v.getId());
         }
@@ -323,8 +414,12 @@ public class NewTaskDialogFrag extends DialogFragment
                 newTask.setFamily(mFamily.isChecked());
 
                 List<? extends ChipInterface> tags = mTagInput.getSelectedChipList();
-                for (ChipInterface tag : tags) {
-                    newTask.addTag_id(tag.getLabel());
+                for (ChipInterface chip : tags) {
+                    for (Tag tag : mTags) {
+                        if (tag.getName().equals(chip.getLabel())) {
+                            newTask.addTag_id(tag.getId());
+                        }
+                    }
                 }
 
                 // If mTask was already set, the dialog was to edit it.

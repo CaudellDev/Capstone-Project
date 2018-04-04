@@ -56,5 +56,10 @@
     <string name="disconnected_click_msg">You cannot add without an internet connection.</string>
     <string name="no_network_menu_msg">Please connect to a network before accessing these menus.</string>
     <string name="empty_task_msg">There are no tasks to display.</string>
+    <string name="date_chooser_desc">Date Chooser</string>
+    <string name="date_desc">Date</string>
+    <string name="duplicate_tag_msg">This tag already exists. Please try again.</string>
+    <string name="add_tag_failure_msg">There was a problem adding the tag. Please try again.</string>
+    <string name="add_tag_success_msg">Tag %s has been successfully added.</string>
 
 </resources>

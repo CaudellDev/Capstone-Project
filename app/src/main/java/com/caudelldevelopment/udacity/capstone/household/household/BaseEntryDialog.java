@@ -62,23 +62,16 @@ public class BaseEntryDialog extends DialogFragment {
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         String entry = getArguments().getString(ENTRY);
-        String title = "";
-        DialogInterface.OnClickListener listener;
 
-        // We can add to this if we need.
+        String title = "";
         switch(entry) {
             case ENTRY_FAMILY:
                 title = getString(R.string.new_family_title);
                 break;
             case ENTRY_TAG:
                 title = getString(R.string.new_tag_title);
-//                listener = (dialog, which) -> {
-//                    String name = mName.getText().toString().trim();
-//                    mListener.onEntrySave(name);
-//                };
                 break;
             default:
-                listener = (dialog, which) -> {};
                 Log.w(LOG_TAG, "Entry is not recognized!!!!");
         }
 

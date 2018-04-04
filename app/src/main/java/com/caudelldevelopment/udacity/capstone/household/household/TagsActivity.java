@@ -1,6 +1,7 @@
 package com.caudelldevelopment.udacity.capstone.household.household;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -15,6 +16,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.caudelldevelopment.udacity.capstone.household.household.data.Tag;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -57,20 +59,23 @@ public class TagsActivity extends AppCompatActivity implements BaseEntryDialog.E
                 .addOnCompleteListener(task -> {
                     List<Tag> tags = new LinkedList<>();
                     for (DocumentSnapshot doc : task.getResult()) {
-                        Tag curr = doc.toObject(Tag.class);
-                        Log.v(LOG_TAG, "onCreate, onCompleteListener - curr tag: " + curr.getName());
+                        Tag curr = Tag.fromDoc(doc);
                         tags.add(curr);
                     }
 
                     mAdapter.data = tags;
                     mAdapter.notifyDataSetChanged();
                 });
-
     }
 
     @Override
     public void onEntrySave(String name) {
         Tag tag = new Tag(name);
+
+        if (mAdapter.data.contains(tag)) {
+            Snackbar.make(findViewById(R.id.app_bar_layout), R.string.duplicate_tag_msg, Snackbar.LENGTH_SHORT).show();
+            return;
+        }
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection(Tag.COL_TAG)
@@ -80,10 +85,11 @@ public class TagsActivity extends AppCompatActivity implements BaseEntryDialog.E
                 mAdapter.data.add(tag);
                 mAdapter.notifyDataSetChanged();
 
-                Snackbar.make(findViewById(R.id.tag_list_layout), "Tag " + name + " has been sucessfully added.", Snackbar.LENGTH_SHORT).show();
+                Snackbar.make(findViewById(R.id.tag_list_layout), getString(R.string.add_tag_success_msg, tag.getName()), Snackbar.LENGTH_SHORT).show();
+            }).addOnFailureListener(e -> {
+                Snackbar.make(findViewById(R.id.tag_list_layout), R.string.add_tag_failure_msg, Snackbar.LENGTH_LONG).show();
             });
     }
-
 
     private class TagViewHolder extends RecyclerView.ViewHolder {
 

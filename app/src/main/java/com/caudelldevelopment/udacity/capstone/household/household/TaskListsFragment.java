@@ -67,6 +67,7 @@ public class TaskListsFragment extends Fragment
     private List<Task> mPersonalTasks;
     private List<Task> mFamilyTasks;
     private List<Family> mFamiliesList;
+    private List<Tag> mTagsList;
 
     private OnListsFragmentListener mListener;
     private TaskListsPagerAdapter mTaskAdapter;
@@ -85,22 +86,18 @@ public class TaskListsFragment extends Fragment
         super.onCreate(savedInstanceState);
         Log.v(LOG_TAG, "onCreate has been run.");
 
-        if (mPersonalTasks == null) mPersonalTasks = new LinkedList<>();
-        if (mFamilyTasks   == null) mFamilyTasks   = new LinkedList<>();
-        if (mFamiliesList  == null) mFamiliesList  = new LinkedList<>();
+        if (mPersonalTasks  == null) mPersonalTasks = new LinkedList<>();
+        if (mFamilyTasks    == null) mFamilyTasks   = new LinkedList<>();
+        if (mFamiliesList   == null) mFamiliesList  = new LinkedList<>();
+        if (mTagsList       == null) mTagsList      = new LinkedList<>();
 
         mDatabase = FirebaseFirestore.getInstance();
 
-        // Listener for the personal tasks
+        startTagsQuery();
         startPersonalQuery();
         startFamiliesQuery();
 
-        if (mNoFamily) {
-//            startFamiliesQuery();
-        } else {
-            // Listener for the family tasks
-            startFamilyQuery();
-        }
+        if (!mNoFamily) startFamilyQuery();
     }
 
     @Override
@@ -204,31 +201,37 @@ public class TaskListsFragment extends Fragment
         // This just replaces the entry. For a final product, I would probably
         // get the tags from Firebase first. Once that query is complete, I could
         // add the new item and submit the full list.
-        for (int i = 0; i < task.getTag_ids().size(); i++) {
-            Tag currTag = new Tag(task.getTag(i));
-            DocumentReference currRef = mDatabase.collection(Tag.COL_TAG).document(currTag.getId());
-            batch.update(currRef, Tag.TASKS_ID, Collections.singletonList(taskRef.getId()));
-        }
-
-        // Add the task id to the list of tasks in the family or user
-//        if (task.isFamily()) {
-//            DocumentReference famRef = mDatabase.collection(Family.COL_TAG).document(task.getAccess_id());
-//            List<String> task_ids = mFamily.getTask_ids();
-//
-//            // Check if the new task already exists to avoid duplicates.
-//            if (!task_ids.contains(taskRef.getId())) {
-//                task_ids.add(taskRef.getId());
-//                batch.update(famRef, Family.TASKS_ID, task_ids);
-//            }
-//        } else {
-//            DocumentReference persRef = mDatabase.collection(User.COL_TAG).document(task.getAccess_id());
-//            List<String> task_ids = mUser.getTask_ids();
-//
-//            if (!task_ids.contains(taskRef.getId())) {
-//                task_ids.add(taskRef.getId());
-//                batch.update(persRef, User.TASKS_ID, task_ids);
-//            }
+//        for (int i = 0; i < task.getTag_ids().size(); i++) {
+//            Tag currTag = new Tag(task.getTag(i));
+//            DocumentReference currRef = mDatabase.collection(Tag.COL_TAG).document(currTag.getId());
+//            batch.update(currRef, Tag.TASKS_ID, Collections.singletonList(taskRef.getId()));
 //        }
+
+        Log.v(LOG_TAG, "addNewTask - task tag ids empty: " + (task.getTag_ids().isEmpty()));
+        Log.v(LOG_TAG, "addNewTask - task tag ids count: " + (task.getTag_ids().size()));
+        Log.v(LOG_TAG, "addNewTask - tags list size: " + mTagsList.size());
+        if (!task.getTag_ids().isEmpty()) {
+            for (int i = 0; i < mTagsList.size(); i++) {
+                Tag curr = mTagsList.get(i);
+
+                Log.v(LOG_TAG, "addNewTask - current tag " + i + ": " + curr.getName());
+
+                boolean contains = (task.getTag_ids().contains(curr.getId()));
+                Log.v(LOG_TAG, "addNewTask - task contains curr: " + contains);
+
+//                if (task.getTag_ids().contains(curr.getId())) {
+                if (contains) {
+                    if (task.getId() == null || task.getId().isEmpty()) {
+                        curr.addTask(taskRef.getId());
+                    } else {
+                        curr.addTask(task.getId());
+                    }
+
+                    DocumentReference tagRef = mDatabase.collection(Tag.COL_TAG).document(curr.getId());
+                    batch.update(tagRef, Tag.TASKS_ID, curr.getTask_ids());
+                }
+            }
+        }
 
         batch.commit()
                 .addOnSuccessListener(Void -> mListener.onAddTaskComplete())
@@ -237,14 +240,10 @@ public class TaskListsFragment extends Fragment
 
     public void addNewTask(Task task, boolean accessChange) {
         if (accessChange) {
-            // If the list is currently set for family, it used to be in the personal task list.
-            List<Task> remove = task.isFamily() ? mPersonalTasks : mFamilyTasks;
-
-            // I probably can't use the remove function because any of the values could be different. Only the id will always be the same.
-            for (Task curr : remove) {
-                if (curr.getId().equals(task.getId())) {
-                    remove.remove(curr);
-                }
+            if (task.isFamily()) {
+                mPersonalTasks.remove(task);
+            } else {
+                mFamilyTasks.remove(task);
             }
         }
 
@@ -271,6 +270,11 @@ public class TaskListsFragment extends Fragment
         mDatabase.collection(Family.COL_TAG)
                 .orderBy(Family.NAME_ID)
                 .addSnapshotListener(this::doFamilies);
+    }
+
+    private void startTagsQuery() {
+        mDatabase.collection(Tag.COL_TAG)
+                .addSnapshotListener(this::doTags);
     }
 
     private void doPersonalTasks(QuerySnapshot query, FirebaseFirestoreException e) {
@@ -411,6 +415,70 @@ public class TaskListsFragment extends Fragment
         }
     }
 
+    private void doTags(QuerySnapshot querySnapshot, FirebaseFirestoreException e) {
+        if (e != null) {
+            Log.w(LOG_TAG, "doTags - Firebase Exception: " + e.getMessage());
+            e.printStackTrace();
+            return;
+        }
+
+        for (DocumentChange dc : querySnapshot.getDocumentChanges()) {
+            switch(dc.getType()) {
+                case ADDED:
+                    DocumentSnapshot added = dc.getDocument();
+                    Tag added_tag = Tag.fromDoc(added);
+                    mTagsList.add(added_tag);
+                    break;
+                case MODIFIED:
+                    DocumentSnapshot mod = dc.getDocument();
+                    Tag mod_tag = Tag.fromDoc(mod);
+
+                    for (int i = 0; i < mTagsList.size(); i++) {
+                        Tag curr = mTagsList.get(i);
+                        if (curr.equals(mod_tag)) {
+                            mTagsList.set(i, mod_tag);
+                            break;
+                        }
+                    }
+                    break;
+                case REMOVED:
+                    // Do nothing
+                    break;
+                default:
+                    return;
+            }
+        }
+
+        Log.v(LOG_TAG, "doTags - build list is done. Now update fragments. " + (mPersonalFrag == null) + ", " + (mFamilyFrag == null));
+
+        if (mPersonalFrag != null) {
+            mPersonalFrag.updateTags();
+        }
+
+        if (mFamilyFrag != null) {
+            mFamilyFrag.updateTags();
+        }
+    }
+
+    @Nullable
+    @Override
+    public Tag getTag(String id) {
+        Log.v(LOG_TAG, "getTag - id: " + id);
+        for (Tag curr : mTagsList) {
+            Log.v(LOG_TAG, "getTag - curr: " + curr.getName());
+            if (curr.getId().equals(id)) {
+                return curr;
+            }
+        }
+
+        return null;
+    }
+
+    @Nullable
+    public List<Tag> getAllTags() {
+        return mTagsList;
+    }
+
     private void updateWidget(boolean personal) {
         Intent intent = new Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
         intent.putExtra(TasksWidget.IS_PERSONAL, personal);
@@ -462,8 +530,6 @@ public class TaskListsFragment extends Fragment
 
         batch.commit()
                 .addOnSuccessListener(v -> notifyFamiliesUpdate());
-
-        startFamiliesQuery();
     }
 
     public void onFamilyEntered(String name) {
