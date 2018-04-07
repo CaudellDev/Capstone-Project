@@ -8,12 +8,12 @@
     tools:context="com.caudelldevelopment.udacity.capstone.household.household.TagsActivity">
 
     <android.support.design.widget.AppBarLayout
-        android:id="@+id/app_bar_layout"
+        android:id="@+id/tabs_app_bar_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
         <android.support.v7.widget.Toolbar
-            android:id="@+id/toolbar"
+            android:id="@+id/tabs_toolbar"
             android:layout_width="match_parent"
             android:layout_height="?actionBarSize"
             android:background="?attr/colorPrimary"

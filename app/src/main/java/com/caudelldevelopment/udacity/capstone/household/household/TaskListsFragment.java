@@ -86,10 +86,18 @@ public class TaskListsFragment extends Fragment
         super.onCreate(savedInstanceState);
         Log.v(LOG_TAG, "onCreate has been run.");
 
-        if (mPersonalTasks  == null) mPersonalTasks = new LinkedList<>();
-        if (mFamilyTasks    == null) mFamilyTasks   = new LinkedList<>();
-        if (mFamiliesList   == null) mFamiliesList  = new LinkedList<>();
-        if (mTagsList       == null) mTagsList      = new LinkedList<>();
+        if (mPersonalTasks == null) mPersonalTasks = new LinkedList<>();
+        if (mFamilyTasks   == null) mFamilyTasks   = new LinkedList<>();
+        if (mFamiliesList  == null) mFamiliesList  = new LinkedList<>();
+        if (mTagsList      == null) mTagsList      = new LinkedList<>();
+
+        if (savedInstanceState != null) {
+            User temp = savedInstanceState.getParcelable("user");
+            Log.v(LOG_TAG, "onCreate, restoring saved state - user == null: " + (temp == null));
+            if (temp != null) {
+                mUser = temp;
+            }
+        }
 
         mDatabase = FirebaseFirestore.getInstance();
 
@@ -144,13 +152,6 @@ public class TaskListsFragment extends Fragment
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-
-
-    }
-
-    @Override
     public void onAttach(Context context) {
         Log.v(LOG_TAG, "onAttach has started!!!");
         super.onAttach(context);
@@ -174,10 +175,25 @@ public class TaskListsFragment extends Fragment
         mListener = null;
     }
 
-//    @Override
-//    public void onSaveInstanceState(Bundle outState) {
-//        super.onSaveInstanceState(outState);
-//    }
+    @Override
+    public void onPause() {
+        Log.v(LOG_TAG, "onPause has started. mUser == null: " + (mUser == null));
+        super.onPause();
+    }
+
+    @Override
+    public void onResume() {
+        Log.v(LOG_TAG, "onResume has started. mUser == null: " + (mUser == null));
+        super.onResume();
+    }
+
+        @Override
+    public void onSaveInstanceState(Bundle outState) {
+
+        outState.putParcelable("user", mUser);
+
+        super.onSaveInstanceState(outState);
+    }
 
 
     // Would this be better in a WorkerThread or AsyncTask? Is this thread safe?

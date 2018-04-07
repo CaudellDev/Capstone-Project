@@ -29,6 +29,9 @@ import com.caudelldevelopment.udacity.capstone.household.household.data.Task;
 import com.caudelldevelopment.udacity.capstone.household.household.data.User;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.util.Arrays;
+import java.util.List;
+
 public class MainActivity extends AppCompatActivity
                           implements View.OnClickListener,
                                      TaskListsFragment.OnListsFragmentListener,
@@ -62,8 +65,11 @@ public class MainActivity extends AppCompatActivity
             mNoFamily = (mFamily == null);
         } else {
             Parcelable[] user_data = getIntent().getParcelableArrayExtra("user_data");
-            mUser = (User) user_data[0];
-            mFamily = (Family) user_data[1];
+            if (user_data != null) {
+                mUser = (User) user_data[0];
+                mFamily = (Family) user_data[1];
+            }
+
             mNoFamily = (mFamily == null);
 
             if (!mNoFamily) {
@@ -108,7 +114,7 @@ public class MainActivity extends AppCompatActivity
     public boolean onOptionsItemSelected(MenuItem item) {
         if (!isConnected) {
             doSnackbar(R.string.no_network_menu_msg);
-            return true;
+            return super.onOptionsItemSelected(item);
         }
 
         switch(item.getItemId()) {
@@ -124,7 +130,17 @@ public class MainActivity extends AppCompatActivity
                 return true;
             case R.id.menu_tags:
                 Intent tags = new Intent(this, TagsActivity.class);
-                startActivity(tags);
+                List<Tag> all_tags = mListFragment.getAllTags();
+
+                if (all_tags != null) {
+                    Tag[] tags_arr = new Tag[all_tags.size()];
+                    tags_arr = all_tags.toArray(tags_arr);
+
+                    Parcelable[] temp_arr = Arrays.copyOf(tags_arr, tags_arr.length, Parcelable[].class);
+                    tags.putExtra("all_tags", temp_arr);
+
+                    startActivity(tags);
+                }
                 return true;
             case R.id.menu_settings:
                 Intent settings = new Intent(this, SettingsActivity.class);

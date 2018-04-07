@@ -10,6 +10,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.Layout;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,6 +26,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class FamilyActivity extends AppCompatActivity implements View.OnClickListener {
+
+    private static final String LOG_TAG = FamilyActivity.class.getSimpleName();
 
     public static final String USER_EXTRA = "user_extra";
     public static final String LEFT_FAMILY = "left_fammily";
@@ -85,6 +88,13 @@ public class FamilyActivity extends AppCompatActivity implements View.OnClickLis
 
         leaveFamily = findViewById(R.id.leave_family_btn);
         leaveFamily.setOnClickListener(this);
+    }
+
+    @Override
+    public void onBackPressed() {
+        Log.v(LOG_TAG, "onBackPressed has started!!!");
+        super.onBackPressed();
+        Log.v(LOG_TAG, "onBackPressed has ended!!!!!");
     }
 
     private void updateMembersList() {

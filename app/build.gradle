@@ -1,6 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
+    signingConfigs {
+        debug {
+        }
+    }
     compileSdkVersion 26
     defaultConfig {
         applicationId "com.caudelldevelopment.udacity.capstone.household.household"
@@ -17,7 +21,6 @@ android {
         }
     }
     buildToolsVersion '27.0.3'
-
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -40,7 +43,6 @@ dependencies {
     implementation 'com.google.firebase:firebase-auth:11.8.0'
     implementation 'com.firebaseui:firebase-ui-auth:3.1.0'
     implementation 'com.google.android.gms:play-services-auth:11.8.0'
-
 }
 
 apply plugin: 'com.google.gms.google-services'

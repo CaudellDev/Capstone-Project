@@ -1,6 +1,7 @@
 package com.caudelldevelopment.udacity.capstone.household.household;
 
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -11,15 +12,19 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.caudelldevelopment.udacity.capstone.household.household.data.Tag;
+import com.caudelldevelopment.udacity.capstone.household.household.data.Task;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -34,7 +39,7 @@ public class TagsActivity extends AppCompatActivity implements BaseEntryDialog.E
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tags);
-        Toolbar toolbar = findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.tabs_toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
@@ -53,19 +58,30 @@ public class TagsActivity extends AppCompatActivity implements BaseEntryDialog.E
         mAdapter = new TagAdapter();
         mTagList.setAdapter(mAdapter);
 
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection(Tag.COL_TAG)
-                .get()
-                .addOnCompleteListener(task -> {
-                    List<Tag> tags = new LinkedList<>();
-                    for (DocumentSnapshot doc : task.getResult()) {
-                        Tag curr = Tag.fromDoc(doc);
-                        tags.add(curr);
-                    }
+        Parcelable[] temp_arr = getIntent().getParcelableArrayExtra("all_tags");
 
-                    mAdapter.data = tags;
-                    mAdapter.notifyDataSetChanged();
-                });
+        if (temp_arr != null && temp_arr.length > 0) {
+            Tag[] task_arr = Arrays.copyOf(temp_arr, temp_arr.length, Tag[].class);
+            mAdapter.data = new LinkedList<>(Arrays.asList(task_arr));
+        } else {
+            Log.w(LOG_TAG, "onCreate - List of tags could not be retrieved.");
+            mAdapter.data = new LinkedList<>();
+        }
+
+        mAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            // For some reason, without this manual finish on back
+            // MainActivity gets recreated causing a NullPointerException
+            // on mUser.
+            finish();
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -73,7 +89,7 @@ public class TagsActivity extends AppCompatActivity implements BaseEntryDialog.E
         Tag tag = new Tag(name);
 
         if (mAdapter.data.contains(tag)) {
-            Snackbar.make(findViewById(R.id.app_bar_layout), R.string.duplicate_tag_msg, Snackbar.LENGTH_SHORT).show();
+            Snackbar.make(findViewById(R.id.tabs_app_bar_layout), R.string.duplicate_tag_msg, Snackbar.LENGTH_SHORT).show();
             return;
         }
 
