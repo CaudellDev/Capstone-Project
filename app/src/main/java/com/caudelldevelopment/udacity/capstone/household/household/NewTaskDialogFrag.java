@@ -454,7 +454,7 @@ public class NewTaskDialogFrag extends DialogFragment
 
                 break;
             case Dialog.BUTTON_NEGATIVE:
-                mListener.onDialogNegativeClick();
+                mListener.onDialogClose();
                 break;
             case Dialog.BUTTON_NEUTRAL:
                 AlertDialog.Builder conf_builder = new AlertDialog.Builder(getContext());
@@ -466,6 +466,8 @@ public class NewTaskDialogFrag extends DialogFragment
                             db_task.collection(Task.COL_TAG)
                                     .document(mTask.getId())
                                     .delete();
+
+                            mListener.onDialogClose();
                         }).setNegativeButton("CANCEL", (conf_dialog, conf_which) -> {
 
                 });
@@ -479,8 +481,7 @@ public class NewTaskDialogFrag extends DialogFragment
 
     public interface NewTaskDialogListener {
         void onDialogPositiveClick(Task task);
-        void onDialogNegativeClick();
+        void onDialogClose();
         void onFragmentReady();
-        void deleteTask(Task task);
     }
 }

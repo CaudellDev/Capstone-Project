@@ -292,10 +292,12 @@ public class MainActivity extends AppCompatActivity
         } else {
             mListFragment.addNewTask(task);
         }
+
+        onDialogClose();
     }
 
     @Override
-    public void onDialogNegativeClick() {
+    public void onDialogClose() {
         if (wide_layout) {
             FragmentManager manager = getSupportFragmentManager();
             NewTaskDialogFrag dialog = (NewTaskDialogFrag) manager.findFragmentByTag(NewTaskDialogFrag.DIALOG_TAG);
@@ -339,11 +341,6 @@ public class MainActivity extends AppCompatActivity
             container.setVisibility(View.VISIBLE);
             container.startAnimation(AnimationUtils.loadAnimation(this, R.anim.right_in));
         }
-    }
-
-    @Override
-    public void deleteTask(Task task) {
-        Log.v(LOG_TAG, "deleteTask - deleting task: " + task.getId() + ", " + task.getName());
     }
 
     @Override

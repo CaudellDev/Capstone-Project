@@ -91,6 +91,7 @@ public class LoginActivity extends AppCompatActivity implements OnSuccessListene
                 AuthUI.getInstance()
                         .createSignInIntentBuilder()
                         .setAvailableProviders(providers)
+                        .setIsSmartLockEnabled(false)
                         .build(),
                 SIGN_IN_REQ_CODE
         );
