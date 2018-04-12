@@ -66,14 +66,16 @@ public class FamilyListFragment extends Fragment {
      * @return A new instance of fragment FamilyListFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static FamilyListFragment newInstance(List<Task> data) {
+    public static FamilyListFragment newInstance(@Nullable List<Task> data) {
         FamilyListFragment fragment = new FamilyListFragment();
 
         Bundle args = new Bundle();
 
-        Task[] task_arr = new Task[data.size()];
-        task_arr = data.toArray(task_arr);
-        args.putParcelableArray(FAML_TASK_LIST, task_arr);
+        if (data != null) {
+            Task[] task_arr = new Task[data.size()];
+            task_arr = data.toArray(task_arr);
+            args.putParcelableArray(FAML_TASK_LIST, task_arr);
+        }
 
         fragment.setArguments(args);
         return fragment;

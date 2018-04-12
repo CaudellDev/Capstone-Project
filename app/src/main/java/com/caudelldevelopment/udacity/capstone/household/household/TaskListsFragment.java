@@ -4,6 +4,7 @@ import android.appwidget.AppWidgetManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
@@ -33,9 +34,12 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.ListenerRegistration;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.WriteBatch;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -86,16 +90,25 @@ public class TaskListsFragment extends Fragment
         super.onCreate(savedInstanceState);
         Log.v(LOG_TAG, "onCreate has been run.");
 
-        if (mPersonalTasks == null) mPersonalTasks = new LinkedList<>();
-        if (mFamilyTasks   == null) mFamilyTasks   = new LinkedList<>();
-        if (mFamiliesList  == null) mFamiliesList  = new LinkedList<>();
-        if (mTagsList      == null) mTagsList      = new LinkedList<>();
+//        if (mPersonalTasks == null) mPersonalTasks = new LinkedList<>();
+//        if (mFamilyTasks   == null) mFamilyTasks   = new LinkedList<>();
+//        if (mFamiliesList  == null) mFamiliesList  = new LinkedList<>();
+//        if (mTagsList      == null) mTagsList      = new LinkedList<>();
 
         if (savedInstanceState != null) {
             User temp = savedInstanceState.getParcelable("user");
             Log.v(LOG_TAG, "onCreate, restoring saved state - user == null: " + (temp == null));
             if (temp != null) {
                 mUser = temp;
+            }
+
+            Parcelable[] temp_arr = savedInstanceState.getParcelableArray("all_tags");
+            Log.v(LOG_TAG, "onCreate, restoring saved state - temp_arry == null" + (temp_arr == null));
+
+            if (temp_arr != null && temp_arr.length > 0) {
+                Tag[] tag_arr = Arrays.copyOf(temp_arr, temp_arr.length, Tag[].class);
+                mTagsList = new LinkedList<>(Arrays.asList(tag_arr));
+
             }
         }
 
@@ -139,6 +152,7 @@ public class TaskListsFragment extends Fragment
         return rootView;
     }
 
+    @SuppressWarnings("all")
     public String getSelectedTab() {
         return mTabLayout.getTabAt(mTabLayout.getSelectedTabPosition()).getText().toString();
     }
@@ -189,8 +203,11 @@ public class TaskListsFragment extends Fragment
 
         @Override
     public void onSaveInstanceState(Bundle outState) {
-
         outState.putParcelable("user", mUser);
+
+        Tag[] tag_arr = new Tag[mTagsList.size()];
+        tag_arr = mTagsList.toArray(tag_arr);
+        outState.putParcelableArray("all_tags", tag_arr);
 
         super.onSaveInstanceState(outState);
     }
@@ -267,30 +284,38 @@ public class TaskListsFragment extends Fragment
     }
 
     private void startPersonalQuery() {
-        mDatabase.collection(Task.COL_TAG)
-                .whereEqualTo(Task.FAM_ID, false)
-                .whereEqualTo(Task.ACCESS_ID, mUser.getId())
-                .orderBy(Task.DATE_ID)
-                .addSnapshotListener(this::doPersonalTasks);
+        if (mPersonalTasks == null) {
+            mDatabase.collection(Task.COL_TAG)
+                    .whereEqualTo(Task.FAM_ID, false)
+                    .whereEqualTo(Task.ACCESS_ID, mUser.getId())
+                    .orderBy(Task.DATE_ID)
+                    .addSnapshotListener(this::doPersonalTasks);
+        }
     }
 
     private void startFamilyQuery() {
-        mDatabase.collection(Task.COL_TAG)
-                .whereEqualTo(Task.FAM_ID, true)
-                .whereEqualTo(Task.ACCESS_ID, mUser.getFamily())
-                .orderBy(Task.DATE_ID)
-                .addSnapshotListener(this::doFamilyTasks);
+        if (mFamilyTasks == null) {
+            mDatabase.collection(Task.COL_TAG)
+                    .whereEqualTo(Task.FAM_ID, true)
+                    .whereEqualTo(Task.ACCESS_ID, mUser.getFamily())
+                    .orderBy(Task.DATE_ID)
+                    .addSnapshotListener(this::doFamilyTasks);
+        }
     }
 
     private void startFamiliesQuery() {
-        mDatabase.collection(Family.COL_TAG)
-                .orderBy(Family.NAME_ID)
-                .addSnapshotListener(this::doFamilies);
+        if (mFamiliesList == null) {
+            mDatabase.collection(Family.COL_TAG)
+                    .orderBy(Family.NAME_ID)
+                    .addSnapshotListener(this::doFamilies);
+        }
     }
 
     private void startTagsQuery() {
-        mDatabase.collection(Tag.COL_TAG)
-                .addSnapshotListener(this::doTags);
+        if (mTagsList == null) {
+            mDatabase.collection(Tag.COL_TAG)
+                    .addSnapshotListener(this::doTags);
+        }
     }
 
     private void doPersonalTasks(QuerySnapshot query, FirebaseFirestoreException e) {
@@ -299,6 +324,8 @@ public class TaskListsFragment extends Fragment
             e.printStackTrace();
             return;
         }
+
+        if (mPersonalTasks == null) mPersonalTasks = new LinkedList<>();
 
         for (DocumentChange dc : query.getDocumentChanges()) {
             switch (dc.getType()) {
@@ -344,6 +371,8 @@ public class TaskListsFragment extends Fragment
             e.printStackTrace();
             return;
         }
+
+        if (mFamilyTasks == null) mFamilyTasks = new LinkedList<>();
 
         for (DocumentChange dc : query.getDocumentChanges()) {
             switch (dc.getType()) {
@@ -392,6 +421,8 @@ public class TaskListsFragment extends Fragment
             return;
         }
 
+        if (mFamiliesList == null) mFamiliesList = new LinkedList<>();
+
         for (DocumentChange dc : query.getDocumentChanges()) {
             switch (dc.getType()) {
                 case ADDED:
@@ -438,6 +469,8 @@ public class TaskListsFragment extends Fragment
             return;
         }
 
+        if (mTagsList == null) mTagsList = new LinkedList<>();
+
         for (DocumentChange dc : querySnapshot.getDocumentChanges()) {
             switch(dc.getType()) {
                 case ADDED:
@@ -479,7 +512,8 @@ public class TaskListsFragment extends Fragment
     @Nullable
     @Override
     public Tag getTag(String id) {
-        Log.v(LOG_TAG, "getTag - id: " + id);
+        Log.v(LOG_TAG, "getTag - mTagsList == null: " + (mTagsList == null));
+        Log.v(LOG_TAG, "getTag - mTagsList.size   : " + ((mTagsList == null) ? 0 : mTagsList.size()));
         for (Tag curr : mTagsList) {
             Log.v(LOG_TAG, "getTag - curr: " + curr.getName());
             if (curr.getId().equals(id)) {
@@ -646,7 +680,7 @@ public class TaskListsFragment extends Fragment
 
     private class TaskListsPagerAdapter extends FragmentStatePagerAdapter {
 
-        public TaskListsPagerAdapter(FragmentManager fm) {
+        TaskListsPagerAdapter(FragmentManager fm) {
             super(fm);
         }
 
@@ -657,7 +691,7 @@ public class TaskListsFragment extends Fragment
             Fragment result = null;
 
             if (position == 0) {
-                Log.v(LOG_TAG, "TaskListPagerAdapter, getPersonalFrag - mPersonalTasks.size: " + mPersonalTasks.size());
+//                Log.v(LOG_TAG, "TaskListPagerAdapter, getPersonalFrag - mPersonalTasks.size: " + mPersonalTasks.size());
                 Log.v(LOG_TAG, "TaskListPagerAdapter, getPersonalFrag - mPersonalFrag == null: " + (mPersonalFrag == null));
                 if (mPersonalFrag == null) {
                     result = PersonalListFragment.newInstance(mPersonalTasks);
@@ -667,7 +701,7 @@ public class TaskListsFragment extends Fragment
                     result = mPersonalFrag;
                 }
             } else if (position == 1) {
-                Log.v(LOG_TAG, "TaskListPagerAdapter, getFamilyFrag - mFamilyTasks.size: " + mFamilyTasks.size());
+//                Log.v(LOG_TAG, "TaskListPagerAdapter, getFamilyFrag - mFamilyTasks.size: " + mFamilyTasks.size());
                 Log.v(LOG_TAG, "TaskListPagerAdapter, getFamilyFrag - mFamilyFrag == null: " + (mFamilyFrag == null));
 
                 if (mNoFamily) {

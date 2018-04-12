@@ -55,6 +55,8 @@ public class MainActivity extends AppCompatActivity
     private Family mFamily;
     private boolean mNoFamily;
 
+    private NetworkReceiver mNetworkRec;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -88,12 +90,21 @@ public class MainActivity extends AppCompatActivity
         View view_holder = findViewById(R.id.main_view_holder);
         wide_layout = (view_holder != null);
 
-        NetworkReceiver receiver = new NetworkReceiver();
-        IntentFilter networkFilter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
-        registerReceiver(receiver, networkFilter);
+        mNetworkRec = new NetworkReceiver();
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        IntentFilter networkFilter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
+        registerReceiver(mNetworkRec, networkFilter);
+    }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        unregisterReceiver(mNetworkRec);
+    }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
@@ -203,6 +214,12 @@ public class MainActivity extends AppCompatActivity
     @Nullable
     public Family getFamily() {
         return mFamily;
+    }
+
+    @Nullable
+    @Override
+    public List<Tag> getAllTags() {
+        return mListFragment.getAllTags();
     }
 
     @Override

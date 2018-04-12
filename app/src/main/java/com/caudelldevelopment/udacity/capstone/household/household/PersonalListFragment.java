@@ -67,13 +67,15 @@ public class PersonalListFragment extends Fragment {
      * @param data Parameter 1.
      * @return A new instance of fragment PersonalListFragment.
      */
-    public static PersonalListFragment newInstance(List<Task> data) {
+    public static PersonalListFragment newInstance(@Nullable List<Task> data) {
         PersonalListFragment fragment = new PersonalListFragment();
         Bundle args = new Bundle();
 
-        Task[] task_arr = new Task[data.size()];
-        task_arr = data.toArray(task_arr);
-        args.putParcelableArray(PERS_TASK_LIST, task_arr);
+        if (data != null) {
+            Task[] task_arr = new Task[data.size()];
+            task_arr = data.toArray(task_arr);
+            args.putParcelableArray(PERS_TASK_LIST, task_arr);
+        }
 
         fragment.setArguments(args);
         return fragment;
@@ -113,7 +115,11 @@ public class PersonalListFragment extends Fragment {
         DividerItemDecoration itemDecoration = new DividerItemDecoration(getContext(), DividerItemDecoration.VERTICAL);
         itemDecoration.setDrawable(getContext().getDrawable(R.drawable.list_divider));
         mTaskList.addItemDecoration(itemDecoration);
-        mTaskList.setLayoutManager(new LinearLayoutManager(getContext()));
+
+        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getContext());
+
+
+        mTaskList.setLayoutManager(layoutManager);
 
         mTaskList.setAdapter(mAdapter);
         mAdapter.notifyDataSetChanged();
@@ -210,7 +216,7 @@ public class PersonalListFragment extends Fragment {
         }
     }
 
-    public class PersonalTaskViewHolder extends RecyclerView.ViewHolder {
+    class PersonalTaskViewHolder extends RecyclerView.ViewHolder {
 
         private View item;
         private TextView title;
@@ -220,7 +226,7 @@ public class PersonalListFragment extends Fragment {
 
         private LinearLayout tags_layout;
 
-        public PersonalTaskViewHolder(View itemView) {
+        PersonalTaskViewHolder(View itemView) {
             super(itemView);
 
             item = itemView;
@@ -235,7 +241,7 @@ public class PersonalListFragment extends Fragment {
             item.setOnClickListener(this::onItemClick);
         }
 
-        public void onCompleteChanged(CompoundButton buttonView, boolean isChecked) {
+        void onCompleteChanged(CompoundButton buttonView, boolean isChecked) {
             int pos = getAdapterPosition();
             Task curr = mAdapter.data.get(pos);
 
@@ -244,7 +250,7 @@ public class PersonalListFragment extends Fragment {
             mListener.onPersonalTaskCheckClick(curr, pos);
         }
 
-        public void onItemClick(View v) {
+        void onItemClick(View v) {
             int pos = getAdapterPosition();
             Task curr = mAdapter.data.get(pos);
 
@@ -256,6 +262,8 @@ public class PersonalListFragment extends Fragment {
 
         // Array list of the tasks
         protected List<Task> data;
+
+
 
         @Override
         public PersonalTaskViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -279,34 +287,12 @@ public class PersonalListFragment extends Fragment {
                 Log.v(LOG_TAG, "PersonalAdapter.onBindViewHolder - curr_chip: " + curr_chip.getLabel());
                 holder.tags_layout.addView(curr_chip);
             }
-
-//            Log.v(LOG_TAG, "FamilyAdapter.onBindViewHolder - curr.getTag_ids.size: " + curr.getName() + ", " + curr.getTag_ids().size());
-//            for (int i = 0; i < curr.getTag_ids().size(); i++) {
-//                // Check if the tag already exists before adding
-//                ChipView check = (ChipView) holder.tags_layout.getChildAt(i);
-//                if (check != null && check.getLabel().equals(curr.getTag(i))) {
-//                    continue;
-//                }
-//
-//                Tag tag = mListener.getTag(curr.getTag(i));
-//
-//                if (tag != null) {
-//                    ChipView tag_chip = new ChipView(getContext());
-//                    tag_chip.setLabel(tag.getName());
-//                    tag_chip.setPadding(4, 4, 4, 4);
-//                    tag_chip.setLabelColor(getResources().getColor(R.color.black));
-//                    tag_chip.setChipBackgroundColor(getResources().getColor(R.color.colorAccent));
-//
-//                    holder.tags_layout.addView(tag_chip);
-//                }
-//            }
         }
 
         @Override
         public int getItemCount() {
             return data != null ? data.size() : 0;
         }
-
 
         private List<ChipView> getTagChipList(Task task) {
             List<String> tagIdList = task.getTag_ids();

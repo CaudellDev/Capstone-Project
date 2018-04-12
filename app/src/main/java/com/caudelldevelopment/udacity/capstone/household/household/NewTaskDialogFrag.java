@@ -76,16 +76,18 @@ public class NewTaskDialogFrag extends DialogFragment
 
     private ImageButton mDatePicker;
 
-    public static NewTaskDialogFrag newInstance(boolean family, List<Tag> all_tags, User user, @Nullable Task task) {
+    public static NewTaskDialogFrag newInstance(boolean family, @Nullable List<Tag> all_tags, User user, @Nullable Task task) {
 
         Bundle args = new Bundle();
 
         args.putBoolean(Family.DOC_TAG, family);
         args.putParcelable(User.DOC_TAG, user);
 
-        Parcelable[] tag_arr = new Parcelable[all_tags.size()];
-        tag_arr = all_tags.toArray(tag_arr);
-        args.putParcelableArray("all_tags", tag_arr);
+        if (all_tags != null) {
+            Parcelable[] tag_arr = new Parcelable[all_tags.size()];
+            tag_arr = all_tags.toArray(tag_arr);
+            args.putParcelableArray("all_tags", tag_arr);
+        }
 
         // Task will usually be null. Will be used to handle ListItemClicks to edit existing tags.
         if (task != null) args.putParcelable(Task.TAG, task);
@@ -254,14 +256,21 @@ public class NewTaskDialogFrag extends DialogFragment
         if (temp_arr != null && temp_arr.length > 0) {
             Tag[] tag_arr = Arrays.copyOf(temp_arr, temp_arr.length, Tag[].class);
             mTags = new LinkedList<>(Arrays.asList(tag_arr));
+        } else {
+            List<Tag> temp_list = mListener.getAllTags();
+            if (temp_list != null) {
+                mTags = temp_list;
+            }
         }
 
-        for (Tag tag : mTags) {
-            Chip tag_chip = new Chip(tag.getName(), "");
-            mChips.add(tag_chip);
-        }
+        if (mTags != null) {
+            for (Tag tag : mTags) {
+                Chip tag_chip = new Chip(tag.getName(), "");
+                mChips.add(tag_chip);
+            }
 
-        mTagInput.setFilterableList(mChips);
+            mTagInput.setFilterableList(mChips);
+        }
 
         // Disable the family switch if they haven't selected a family yet.
         User user = args.getParcelable(User.DOC_TAG);
@@ -483,5 +492,6 @@ public class NewTaskDialogFrag extends DialogFragment
         void onDialogPositiveClick(Task task);
         void onDialogClose();
         void onFragmentReady();
+        List<Tag> getAllTags();
     }
 }
