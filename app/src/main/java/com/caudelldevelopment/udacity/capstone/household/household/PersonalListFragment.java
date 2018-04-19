@@ -60,13 +60,6 @@ public class PersonalListFragment extends Fragment {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param data Parameter 1.
-     * @return A new instance of fragment PersonalListFragment.
-     */
     public static PersonalListFragment newInstance(@Nullable List<Task> data) {
         PersonalListFragment fragment = new PersonalListFragment();
         Bundle args = new Bundle();
@@ -84,7 +77,7 @@ public class PersonalListFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        List<Task> data = new LinkedList<>();
+        List<Task> data;
 
         if (getArguments() != null) {
             Parcelable[] temp_arr = getArguments().getParcelableArray(PERS_TASK_LIST);
@@ -96,13 +89,10 @@ public class PersonalListFragment extends Fragment {
                 Log.w(LOG_TAG, "onCreate - List of tasks could not be retrieved.");
                 data = new LinkedList<>();
             }
-        }
 
-        if (mAdapter == null) {
-            mAdapter = new PersonalAdapter();
+            if (mAdapter == null) mAdapter = new PersonalAdapter();
+            mAdapter.data = data;
         }
-
-        mAdapter.data = data;
     }
 
     @Override
@@ -115,11 +105,7 @@ public class PersonalListFragment extends Fragment {
         DividerItemDecoration itemDecoration = new DividerItemDecoration(getContext(), DividerItemDecoration.VERTICAL);
         itemDecoration.setDrawable(getContext().getDrawable(R.drawable.list_divider));
         mTaskList.addItemDecoration(itemDecoration);
-
-        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getContext());
-
-
-        mTaskList.setLayoutManager(layoutManager);
+        mTaskList.setLayoutManager(new LinearLayoutManager(getContext()));
 
         mTaskList.setAdapter(mAdapter);
         mAdapter.notifyDataSetChanged();
@@ -136,17 +122,21 @@ public class PersonalListFragment extends Fragment {
         super.onActivityCreated(savedInstanceState);
 
         if (savedInstanceState != null) {
-            Log.v(LOG_TAG, "onActivityCreated - restoring fragment state.");
-
             Parcelable[] stored = savedInstanceState.getParcelableArray(PERS_TASK_LIST);
 
             if (stored != null) {
-                Task[] temp_arr;
-                temp_arr = Arrays.copyOf(stored, stored.length, Task[].class);
+                Task[] temp_arr = Arrays.copyOf(stored, stored.length, Task[].class);
 
-                if (mAdapter == null) mAdapter = new PersonalAdapter();
-                mAdapter.data = Arrays.asList(temp_arr);
-                mAdapter.notifyDataSetChanged();
+                if (mAdapter == null) {
+                    mAdapter = new PersonalAdapter();
+
+                    if (mTaskList != null) {
+                        mTaskList.setAdapter(mAdapter);
+                    }
+                }
+
+                mAdapter.update(Arrays.asList(temp_arr));
+                updateEmpty();
             }
         }
     }
@@ -186,20 +176,12 @@ public class PersonalListFragment extends Fragment {
         mListener = null;
     }
 
-
-
     public void setData(List<Task> data) {
-        if (mAdapter == null) mAdapter = new PersonalAdapter();
-
-        mAdapter.data = data;
-        mAdapter.notifyDataSetChanged();
-
+        mAdapter.update(data);
         updateEmpty();
     }
 
     public void updateTags() {
-        Log.v(LOG_TAG, "updateTags has started!!!!");
-        if (mAdapter == null) mAdapter = new PersonalAdapter();
         mAdapter.notifyDataSetChanged();
     }
 
@@ -246,7 +228,6 @@ public class PersonalListFragment extends Fragment {
             Task curr = mAdapter.data.get(pos);
 
             curr.setComplete(isChecked);
-
             mListener.onPersonalTaskCheckClick(curr, pos);
         }
 
@@ -263,7 +244,14 @@ public class PersonalListFragment extends Fragment {
         // Array list of the tasks
         protected List<Task> data;
 
+        PersonalAdapter() {
+            data = new LinkedList<>();
+        }
 
+        public void update(List<Task> data) {
+            this.data = data;
+            notifyDataSetChanged();
+        }
 
         @Override
         public PersonalTaskViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -284,7 +272,6 @@ public class PersonalListFragment extends Fragment {
 
             holder.tags_layout.removeAllViews();
             for (ChipView curr_chip : tags_list) {
-                Log.v(LOG_TAG, "PersonalAdapter.onBindViewHolder - curr_chip: " + curr_chip.getLabel());
                 holder.tags_layout.addView(curr_chip);
             }
         }
@@ -302,16 +289,11 @@ public class PersonalListFragment extends Fragment {
                 Tag tag = mListener.getTag(curr);
                 String label;
 
-                Log.v(LOG_TAG, "PersonalAdapter.getTagChipList - tag from listener is null: " + (tag == null));
-
                 if (tag == null) {
-//                    label = curr;
                     continue;
                 } else {
                     label = tag.getName();
                 }
-
-                Log.v(LOG_TAG, "PersonalAdapter.getTagChipList - tag from listener label: " + label);
 
                 ChipView chip = new ChipView(getContext());
                 chip.setLabel(label);

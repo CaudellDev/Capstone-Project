@@ -21,6 +21,7 @@ import android.widget.TextView;
 import com.caudelldevelopment.udacity.capstone.household.household.data.Tag;
 import com.caudelldevelopment.udacity.capstone.household.household.data.Task;
 import com.google.android.gms.tasks.OnFailureListener;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -32,7 +33,6 @@ public class TagsActivity extends AppCompatActivity implements BaseEntryDialog.E
 
     private static final String LOG_TAG = TagsActivity.class.getSimpleName();
 
-    private RecyclerView mTagList;
     private TagAdapter mAdapter;
 
     @Override
@@ -49,7 +49,7 @@ public class TagsActivity extends AppCompatActivity implements BaseEntryDialog.E
             dialog.show(getSupportFragmentManager(), "base_entry_dialog");
         });
 
-        mTagList = findViewById(R.id.tag_list_rv);
+        RecyclerView mTagList = findViewById(R.id.tag_list_rv);
         DividerItemDecoration itemDecoration = new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
         itemDecoration.setDrawable(this.getDrawable(R.drawable.list_divider));
         mTagList.addItemDecoration(itemDecoration);
@@ -94,6 +94,13 @@ public class TagsActivity extends AppCompatActivity implements BaseEntryDialog.E
         }
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        // Tags won't be modified or removed, so this should always be true.
+        if (tag.getId() == null) {
+            DocumentReference tagRef = db.collection(Tag.COL_TAG).document();
+            tag.setId(tagRef.getId());
+        }
+
         db.collection(Tag.COL_TAG)
             .document(tag.getId())
             .set(tag.toMap())

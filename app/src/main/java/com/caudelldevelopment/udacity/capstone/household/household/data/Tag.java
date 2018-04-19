@@ -2,6 +2,7 @@ package com.caudelldevelopment.udacity.capstone.household.household.data;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.Log;
 
 import com.google.firebase.firestore.DocumentSnapshot;
 
@@ -14,6 +15,8 @@ import java.util.Map;
  * Created by caude on 12/25/2017.
  */
 public class Tag implements Parcelable {
+
+    private static final String LOG_TAG = Tag.class.getSimpleName();
 
     public static final String COL_TAG = "tags";
     public static final String DOC_TAG = "tag";
@@ -108,16 +111,17 @@ public class Tag implements Parcelable {
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof Tag) {
-            Tag temp = (Tag) obj;
-            String temp_id = temp.getId();
-            return (temp_id != null) && id.equals(temp_id);
+            Tag check = (Tag) obj;
+            String check_id = check.getId();
+            return (id == null) ? (check_id == null) : id.equals(check_id);
         } else {
             return false;
         }
     }
 
-    // ###----- Parcelable -----###
 
+
+    // ###----- Parcelable -----###
 
     @Override
     public int describeContents() {

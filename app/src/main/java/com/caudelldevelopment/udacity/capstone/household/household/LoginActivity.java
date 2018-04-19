@@ -153,7 +153,7 @@ public class LoginActivity extends AppCompatActivity implements OnSuccessListene
             // ... submit it to Firestore. Once complete, launch MainActivity.
             db.collection(User.COL_TAG)
                     .document(mUser.getId())
-                    .set(mUser)
+                    .set(mUser.toMap())
                     .addOnSuccessListener(task -> startMainActivity())
                     .addOnFailureListener(Throwable::printStackTrace);
         }

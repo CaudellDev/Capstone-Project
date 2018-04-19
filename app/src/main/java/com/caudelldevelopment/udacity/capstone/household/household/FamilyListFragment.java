@@ -59,13 +59,6 @@ public class FamilyListFragment extends Fragment {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @return A new instance of fragment FamilyListFragment.
-     */
-    // TODO: Rename and change types and number of parameters
     public static FamilyListFragment newInstance(@Nullable List<Task> data) {
         FamilyListFragment fragment = new FamilyListFragment();
 
@@ -84,7 +77,7 @@ public class FamilyListFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        List<Task> data = new LinkedList<>();
+        List<Task> data;
 
         if (getArguments() != null) {
             Parcelable[] temp_arr = getArguments().getParcelableArray(FAML_TASK_LIST);
@@ -96,10 +89,10 @@ public class FamilyListFragment extends Fragment {
                 Log.w(LOG_TAG, "onCreate - List of tasks could not be retrieved.");
                 data = new LinkedList<>();
             }
-        }
 
-        if (mAdapter == null) mAdapter = new FamilyAdapter();
-        mAdapter.data = data;
+            if (mAdapter == null) mAdapter = new FamilyAdapter();
+            mAdapter.data = data;
+        }
     }
 
     @Override
@@ -130,17 +123,25 @@ public class FamilyListFragment extends Fragment {
         super.onActivityCreated(savedInstanceState);
 
         if (savedInstanceState != null) {
-            Log.v(LOG_TAG, "onActivityCreated - restoring fragment state.");
-
             Parcelable[] stored = savedInstanceState.getParcelableArray(FAML_TASK_LIST);
 
             if (stored != null) {
-                Task[] temp_arr;
-                temp_arr = Arrays.copyOf(stored, stored.length, Task[].class);
+                Task[] temp_arr = Arrays.copyOf(stored, stored.length, Task[].class);
 
-                if (mAdapter == null) mAdapter = new FamilyAdapter();
-                mAdapter.data = Arrays.asList(temp_arr);
-                mAdapter.notifyDataSetChanged();
+                if (mAdapter == null) {
+                    mAdapter = new FamilyAdapter();
+
+                    if (mTaskList != null) {
+                        mTaskList.setAdapter(mAdapter);
+                    }
+                }
+
+
+//                mAdapter.data = Arrays.asList(temp_arr);
+//                mAdapter.notifyDataSetChanged();
+
+                mAdapter.update(Arrays.asList(temp_arr));
+                updateEmpty();
             }
         }
     }
@@ -181,11 +182,7 @@ public class FamilyListFragment extends Fragment {
     }
 
     public void setData(List<Task> data) {
-//        if (mAdapter == null) mAdapter = new FamilyAdapter();
-
-        mAdapter.data = data;
-        mAdapter.notifyDataSetChanged();
-
+        mAdapter.update(data);
         updateEmpty();
     }
 
@@ -215,7 +212,6 @@ public class FamilyListFragment extends Fragment {
         private CheckBox comp;
 
         private LinearLayout tags_layout;
-        private List<ChipView> tags_list;
 
         public FamilyTaskViewHolder(View itemView) {
             super(itemView);
@@ -227,9 +223,6 @@ public class FamilyListFragment extends Fragment {
             comp = itemView.findViewById(R.id.task_checkbox);
 
             tags_layout = itemView.findViewById(R.id.task_tags_ll);
-
-//            Task curr = mAdapter.data.get(getAdapterPosition());
-//            tags_list = getTagChipList(curr);
 
             comp.setOnCheckedChangeListener(this::onCompleteChanged);
             item.setOnClickListener(this::onItemClick);
@@ -249,14 +242,21 @@ public class FamilyListFragment extends Fragment {
 
             mListener.onFamilyTaskClick(curr, pos);
         }
-
-
     }
 
     public class FamilyAdapter extends RecyclerView.Adapter<FamilyTaskViewHolder> {
 
         // Array list of the tasks
         protected List<Task> data;
+
+        FamilyAdapter() {
+            data = new LinkedList<>();
+        }
+
+        void update(List<Task> data) {
+            this.data = data;
+            notifyDataSetChanged();
+        }
 
         @Override
         public FamilyTaskViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -279,37 +279,6 @@ public class FamilyListFragment extends Fragment {
             for (ChipView curr_chip : tags_list) {
                 holder.tags_layout.addView(curr_chip);
             }
-
-//            for (int i = 0; i < holder.tags_list.size(); i++) {
-//                View layout_child = holder.tags_layout.getChildAt(i);
-//                if (layout_child instanceof ChipView) {
-//                    ChipView layout_chip = (ChipView) layout_child;
-//                    if (layout_chip.equals())
-//                }
-//            }
-
-//            Log.v(LOG_TAG, "FamilyAdapter.onBindViewHolder - curr.getTag_ids.size: " + curr.getTag_ids().size());
-//            for (int i = 0; i < curr.getTag_ids().size(); i++) {
-//                // Check if the tag already exists before adding
-//                ChipView check = (ChipView) holder.tags_layout.getChildAt(i);
-//                if (check != null && check.getLabel().equals(curr.getTag(i))) {
-//                    continue;
-//                }
-//
-//                // Trying to avoid using a ChipInput. The user doesn't need to type here
-//                // and it would improve performance to have a ViewGroup with ChipViews.
-//                Tag tag = mListener.getTag(curr.getTag(i));
-//
-//                if (tag != null) {
-//                    ChipView tag_chip = new ChipView(getContext());
-//                    tag_chip.setLabel(tag.getName());
-//                    tag_chip.setPadding(4, 4, 4, 4);
-//                    tag_chip.setLabelColor(getResources().getColor(R.color.black));
-//                    tag_chip.setChipBackgroundColor(getResources().getColor(R.color.colorAccent));
-//
-//                    holder.tags_layout.addView(tag_chip);
-//                }
-//            }
         }
 
         @Override
@@ -325,16 +294,11 @@ public class FamilyListFragment extends Fragment {
                 Tag tag = mListener.getTag(curr);
                 String label;
 
-                Log.v(LOG_TAG, "FamilyAdapter.getTagChipList - tag from listener is null: " + (tag == null));
-
                 if (tag == null) {
-//                    label = curr;
                     continue;
                 } else {
                     label = tag.getName();
                 }
-
-                Log.v(LOG_TAG, "FamilyAdapter.getTagChipList - tag from listener label: " + label);
 
                 ChipView chip = new ChipView(getContext());
                 chip.setLabel(label);

@@ -61,5 +61,6 @@
     <string name="duplicate_tag_msg">This tag already exists. Please try again.</string>
     <string name="add_tag_failure_msg">There was a problem adding the tag. Please try again.</string>
     <string name="add_tag_success_msg">Tag %s has been successfully added.</string>
+    <string name="new_task_comp_msg">Task has been added successfully .</string>
 
 </resources>

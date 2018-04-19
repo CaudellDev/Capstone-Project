@@ -103,12 +103,11 @@ public class TaskListsFragment extends Fragment
             }
 
             Parcelable[] temp_arr = savedInstanceState.getParcelableArray("all_tags");
-            Log.v(LOG_TAG, "onCreate, restoring saved state - temp_arry == null" + (temp_arr == null));
+            Log.v(LOG_TAG, "onCreate, restoring saved state - temp_arr == null: " + (temp_arr == null));
 
             if (temp_arr != null && temp_arr.length > 0) {
                 Tag[] tag_arr = Arrays.copyOf(temp_arr, temp_arr.length, Tag[].class);
                 mTagsList = new LinkedList<>(Arrays.asList(tag_arr));
-
             }
         }
 
@@ -229,45 +228,39 @@ public class TaskListsFragment extends Fragment
             batch.update(taskRef, task.toMap());
         }
 
-        // Add the task reference id to the tags the task is using.
-        // For now, Firebase doesn't support adding an item to an array field.
-        // This just replaces the entry. For a final product, I would probably
-        // get the tags from Firebase first. Once that query is complete, I could
-        // add the new item and submit the full list.
-//        for (int i = 0; i < task.getTag_ids().size(); i++) {
-//            Tag currTag = new Tag(task.getTag(i));
-//            DocumentReference currRef = mDatabase.collection(Tag.COL_TAG).document(currTag.getId());
-//            batch.update(currRef, Tag.TASKS_ID, Collections.singletonList(taskRef.getId()));
-//        }
+        for (Tag curr : mTagsList) Log.v(LOG_TAG, "addNewTask - mTagsList tag:    " + curr.getName() + ", id: " + curr.getId());
+        for (String curr :
+                task.getTag_ids()) Log.v(LOG_TAG, "addNewTask - new task id list: " + curr);
 
-        Log.v(LOG_TAG, "addNewTask - task tag ids empty: " + (task.getTag_ids().isEmpty()));
-        Log.v(LOG_TAG, "addNewTask - task tag ids count: " + (task.getTag_ids().size()));
-        Log.v(LOG_TAG, "addNewTask - tags list size: " + mTagsList.size());
-        if (!task.getTag_ids().isEmpty()) {
+        // Check each tag, and add or remove the id's that are missing.
+        if (mTagsList != null) {
             for (int i = 0; i < mTagsList.size(); i++) {
-                Tag curr = mTagsList.get(i);
+                Tag curr_tag = mTagsList.get(i);
+                Log.v(LOG_TAG, "addNewTask - current tag " + i + ": " + curr_tag.getName());
 
-                Log.v(LOG_TAG, "addNewTask - current tag " + i + ": " + curr.getName());
+                boolean tag_has_task = curr_tag.getTask_ids().contains(task.getId());
+                boolean task_has_tag = task.getTag_ids().contains(curr_tag.getId());
 
-                boolean contains = (task.getTag_ids().contains(curr.getId()));
-                Log.v(LOG_TAG, "addNewTask - task contains curr: " + contains);
+                Log.v(LOG_TAG, "addNewTask - tag_has_task: " + tag_has_task + ", task_has_tag: " + task_has_tag);
 
-//                if (task.getTag_ids().contains(curr.getId())) {
-                if (contains) {
-                    if (task.getId() == null || task.getId().isEmpty()) {
-                        curr.addTask(taskRef.getId());
-                    } else {
-                        curr.addTask(task.getId());
-                    }
-
-                    DocumentReference tagRef = mDatabase.collection(Tag.COL_TAG).document(curr.getId());
-                    batch.update(tagRef, Tag.TASKS_ID, curr.getTask_ids());
+                // If tag does not have it but the task does, it's a new tag. Add it to the task.
+                if (!tag_has_task && task_has_tag) {
+                    curr_tag.addTask(task.getId());
                 }
+
+                // If tag has the task id, but the task does not, it has been removed.
+                if (tag_has_task && !task_has_tag) {
+                    curr_tag.removeTask(task.getId());
+                }
+
+                // Submit updated tag to the batch operation.
+                DocumentReference tagRef = mDatabase.collection(Tag.COL_TAG).document(curr_tag.getId());
+                batch.update(tagRef, Tag.TASKS_ID, curr_tag.getTask_ids());
             }
         }
 
         batch.commit()
-                .addOnSuccessListener(Void -> mListener.onAddTaskComplete())
+                .addOnSuccessListener(v -> onAddNewTaskComplete(v, task))
                 .addOnFailureListener(Throwable::printStackTrace);
     }
 
@@ -281,6 +274,44 @@ public class TaskListsFragment extends Fragment
         }
 
         addNewTask(task);
+    }
+
+    private void onAddNewTaskComplete(Void v, Task task) {
+
+        List<Task> list_check;
+
+        if (task.isFamily()) {
+            list_check = mFamilyTasks;
+        } else {
+            list_check = mPersonalTasks;
+        }
+
+        for (int i = 0; i < list_check.size(); i++) {
+            Task curr = list_check.get(i);
+            if (curr.equals(task)) { // This compares the ids of the tasks
+                list_check.set(i, task);
+
+                if (task.isFamily()) {
+                    updateFamilyTasks();
+                } else {
+                    updatePersonalTasks();
+                }
+
+                mListener.doSnackbar(R.string.new_task_comp_msg);
+                return;
+            }
+        }
+
+        // If it reaches here, it didn't match any tasks. It must be new.
+        list_check.add(task);
+
+        if (task.isFamily()) {
+            updateFamilyTasks();
+        } else {
+            updatePersonalTasks();
+        }
+
+        mListener.doSnackbar(R.string.new_task_comp_msg);
     }
 
     private void startPersonalQuery() {
@@ -319,6 +350,8 @@ public class TaskListsFragment extends Fragment
     }
 
     private void doPersonalTasks(QuerySnapshot query, FirebaseFirestoreException e) {
+        Log.v(LOG_TAG, "doPersonalTasks has started!!!! mPersonalTasks == null: " + (mPersonalTasks == null));
+
         if (e != null) {
             Log.w(LOG_TAG, "doPersonalTasks - Firebase Exception: " + e.getMessage());
             e.printStackTrace();
@@ -328,6 +361,8 @@ public class TaskListsFragment extends Fragment
         if (mPersonalTasks == null) mPersonalTasks = new LinkedList<>();
 
         for (DocumentChange dc : query.getDocumentChanges()) {
+            Log.v(LOG_TAG, "doPersonalTasks - doc change type: " + dc.getType().name());
+
             switch (dc.getType()) {
                 case ADDED:
                     DocumentSnapshot added = dc.getDocument();
@@ -359,10 +394,7 @@ public class TaskListsFragment extends Fragment
             }
         }
 
-        if (mPersonalFrag != null) {
-            mPersonalFrag.setData(mPersonalTasks);
-            updateWidget(true);
-        }
+        updatePersonalTasks();
     }
 
     private void doFamilyTasks(QuerySnapshot query, FirebaseFirestoreException e) {
@@ -408,6 +440,19 @@ public class TaskListsFragment extends Fragment
             }
         }
 
+        updateFamilyTasks();
+    }
+
+    private void updatePersonalTasks() {
+        Log.v(LOG_TAG, "updatePersonalTasks has started!!!! mPersonalFrag == null: " + (mPersonalFrag == null));
+
+        if (mPersonalFrag != null) {
+            mPersonalFrag.setData(mPersonalTasks);
+            updateWidget(true);
+        }
+    }
+
+    private void updateFamilyTasks() {
         if (mFamilyFrag != null) {
             mFamilyFrag.setData(mFamilyTasks);
             updateWidget(false);
@@ -471,7 +516,11 @@ public class TaskListsFragment extends Fragment
 
         if (mTagsList == null) mTagsList = new LinkedList<>();
 
+        for (Tag curr : mTagsList) Log.v(LOG_TAG, "doTags - mTagsList before build: " + curr.getName());
+
         for (DocumentChange dc : querySnapshot.getDocumentChanges()) {
+            Log.v(LOG_TAG, "doTags - doc change type: " + dc.getType());
+
             switch(dc.getType()) {
                 case ADDED:
                     DocumentSnapshot added = dc.getDocument();
@@ -498,8 +547,9 @@ public class TaskListsFragment extends Fragment
             }
         }
 
-        Log.v(LOG_TAG, "doTags - build list is done. Now update fragments. " + (mPersonalFrag == null) + ", " + (mFamilyFrag == null));
+        for (Tag curr : mTagsList) Log.v(LOG_TAG, "doTags - mTagsList after build: " + curr.getName());
 
+        Log.v(LOG_TAG, "doTags - build list is done. Now update fragments. " + (mPersonalFrag == null) + ", " + (mFamilyFrag == null));
         if (mPersonalFrag != null) {
             mPersonalFrag.updateTags();
         }
@@ -666,7 +716,6 @@ public class TaskListsFragment extends Fragment
      */
     public interface OnListsFragmentListener {
         void onListsFragAttach();
-        void onAddTaskComplete();
         void onTaskClick(Task task, String tab);
         User getUser();
         Family getFamily();

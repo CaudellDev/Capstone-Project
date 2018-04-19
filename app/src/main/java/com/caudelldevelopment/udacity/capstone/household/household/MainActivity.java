@@ -274,11 +274,6 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onAddTaskComplete() {
-        Snackbar.make(findViewById(R.id.appBarLayout), "Task added succesfully.", Snackbar.LENGTH_SHORT).show();
-    }
-
-    @Override
     public void onTaskClick(Task task, String tab) {
         if (tab != null && task != null) {
             if (wide_layout) {
