@@ -58,8 +58,6 @@ public class LoginActivity extends AppCompatActivity implements OnSuccessListene
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.v(LOG_TAG, "onActivityResult has started!!! requestCode: " + requestCode);
-
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == SIGN_IN_REQ_CODE) {
@@ -133,7 +131,6 @@ public class LoginActivity extends AppCompatActivity implements OnSuccessListene
         if (documentSnapshot.exists()) {
             // Launch activity with user object
             mUser = User.fromDoc(documentSnapshot);
-            Log.v(LOG_TAG, "onSuccess, doc exists - mUser == null: " + (mUser == null));
 
             if (mUser.getFamily() != null && !mUser.getFamily().isEmpty()) {
                 db.collection(Family.COL_TAG)

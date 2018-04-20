@@ -58,6 +58,7 @@ public class Task implements Parcelable {
         return task;
     }
 
+    // Required for Firebase DocumentSnapshot toObject function.
     public Task() {
         tag_ids = new LinkedList<>();
         complete = false;

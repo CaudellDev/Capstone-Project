@@ -260,12 +260,14 @@ public class TaskListsFragment extends Fragment
         }
 
         batch.commit()
-                .addOnSuccessListener(v -> onAddNewTaskComplete(v, task))
+                .addOnSuccessListener(v -> onAddNewTaskComplete(task))
                 .addOnFailureListener(Throwable::printStackTrace);
     }
 
     public void addNewTask(Task task, boolean accessChange) {
+        // If the task has changed between personal or family, we need to remove it from the original list
         if (accessChange) {
+            // If it's currently family, it used to be personal and vice versa.
             if (task.isFamily()) {
                 mPersonalTasks.remove(task);
             } else {
@@ -276,41 +278,42 @@ public class TaskListsFragment extends Fragment
         addNewTask(task);
     }
 
-    private void onAddNewTaskComplete(Void v, Task task) {
+    private void onAddNewTaskComplete(Task task) {
 
-        List<Task> list_check;
+//        List<Task> list_check;
+//
+//        if (task.isFamily()) {
+//            list_check = mFamilyTasks;
+//        } else {
+//            list_check = mPersonalTasks;
+//        }
+//
+//        for (int i = 0; i < list_check.size(); i++) {
+//            Task curr = list_check.get(i);
+//            if (curr.equals(task)) { // This compares the ids of the tasks
+//                list_check.set(i, task);
+//
+//                if (task.isFamily()) {
+//                    updateFamilyTasks();
+//                } else {
+//                    updatePersonalTasks();
+//                }
+//
+//                mListener.doSnackbar(R.string.new_task_comp_msg);
+//                return;
+//            }
+//        }
+//
+//        // If it reaches here, it didn't match any tasks. It must be new.
+//        list_check.add(task);
+//
+//        if (task.isFamily()) {
+//            updateFamilyTasks();
+//        } else {
+//            updatePersonalTasks();
+//        }
 
-        if (task.isFamily()) {
-            list_check = mFamilyTasks;
-        } else {
-            list_check = mPersonalTasks;
-        }
-
-        for (int i = 0; i < list_check.size(); i++) {
-            Task curr = list_check.get(i);
-            if (curr.equals(task)) { // This compares the ids of the tasks
-                list_check.set(i, task);
-
-                if (task.isFamily()) {
-                    updateFamilyTasks();
-                } else {
-                    updatePersonalTasks();
-                }
-
-                mListener.doSnackbar(R.string.new_task_comp_msg);
-                return;
-            }
-        }
-
-        // If it reaches here, it didn't match any tasks. It must be new.
-        list_check.add(task);
-
-        if (task.isFamily()) {
-            updateFamilyTasks();
-        } else {
-            updatePersonalTasks();
-        }
-
+        // Just show the snackbar. The snapshot listener will trigger and update/add the task.
         mListener.doSnackbar(R.string.new_task_comp_msg);
     }
 

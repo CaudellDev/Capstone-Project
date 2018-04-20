@@ -66,7 +66,6 @@ public class NewTaskDialogFrag extends DialogFragment
     private EditText mName;
     private Switch mFamily;
     private EditText mDate;
-//    private Button mDatePickerBtn;
     private EditText mDesc;
     private ChipsInput mTagInput;
 
@@ -101,8 +100,6 @@ public class NewTaskDialogFrag extends DialogFragment
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-
-
         mChips = new LinkedList<>();
         accessIdChange = false;
     }
@@ -131,21 +128,6 @@ public class NewTaskDialogFrag extends DialogFragment
     public void onDestroy() {
         Log.v(LOG_TAG, "onDestroy has started!!!");
         super.onDestroy();
-    }
-
-    @Override
-    public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
-        super.onViewStateRestored(savedInstanceState);
-
-//        if (savedInstanceState != null) {
-//            String[] chip_labels = savedInstanceState.getStringArray("sel_tags");
-//
-//            if (chip_labels != null && chip_labels.length > 0) {
-//                for (String label : chip_labels) {
-//                    mTagInput.addChip(new Chip(label, ""));
-//                }
-//            }
-//        }
     }
 
     @Override
@@ -203,12 +185,12 @@ public class NewTaskDialogFrag extends DialogFragment
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setView(rootView)
-                .setPositiveButton("SAVE", this)
-                .setNegativeButton("DISMISS", this);
+                .setPositiveButton(R.string.save_text, this)
+                .setNegativeButton(R.string.dismiss_text, this);
 
         // If the user selected a task, this will nto be null and will allow them to delete the task.
         if (mTask != null) {
-            builder.setNeutralButton("DELETE TASK", this);
+            builder.setNeutralButton(R.string.delete_text, this);
         }
 
         return builder.create();
@@ -226,11 +208,6 @@ public class NewTaskDialogFrag extends DialogFragment
 
     public Task getTask() {
         return mTask;
-    }
-
-    public void removeTask() {
-        mTask = null;
-        updateViews();
     }
 
     public boolean isAccessIdDiff() {
@@ -325,8 +302,6 @@ public class NewTaskDialogFrag extends DialogFragment
 
             if (mTags != null && !mTags.isEmpty()) {
                 for (String tag_id : mTask.getTag_ids()) {
-                    Log.v(LOG_TAG, "updateViews, tag loop - tag: " + tag_id);
-
                     for (Tag curr : mTags) {
                         if (curr.getId().equals(tag_id)) {
                             mTagInput.addChip(curr.getName(), null);
@@ -367,7 +342,7 @@ public class NewTaskDialogFrag extends DialogFragment
 
         mTagInput.setFilterableList(mChips);
 
-        // We only need this when starting an animation.
+        // We only need this when starting the animation in wide layout.
         if (!getShowsDialog()) {
             mListener.onFragmentReady();
         }
@@ -403,19 +378,10 @@ public class NewTaskDialogFrag extends DialogFragment
     @Override
     public void onClick(DialogInterface dialog, int which) {
         Bundle args = getArguments();
-
         User user = args.getParcelable("user");
-        if (user.getFamily() == null || user.getFamily().equals("")) {
-            mFamily.setEnabled(false);
-        }
-
-        // Automatically set it based on the selected tab.
-        mFamily.setChecked(args.getBoolean("family"));
 
         switch (which) {
             case Dialog.BUTTON_POSITIVE:
-
-                Log.v(LOG_TAG, "onCreateDialog - positive button click. Name: " + mName.getText());
                 Task newTask = new Task();
                 newTask.setName(mName.getText().toString());
                 newTask.setDesc(mDesc.getText().toString());
@@ -438,7 +404,6 @@ public class NewTaskDialogFrag extends DialogFragment
                     newTask.setComplete(mTask.isComplete());
                     // If this is different, we need to change the access id to the right one.
                     if (newTask.isFamily() != mTask.isFamily()) {
-                        Log.v(LOG_TAG, "onClick - access id has changed. Task is now " + (newTask.isFamily() ? "Family" : "Personal"));
                         accessIdChange = true;
                         if (newTask.isFamily()) {
                             newTask.setAccess_id(user.getFamily());
@@ -467,17 +432,16 @@ public class NewTaskDialogFrag extends DialogFragment
                 break;
             case Dialog.BUTTON_NEUTRAL:
                 AlertDialog.Builder conf_builder = new AlertDialog.Builder(getContext());
-                conf_builder.setTitle("Are you sure?")
-                        .setMessage("You are about to delete task " + mTask.getName() + ". Are you sure?") // Not using the edit field text because those changes haven't been saved.
-                        .setPositiveButton("DELETE", (conf_dialog, conf_which) -> {
-                            Log.v(LOG_TAG, "onCreateDialog, confirm delete positive click listener - deleting task: " + mTask.getName());
+                conf_builder.setTitle(R.string.are_you_sure_title)
+                        .setMessage(getString(R.string.are_you_sure_msg, mTask.getName())) // Not using the edit field text because those changes haven't been saved.
+                        .setPositiveButton(R.string.delete_text, (conf_dialog, conf_which) -> {
                             FirebaseFirestore db_task = FirebaseFirestore.getInstance();
                             db_task.collection(Task.COL_TAG)
                                     .document(mTask.getId())
                                     .delete();
 
                             mListener.onDialogClose();
-                        }).setNegativeButton("CANCEL", (conf_dialog, conf_which) -> {
+                        }).setNegativeButton(R.string.cancel_text, (conf_dialog, conf_which) -> {
 
                 });
 

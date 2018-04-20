@@ -32,15 +32,13 @@
     <string name="logout_key">logout_preference</string>
     <string name="acc_key">account_category</string>
     <string name="family_title_menu">Family Options</string>
-    <string name="select_header">You have not chosen a famlly you would like to join. Please select one from the list below, or create your own.</string>
+    <string name="select_header">You have not chosen a family you would like to join. Please select one from the list below, or create your own.</string>
     <string name="select_subheader">Tasks you create for the family will be visible to all of it\'s members, and you can see tasks the other members add.</string>
     <string name="family_item_count">Members: %d</string>
     <string name="new_family_title">Add new Family</string>
     <string name="new_tag_title">Add new Tag</string>
     <string name="family_add_failure">Family was not successfully added. Please try again.</string>
     <string name="login_user_null">Login failed. Could not retrieve user information.</string>
-    <string name="appwidget_text">EXAMPLE</string>
-    <string name="add_widget">Add widget</string>
 
     <string name="widget_data_updated">app_widget_data_updated_intent_tag</string>
     <string name="widget_empty_text">No items in list.</string>
@@ -62,5 +60,11 @@
     <string name="add_tag_failure_msg">There was a problem adding the tag. Please try again.</string>
     <string name="add_tag_success_msg">Tag %s has been successfully added.</string>
     <string name="new_task_comp_msg">Task has been added successfully .</string>
+    <string name="are_you_sure_title">Are you sure?</string>
+    <string name="are_you_sure_msg">You are about to delete task %s. Are you sure?</string>
+    <string name="save_text">SAVE</string>
+    <string name="dismiss_text">DISMISS</string>
+    <string name="delete_text">DELETE TASK</string>
+    <string name="cancel_text">CANCEL</string>
 
 </resources>

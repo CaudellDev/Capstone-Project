@@ -30,6 +30,7 @@ public class User implements Parcelable {
         return user;
     }
 
+    // Required for Firebase DocumentSnapshot toObject function.
     public User() {
         family = "";
     }

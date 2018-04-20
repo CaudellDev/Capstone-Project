@@ -34,6 +34,11 @@ public class Tag implements Parcelable {
         return tag;
     }
 
+    // Required for Firebase DocumentSnapshot.toObject function.
+    public Tag() {
+        task_ids = new LinkedList<>();
+    }
+
     private Tag(Parcel in) {
         id = in.readString();
         name = in.readString();

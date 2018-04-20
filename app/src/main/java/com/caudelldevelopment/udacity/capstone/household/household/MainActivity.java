@@ -135,7 +135,6 @@ public class MainActivity extends AppCompatActivity
                 } else {
                     Intent family = new Intent(this, FamilyActivity.class);
                     family.putExtra(FamilyActivity.USER_EXTRA, mUser);
-//                    startActivity(family);
                     startActivityForResult(family, FAMILY_REQ_CODE);
                 }
                 return true;
@@ -192,8 +191,6 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onBackPressed() {
-//        super.onBackPressed();
-
         Intent on_up_pressed_data = new Intent();
         on_up_pressed_data.putExtra(ON_UP_CLICKED, true);
         setResult(RESULT_OK, on_up_pressed_data);

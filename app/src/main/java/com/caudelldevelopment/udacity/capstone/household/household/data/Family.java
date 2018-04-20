@@ -35,6 +35,11 @@ public class Family implements Parcelable {
         return family;
     }
 
+    // Required for Firebase DocumentSnapshot toObject function.
+    public Family() {
+        members = new LinkedList<>();
+    }
+
     public Family(String name, User user) {
         this.name = name;
         members = new LinkedList<>();
