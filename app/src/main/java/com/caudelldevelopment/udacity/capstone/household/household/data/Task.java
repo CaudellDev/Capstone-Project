@@ -79,7 +79,6 @@ public class Task implements Parcelable {
     public Map<String, Object> toMap() {
         Map<String, Object> map = new HashMap<>();
 
-//        map.put(ID, id);
         map.put(ACCESS_ID, access_id);
         map.put(NAME_ID, name);
         map.put(DESC_ID, desc);
@@ -120,18 +119,7 @@ public class Task implements Parcelable {
     }
 
     public String getDate() {
-        String result = date;
-
-//        try {
-//            Date temp = new SimpleDateFormat("dd/MM/yyyy", Locale.US).parse(date);
-//            result = temp.toString();
-//        } catch (ParseException e) {
-//            e.printStackTrace();
-//            result = date;
-//        }
-
-//        Log.v(LOG_TAG, "getDate - result: " + ((result != null) ? result : "null"));
-        return result;
+        return date;
     }
 
     public void setDate(String date) {
@@ -157,25 +145,9 @@ public class Task implements Parcelable {
     public List<String> getTag_ids() {
         return tag_ids;
     }
-    public String getTag(int pos) {
-        return tag_ids.get(pos);
-    }
-
-    public void setTag_ids(List<String> tag_ids) {
-        this.tag_ids = tag_ids;
-    }
-    public void setTag_id(int pos, String tag) {
-        this.tag_ids.set(pos, tag);
-    }
 
     public void addTag_id(String tag) {
         tag_ids.add(tag);
-    }
-    public void removeTag_id(int pos) {
-        tag_ids.remove(pos);
-    }
-    public void removeTag_id(String tag) {
-        tag_ids.remove(tag);
     }
 
     @Override

@@ -24,7 +24,6 @@ public class Family implements Parcelable {
 
     public static final String NAME_ID = "name";
     public static final String MEMBERS_ID = "members";
-    public static final String TASKS_ID = "task_ids";
 
     private String name;
     private String id;
@@ -34,10 +33,6 @@ public class Family implements Parcelable {
         Family family = doc.toObject(Family.class);
         family.setId(doc.getId());
         return family;
-    }
-
-    public Family() {
-        members = new LinkedList<>();
     }
 
     public Family(String name, User user) {
@@ -59,7 +54,6 @@ public class Family implements Parcelable {
 
         result.put(NAME_ID, name);
         result.put(MEMBERS_ID, members);
-//        result.put(TASKS_ID, task_ids);
 
         return result;
     }
@@ -82,10 +76,6 @@ public class Family implements Parcelable {
 
     public List<String> getMembers() {
         return members;
-    }
-
-    public void setMembers(List<String> members) {
-        this.members = members;
     }
 
     public void removeMember(String member) {

@@ -26,17 +26,12 @@ public class Tag implements Parcelable {
 
     private String name;
     private String id;
-//    private int count;
     private List<String> task_ids;
 
     public static Tag fromDoc(DocumentSnapshot doc) {
         Tag tag = doc.toObject(Tag.class);
         tag.setId(doc.getId());
         return tag;
-    }
-
-    public Tag() {
-        task_ids = new LinkedList<>();
     }
 
     private Tag(Parcel in) {
@@ -76,24 +71,8 @@ public class Tag implements Parcelable {
         this.id = id;
     }
 
-    public int getCount() {
-        return task_ids.size();
-    }
-
     public List<String> getTask_ids() {
         return task_ids;
-    }
-
-    public String getTask(int pos) {
-        return task_ids.get(pos);
-    }
-
-    public void setTask_ids(List<String> task_ids) {
-        this.task_ids = task_ids;
-    }
-
-    public void setTask(int pos, String task) {
-        task_ids.set(pos, task);
     }
 
     public void addTask(String task) {
@@ -102,10 +81,6 @@ public class Tag implements Parcelable {
 
     public void removeTask(String task) {
         task_ids.remove(task);
-    }
-
-    public void removeTask(int pos) {
-        task_ids.remove(pos);
     }
 
     @Override
@@ -118,8 +93,6 @@ public class Tag implements Parcelable {
             return false;
         }
     }
-
-
 
     // ###----- Parcelable -----###
 

@@ -23,7 +23,6 @@ public class User implements Parcelable {
     private String name;
     private String id;
     private String family;
-//    private List<String> task_ids;
 
     public static User fromDoc(DocumentSnapshot doc) {
         User user = doc.toObject(User.class);
@@ -38,18 +37,12 @@ public class User implements Parcelable {
     public User(FirebaseUser user) {
         id = user.getUid();
         name = user.getDisplayName();
-
-
-//        user.setId(firebaseUser.getUid());
-//        user.setName(firebaseUser.getDisplayName());
-//        user.setFamily("");
     }
 
     private User(Parcel in) {
         name = in.readString();
         id = in.readString();
         family = in.readString();
-//        task_ids = in.createStringArrayList();
     }
 
     public Map<String, Object> toMap() {
@@ -57,7 +50,6 @@ public class User implements Parcelable {
 
         result.put(NAME_ID, name);
         result.put(FAMILY_ID, family);
-//        result.put(TASKS_ID, task_ids);
 
         return result;
     }
