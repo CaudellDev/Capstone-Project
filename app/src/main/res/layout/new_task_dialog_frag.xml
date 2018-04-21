@@ -34,22 +34,29 @@
             android:switchPadding="8dp"
             android:text="@string/family_title" />
 
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2" />
+
         <EditText
             android:id="@+id/dialog_date_tv"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
+            android:minWidth="40dp"
+            android:layout_gravity="end|center_horizontal"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="4dp"
             android:ems="10"
             android:hint="@string/date_desc"
             android:inputType="date"
-            android:textSize="14sp" />
+            android:textSize="16sp" />
 
         <ImageButton style="@style/Base.Widget.AppCompat.Button.Borderless"
             android:id="@+id/dialog_date_imgbtn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="end|center_horizontal"
             android:layout_margin="5dp"
             android:src="@drawable/ic_today_black_24dp"
             android:contentDescription="@string/date_chooser_desc"/>
@@ -67,7 +74,7 @@
         android:ems="10"
         android:hint="@string/description"
         android:inputType="textMultiLine"
-        android:textSize="14sp" />
+        android:textSize="18sp" />
 
     <com.pchmn.materialchips.ChipsInput
         android:id="@+id/dialog_tag_ci"
