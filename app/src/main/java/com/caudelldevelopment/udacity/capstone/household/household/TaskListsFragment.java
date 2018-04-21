@@ -88,22 +88,14 @@ public class TaskListsFragment extends Fragment
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.v(LOG_TAG, "onCreate has been run.");
-
-//        if (mPersonalTasks == null) mPersonalTasks = new LinkedList<>();
-//        if (mFamilyTasks   == null) mFamilyTasks   = new LinkedList<>();
-//        if (mFamiliesList  == null) mFamiliesList  = new LinkedList<>();
-//        if (mTagsList      == null) mTagsList      = new LinkedList<>();
 
         if (savedInstanceState != null) {
             User temp = savedInstanceState.getParcelable("user");
-            Log.v(LOG_TAG, "onCreate, restoring saved state - user == null: " + (temp == null));
             if (temp != null) {
                 mUser = temp;
             }
 
             Parcelable[] temp_arr = savedInstanceState.getParcelableArray("all_tags");
-            Log.v(LOG_TAG, "onCreate, restoring saved state - temp_arr == null: " + (temp_arr == null));
 
             if (temp_arr != null && temp_arr.length > 0) {
                 Tag[] tag_arr = Arrays.copyOf(temp_arr, temp_arr.length, Tag[].class);
@@ -122,7 +114,6 @@ public class TaskListsFragment extends Fragment
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-
         View rootView = inflater.inflate(R.layout.fragment_task_lists, container, false);
 
         FragmentManager fragmentManager = getFragmentManager();
@@ -140,12 +131,8 @@ public class TaskListsFragment extends Fragment
                 mListener.updateFabDesc();
             }
 
-            @Override public void onTabUnselected(TabLayout.Tab tab) {
-
-            }
-            @Override public void onTabReselected(TabLayout.Tab tab) {
-
-            }
+            @Override public void onTabUnselected(TabLayout.Tab tab) {}
+            @Override public void onTabReselected(TabLayout.Tab tab) {}
         });
 
         return rootView;
@@ -188,18 +175,6 @@ public class TaskListsFragment extends Fragment
         mListener = null;
     }
 
-    @Override
-    public void onPause() {
-        Log.v(LOG_TAG, "onPause has started. mUser == null: " + (mUser == null));
-        super.onPause();
-    }
-
-    @Override
-    public void onResume() {
-        Log.v(LOG_TAG, "onResume has started. mUser == null: " + (mUser == null));
-        super.onResume();
-    }
-
         @Override
     public void onSaveInstanceState(Bundle outState) {
         outState.putParcelable("user", mUser);
@@ -211,12 +186,8 @@ public class TaskListsFragment extends Fragment
         super.onSaveInstanceState(outState);
     }
 
-
     // Would this be better in a WorkerThread or AsyncTask? Is this thread safe?
     public void addNewTask(Task task) {
-        // Added this to check if this triggers when a task has been edited.
-        Log.v(LOG_TAG, "addNewTask has started!!! task: " + task.getName() + ", id: " + task.getId());
-
         WriteBatch batch = mDatabase.batch();
 
         DocumentReference taskRef;
@@ -228,20 +199,13 @@ public class TaskListsFragment extends Fragment
             batch.update(taskRef, task.toMap());
         }
 
-        for (Tag curr : mTagsList) Log.v(LOG_TAG, "addNewTask - mTagsList tag:    " + curr.getName() + ", id: " + curr.getId());
-        for (String curr :
-                task.getTag_ids()) Log.v(LOG_TAG, "addNewTask - new task id list: " + curr);
-
         // Check each tag, and add or remove the id's that are missing.
         if (mTagsList != null) {
             for (int i = 0; i < mTagsList.size(); i++) {
                 Tag curr_tag = mTagsList.get(i);
-                Log.v(LOG_TAG, "addNewTask - current tag " + i + ": " + curr_tag.getName());
 
                 boolean tag_has_task = curr_tag.getTask_ids().contains(task.getId());
                 boolean task_has_tag = task.getTag_ids().contains(curr_tag.getId());
-
-                Log.v(LOG_TAG, "addNewTask - tag_has_task: " + tag_has_task + ", task_has_tag: " + task_has_tag);
 
                 // If tag does not have it but the task does, it's a new tag. Add it to the task.
                 if (!tag_has_task && task_has_tag) {
@@ -260,7 +224,7 @@ public class TaskListsFragment extends Fragment
         }
 
         batch.commit()
-                .addOnSuccessListener(v -> onAddNewTaskComplete(task))
+                .addOnSuccessListener(v -> onAddNewTaskComplete())
                 .addOnFailureListener(Throwable::printStackTrace);
     }
 
@@ -278,41 +242,7 @@ public class TaskListsFragment extends Fragment
         addNewTask(task);
     }
 
-    private void onAddNewTaskComplete(Task task) {
-
-//        List<Task> list_check;
-//
-//        if (task.isFamily()) {
-//            list_check = mFamilyTasks;
-//        } else {
-//            list_check = mPersonalTasks;
-//        }
-//
-//        for (int i = 0; i < list_check.size(); i++) {
-//            Task curr = list_check.get(i);
-//            if (curr.equals(task)) { // This compares the ids of the tasks
-//                list_check.set(i, task);
-//
-//                if (task.isFamily()) {
-//                    updateFamilyTasks();
-//                } else {
-//                    updatePersonalTasks();
-//                }
-//
-//                mListener.doSnackbar(R.string.new_task_comp_msg);
-//                return;
-//            }
-//        }
-//
-//        // If it reaches here, it didn't match any tasks. It must be new.
-//        list_check.add(task);
-//
-//        if (task.isFamily()) {
-//            updateFamilyTasks();
-//        } else {
-//            updatePersonalTasks();
-//        }
-
+    private void onAddNewTaskComplete() {
         // Just show the snackbar. The snapshot listener will trigger and update/add the task.
         mListener.doSnackbar(R.string.new_task_comp_msg);
     }
@@ -353,8 +283,6 @@ public class TaskListsFragment extends Fragment
     }
 
     private void doPersonalTasks(QuerySnapshot query, FirebaseFirestoreException e) {
-        Log.v(LOG_TAG, "doPersonalTasks has started!!!! mPersonalTasks == null: " + (mPersonalTasks == null));
-
         if (e != null) {
             Log.w(LOG_TAG, "doPersonalTasks - Firebase Exception: " + e.getMessage());
             e.printStackTrace();
@@ -364,8 +292,6 @@ public class TaskListsFragment extends Fragment
         if (mPersonalTasks == null) mPersonalTasks = new LinkedList<>();
 
         for (DocumentChange dc : query.getDocumentChanges()) {
-            Log.v(LOG_TAG, "doPersonalTasks - doc change type: " + dc.getType().name());
-
             switch (dc.getType()) {
                 case ADDED:
                     DocumentSnapshot added = dc.getDocument();
@@ -447,8 +373,6 @@ public class TaskListsFragment extends Fragment
     }
 
     private void updatePersonalTasks() {
-        Log.v(LOG_TAG, "updatePersonalTasks has started!!!! mPersonalFrag == null: " + (mPersonalFrag == null));
-
         if (mPersonalFrag != null) {
             mPersonalFrag.setData(mPersonalTasks);
             updateWidget(true);
@@ -477,16 +401,11 @@ public class TaskListsFragment extends Fragment
                     DocumentSnapshot added = dc.getDocument();
                     Family added_fam = Family.fromDoc(added);
 
-                    Log.v(LOG_TAG, "doFamilies, ADDED change - family list contains added: " + mFamiliesList.contains(added_fam));
-
                     mFamiliesList.add(added_fam);
                     break;
                 case MODIFIED:
-                    Log.v(LOG_TAG, "doFamilies - families modified.");
-
                     DocumentSnapshot mod = dc.getDocument();
                     Family mod_fam = Family.fromDoc(mod);
-
 
                     for (int i = 0; i < mFamiliesList.size(); i++) {
                         Family curr = mFamiliesList.get(i);
@@ -519,11 +438,7 @@ public class TaskListsFragment extends Fragment
 
         if (mTagsList == null) mTagsList = new LinkedList<>();
 
-        for (Tag curr : mTagsList) Log.v(LOG_TAG, "doTags - mTagsList before build: " + curr.getName());
-
         for (DocumentChange dc : querySnapshot.getDocumentChanges()) {
-            Log.v(LOG_TAG, "doTags - doc change type: " + dc.getType());
-
             switch(dc.getType()) {
                 case ADDED:
                     DocumentSnapshot added = dc.getDocument();
@@ -550,9 +465,6 @@ public class TaskListsFragment extends Fragment
             }
         }
 
-        for (Tag curr : mTagsList) Log.v(LOG_TAG, "doTags - mTagsList after build: " + curr.getName());
-
-        Log.v(LOG_TAG, "doTags - build list is done. Now update fragments. " + (mPersonalFrag == null) + ", " + (mFamilyFrag == null));
         if (mPersonalFrag != null) {
             mPersonalFrag.updateTags();
         }
@@ -565,10 +477,7 @@ public class TaskListsFragment extends Fragment
     @Nullable
     @Override
     public Tag getTag(String id) {
-        Log.v(LOG_TAG, "getTag - mTagsList == null: " + (mTagsList == null));
-        Log.v(LOG_TAG, "getTag - mTagsList.size   : " + ((mTagsList == null) ? 0 : mTagsList.size()));
         for (Tag curr : mTagsList) {
-            Log.v(LOG_TAG, "getTag - curr: " + curr.getName());
             if (curr.getId().equals(id)) {
                 return curr;
             }
@@ -618,9 +527,6 @@ public class TaskListsFragment extends Fragment
         mUser.setFamily("");
         Family temp_family = mFamily;
         temp_family.removeMember(mUser.getId());
-
-        for (String member : temp_family.getMembers()) Log.v(LOG_TAG, "onFamilyLeft - temp_family member: " + member);
-        for (String member : mFamily.getMembers())     Log.v(LOG_TAG, "onFamilyLeft - mFamily member:     " + member);
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         WriteBatch batch = db.batch();
@@ -758,6 +664,7 @@ public class TaskListsFragment extends Fragment
 
                 if (mNoFamily) {
                     if (mSelectFrag == null) {
+                        Log.v(LOG_TAG, "TaskListPagerAdapter, getSelectFrag - mFamiliesList size: " + ((mFamiliesList == null) ? "null" : mFamiliesList.size()));
                         result = SelectFamilyFrag.newInstance(mFamiliesList);
                         mSelectFrag = (SelectFamilyFrag) result;
                     } else {

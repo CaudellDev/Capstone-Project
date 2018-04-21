@@ -41,8 +41,6 @@ public class SelectFamilyFrag extends Fragment {
     private static final String LOG_TAG = SelectFamilyFrag.class.getSimpleName();
     private static final String SEL_FAM_LIST = "select_family_list";
 
-    private User mUser;
-
     private SelectAdapter mAdapter;
     private OnSelectFamilyListener mListener;
 
@@ -53,8 +51,14 @@ public class SelectFamilyFrag extends Fragment {
     public static SelectFamilyFrag newInstance(List<Family> data) {
         SelectFamilyFrag result = new SelectFamilyFrag();
 
-        Family[] temp_list = new Family[data.size()];
-        temp_list = data.toArray(temp_list);
+        Family[] temp_list;
+
+        if (data == null) {
+            temp_list = new Family[0];
+        } else {
+            temp_list = new Family[data.size()];
+            temp_list = data.toArray(temp_list);
+        }
 
         Bundle args = new Bundle();
         args.putParcelableArray(SEL_FAM_LIST, temp_list);
@@ -64,23 +68,9 @@ public class SelectFamilyFrag extends Fragment {
         return result;
     }
 
-//    public static SelectFamilyFrag newInstance(User user) {
-//        SelectFamilyFrag fragment = new SelectFamilyFrag();
-//
-//        Bundle args = new Bundle();
-//        args.putParcelable(User.DOC_TAG, user);
-//        fragment.setArguments(args);
-//
-//        return fragment;
-//    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-//        FirebaseFirestore db = FirebaseFirestore.getInstance();
-//        db.collection(Family.COL_TAG)
-//            .addSnapshotListener(this);
     }
 
     @Override
@@ -143,39 +133,6 @@ public class SelectFamilyFrag extends Fragment {
             mAdapter.notifyDataSetChanged();
         }
     }
-
-//    @Override
-//    public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException e) {
-//        List<Family> familyList = new LinkedList<>();
-//
-//        for (DocumentChange dc : documentSnapshots.getDocumentChanges()) {
-//            switch (dc.getType()) {
-//                case ADDED:
-//                    DocumentSnapshot added = dc.getDocument();
-//                    Family added_family = Family.fromDoc(added);
-//                    familyList.add(added_family);
-//                    break;
-//                case MODIFIED:
-//                    // This could be more efficient, but this will do for now.
-//                    DocumentSnapshot mod = dc.getDocument();
-//                    Family mod_family = Family.fromDoc(mod);
-//                    familyList.add(mod_family);
-//                    break;
-//                case REMOVED:
-//                    // Family members won't be removable for now.
-//                    break;
-//                default:
-//                    Log.w(LOG_TAG, "onEvent - document change not recognized!!! Type: " + dc.getType());
-//            }
-//        }
-//
-//        for (Family curr : familyList) {
-//            Log.v(LOG_TAG, "onEvent - family: " + curr.getName());
-//        }
-//
-//        mAdapter.data = familyList;
-//        mAdapter.notifyDataSetChanged();
-//    }
 
     /**
      * This interface must be implemented by activities that contain this
