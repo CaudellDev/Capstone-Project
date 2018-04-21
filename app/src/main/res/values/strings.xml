@@ -66,5 +66,6 @@
     <string name="dismiss_text">DISMISS</string>
     <string name="delete_text">DELETE TASK</string>
     <string name="cancel_text">CANCEL</string>
+    <string name="chips_input_cont_desc">Tags Enter Box</string>
 
 </resources>

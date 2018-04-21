@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:layout_width="400dp"
-    android:layout_height="500dp">
+    android:layout_height="300dp">
 
     <EditText
         android:id="@+id/dialog_name_tv"
@@ -76,7 +76,7 @@
         android:padding="2dp"
         android:layout_margin="5dp"
         android:background="@color/grey"
-        android:contentDescription="Tags Section"
+        android:contentDescription="@string/chips_input_cont_desc"
         app:chip_deletable="true"
         app:chip_hasAvatarIcon="false"
         app:chip_labelColor="@color/black"
