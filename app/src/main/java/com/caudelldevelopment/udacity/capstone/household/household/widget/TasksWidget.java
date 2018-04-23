@@ -34,6 +34,8 @@ public class TasksWidget extends AppWidgetProvider {
 
     private void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
                                  int appWidgetId) {
+        Log.v(LOG_TAG, "updateAppWidget has started!!! widget id: " + appWidgetId);
+
         // Construct the RemoteViews object
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.tasks_widget);
 
@@ -93,6 +95,11 @@ public class TasksWidget extends AppWidgetProvider {
 
         if (action != null) {
             switch (action) {
+                case AppWidgetManager.ACTION_APPWIDGET_UPDATE:
+                    int[] widgetIds = manager.getAppWidgetIds(new ComponentName(context, getClass()));
+                    manager.notifyAppWidgetViewDataChanged(widgetIds, R.id.widget_task_list);
+                    manager.updateAppWidget(widgetIds, views);
+                    break;
                 case PERS_CLICK_TAG:
                     doButtonSwap(manager, views, context, false);
                     break;
@@ -124,6 +131,8 @@ public class TasksWidget extends AppWidgetProvider {
 
         views.setRemoteAdapter(R.id.widget_task_list, getRemoteAdapterIntent(context, personal));
 
+        // This doesn't update the list when I change the access for a task.
+        // I have to click the button twice and then the task will show up.
         manager.notifyAppWidgetViewDataChanged(widgetIds, R.id.widget_task_list);
         manager.updateAppWidget(widgetIds, views);
     }
