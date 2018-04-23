@@ -23,6 +23,8 @@ import com.caudelldevelopment.udacity.capstone.household.household.data.Family;
 import com.caudelldevelopment.udacity.capstone.household.household.data.Tag;
 import com.caudelldevelopment.udacity.capstone.household.household.data.Task;
 import com.caudelldevelopment.udacity.capstone.household.household.data.User;
+import com.caudelldevelopment.udacity.capstone.household.household.widget.FamilyWidgetRemoteViewsService;
+import com.caudelldevelopment.udacity.capstone.household.household.widget.PersonalWidgetRemoteViewsService;
 import com.caudelldevelopment.udacity.capstone.household.household.widget.TasksWidget;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -258,13 +260,13 @@ public class TaskListsFragment extends Fragment
     }
 
     private void startFamilyQuery() {
-        if (mFamilyTasks == null) {
-            mDatabase.collection(Task.COL_TAG)
-                    .whereEqualTo(Task.FAM_ID, true)
-                    .whereEqualTo(Task.ACCESS_ID, mUser.getFamily())
-                    .orderBy(Task.DATE_ID)
-                    .addSnapshotListener(this::doFamilyTasks);
-        }
+        // Doesn't check if list is null, because this query will need to
+        // be restarted when leaving then joining families.
+        mDatabase.collection(Task.COL_TAG)
+                .whereEqualTo(Task.FAM_ID, true)
+                .whereEqualTo(Task.ACCESS_ID, mUser.getFamily())
+                .orderBy(Task.DATE_ID)
+                .addSnapshotListener(this::doFamilyTasks);
     }
 
     private void startFamiliesQuery() {
@@ -492,7 +494,10 @@ public class TaskListsFragment extends Fragment
     }
 
     private void updateWidget(boolean personal) {
+        Log.v(LOG_TAG, "updateWidget - context == null: " + (getContext() == null));
+
         Intent intent = new Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+
         intent.putExtra(TasksWidget.IS_PERSONAL, personal);
         if (getContext() != null) {
             getContext().sendBroadcast(intent);
@@ -558,6 +563,7 @@ public class TaskListsFragment extends Fragment
         DocumentReference famRef;
         if (isNewFamily) {
             famRef = db.collection(Family.COL_TAG).document();
+            family.setId(famRef.getId());
         } else {
             famRef = db.collection(Family.COL_TAG).document(family.getId());
             family.addMember(mUser.getId());
