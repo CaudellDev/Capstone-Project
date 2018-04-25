@@ -10,6 +10,8 @@ import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -108,8 +110,6 @@ public class NewTaskDialogFrag extends DialogFragment
     public void onAttach(Context context) {
         super.onAttach(context);
 
-        Log.v(LOG_TAG, "onAttach - context instance of NewTaskDialogListener: " + (context instanceof NewTaskDialogListener));
-
         if (context instanceof NewTaskDialogListener) {
             mListener = (NewTaskDialogListener) context;
         } else {
@@ -126,7 +126,6 @@ public class NewTaskDialogFrag extends DialogFragment
 
     @Override
     public void onDestroy() {
-        Log.v(LOG_TAG, "onDestroy has started!!!");
         super.onDestroy();
     }
 
@@ -161,7 +160,7 @@ public class NewTaskDialogFrag extends DialogFragment
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View rootView = null;
+        View rootView;
 
         if (getShowsDialog()) {
             rootView = super.onCreateView(inflater, container, savedInstanceState);
@@ -193,7 +192,9 @@ public class NewTaskDialogFrag extends DialogFragment
             builder.setNeutralButton(R.string.delete_text, this);
         }
 
-        return builder.create();
+        AlertDialog dialog = builder.create();
+        dialog.setOnShowListener(dialogInterface -> updateSaveButton());
+        return dialog;
     }
 
     @Override
@@ -279,11 +280,46 @@ public class NewTaskDialogFrag extends DialogFragment
             });
         }
 
+        mName.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                updateSaveButton();
+            }
+        });
+
+        mDate.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                updateSaveButton();
+            }
+        });
+
         // Fill the views with the values of the Task
         if (args.containsKey(Task.TAG)) {
             mTask = (Task) args.get(Task.TAG);
-            updateViews();
         }
+
+        updateViews();
 
         // We only need this when starting an animation.
         if (!getShowsDialog()) {
@@ -322,6 +358,22 @@ public class NewTaskDialogFrag extends DialogFragment
             if (!getShowsDialog()) {
                 mNeuConf.setVisibility(View.GONE);
             }
+        }
+
+        updateSaveButton();
+    }
+
+    private void updateSaveButton() {
+        boolean name_filled = !mName.getText().toString().trim().isEmpty();
+        boolean date_filled = !mDate.getText().toString().trim().isEmpty();
+
+        if (getShowsDialog()) {
+            AlertDialog dialog = (AlertDialog) getDialog();
+            if (dialog != null) {
+                dialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(name_filled && date_filled);
+            }
+        } else {
+            mPosConf.setEnabled(name_filled && date_filled);
         }
     }
 
@@ -383,8 +435,8 @@ public class NewTaskDialogFrag extends DialogFragment
         switch (which) {
             case Dialog.BUTTON_POSITIVE:
                 Task newTask = new Task();
-                newTask.setName(mName.getText().toString());
-                newTask.setDesc(mDesc.getText().toString());
+                newTask.setName(mName.getText().toString().trim());
+                newTask.setDesc(mDesc.getText().toString().trim());
                 newTask.setDate(mDate.getText().toString());
                 newTask.setFamily(mFamily.isChecked());
 

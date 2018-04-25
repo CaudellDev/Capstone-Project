@@ -61,8 +61,6 @@ public class TasksWidget extends AppWidgetProvider {
     }
 
     private String getDateRange() {
-        String result;
-
         Calendar cal = Calendar.getInstance();
         Date today = cal.getTime();
 
@@ -98,7 +96,6 @@ public class TasksWidget extends AppWidgetProvider {
                 case AppWidgetManager.ACTION_APPWIDGET_UPDATE:
                     int[] widgetIds = manager.getAppWidgetIds(new ComponentName(context, getClass()));
                     manager.notifyAppWidgetViewDataChanged(widgetIds, R.id.widget_task_list);
-                    manager.updateAppWidget(widgetIds, views);
                     break;
                 case PERS_CLICK_TAG:
                     doButtonSwap(manager, views, context, false);

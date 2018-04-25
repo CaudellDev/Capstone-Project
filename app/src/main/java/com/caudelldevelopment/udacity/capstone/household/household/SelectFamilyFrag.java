@@ -162,7 +162,6 @@ public class SelectFamilyFrag extends Fragment {
             View root = itemView.findViewById(R.id.family_item_layout);
             root.setOnClickListener(v -> {
                 Family family = mAdapter.data.get(getAdapterPosition());
-                Log.v(LOG_TAG, "SelectHolder constructor, item onClick - family: " + family.getName() + ", member 0: " + family.getMembers().get(0));
                 mListener.onFamilyItemClick(family);
             });
         }

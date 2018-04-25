@@ -195,6 +195,7 @@ public class TaskListsFragment extends Fragment
         DocumentReference taskRef;
         if (task.getId() == null || task.getId().isEmpty()) {
             taskRef = mDatabase.collection(Task.COL_TAG).document();
+            task.setId(taskRef.getId());
             batch.set(taskRef, task.toMap());
         } else {
             taskRef = mDatabase.collection(Task.COL_TAG).document(task.getId());
@@ -586,7 +587,6 @@ public class TaskListsFragment extends Fragment
     private void notifyFamilyUpdate() {
         mNoFamily = false;
         mFamiliesList.clear();
-//        mSelectFrag = null;
         mListener.onFamilyChange(mFamily);
         mListener.updateFabDesc();
         mTaskAdapter.notifyDataSetChanged();
@@ -597,7 +597,6 @@ public class TaskListsFragment extends Fragment
         mFamily = null;
         mNoFamily = true;
         mFamilyTasks.clear();
-//        mFamilyFrag = null;
         mListener.onFamilyChange(null);
         mListener.updateFabDesc();
         mTaskAdapter.notifyDataSetChanged();
