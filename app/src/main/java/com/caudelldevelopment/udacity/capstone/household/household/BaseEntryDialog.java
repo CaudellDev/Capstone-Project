@@ -14,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 
 /**
  * Created by caude on 2/21/2018.
@@ -46,12 +47,12 @@ public class BaseEntryDialog extends DialogFragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View rootView = null;
+        View rootView;
 
         if (getShowsDialog()) {
             rootView = super.onCreateView(inflater, container, savedInstanceState);
         } else {
-            rootView = inflater.inflate(R.layout.dialog_frag_container, container, false);
+            rootView = inflater.inflate(R.layout.entry_dialog_container, container, false);
             initViews(rootView);
         }
 
@@ -61,25 +62,12 @@ public class BaseEntryDialog extends DialogFragment {
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        String entry = getArguments().getString(ENTRY);
-
-        String title = "";
-        switch(entry) {
-            case ENTRY_FAMILY:
-                title = getString(R.string.new_family_title);
-                break;
-            case ENTRY_TAG:
-                title = getString(R.string.new_tag_title);
-                break;
-            default:
-                Log.w(LOG_TAG, "Entry is not recognized!!!!");
-        }
+        String title = getEntryTitle();
 
         LayoutInflater inflater = LayoutInflater.from(getContext());
         View rootView = inflater.inflate(R.layout.base_entry_dialog, null, false);
 
         mName = rootView.findViewById(R.id.base_title_et);
-
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setTitle(title)
@@ -98,6 +86,9 @@ public class BaseEntryDialog extends DialogFragment {
         mName = rootView.findViewById(R.id.base_title_et);
 
         if (!getShowsDialog()) {
+            TextView title = rootView.findViewById(R.id.dialog_container_title);
+            title.setText(getEntryTitle());
+
             mPosConf = rootView.findViewById(R.id.dialog_container_pos_btn);
             mNegConf = rootView.findViewById(R.id.dialog_container_neg_btn);
 
@@ -106,7 +97,9 @@ public class BaseEntryDialog extends DialogFragment {
                 mListener.onEntrySave(name);
             });
 
-            mNegConf.setOnClickListener(v -> {});
+            mNegConf.setOnClickListener(v -> mListener.onEntryDialogClose());
+
+            mListener.onFragmentReady();
         }
     }
 
@@ -122,7 +115,27 @@ public class BaseEntryDialog extends DialogFragment {
         }
     }
 
+    private String getEntryTitle() {
+        String entry = getArguments().getString(ENTRY);
+
+        String title = "";
+        switch(entry) {
+            case ENTRY_FAMILY:
+                title = getString(R.string.new_family_title);
+                break;
+            case ENTRY_TAG:
+                title = getString(R.string.new_tag_title);
+                break;
+            default:
+                Log.w(LOG_TAG, "Entry is not recognized!!!!");
+        }
+
+        return title;
+    }
+
     public interface EntryDialogListener {
         void onEntrySave(String name);
+        void onFragmentReady();
+        void onEntryDialogClose();
     }
 }

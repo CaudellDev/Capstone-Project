@@ -114,6 +114,16 @@ public class TagsActivity extends AppCompatActivity implements BaseEntryDialog.E
             });
     }
 
+    @Override
+    public void onFragmentReady() {
+        // Do nothing, for wide layout only
+    }
+
+    @Override
+    public void onEntryDialogClose() {
+        // Do nothing, for wide layout only
+    }
+
     private class TagViewHolder extends RecyclerView.ViewHolder {
 
         public TextView title;

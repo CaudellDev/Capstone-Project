@@ -10,7 +10,6 @@ import android.os.Parcelable;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -28,7 +27,6 @@ import com.caudelldevelopment.udacity.capstone.household.household.data.Family;
 import com.caudelldevelopment.udacity.capstone.household.household.data.Tag;
 import com.caudelldevelopment.udacity.capstone.household.household.data.Task;
 import com.caudelldevelopment.udacity.capstone.household.household.data.User;
-import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.Arrays;
 import java.util.List;
@@ -118,6 +116,18 @@ public class MainActivity extends AppCompatActivity
                 getSupportFragmentManager().beginTransaction()
                                         .remove(dialog)
                                         .commit();
+            }
+        }
+
+        BaseEntryDialog entry_dialog = (BaseEntryDialog) getSupportFragmentManager().findFragmentByTag(BaseEntryDialog.DIALOG_TAG);
+
+        if (entry_dialog != null) {
+            if (wide_layout && entry_dialog.getShowsDialog()) {
+                entry_dialog.dismiss();
+            } else if (!wide_layout && !entry_dialog.getShowsDialog()) {
+                getSupportFragmentManager().beginTransaction()
+                        .remove(entry_dialog)
+                        .commit();
             }
         }
     }
@@ -239,6 +249,8 @@ public class MainActivity extends AppCompatActivity
     public void onFamilyChange(Family family) {
         mFamily = family;
         mNoFamily = (mFamily == null);
+
+        onEntryDialogClose();
     }
 
     @Override
@@ -250,7 +262,6 @@ public class MainActivity extends AppCompatActivity
 
         // Get the selected tab or fragment from the TaskListsFragment and display the dialog
         String tab = mListFragment.getSelectedTab();
-
         if (tab.equals(getString(R.string.family_title)) && mNoFamily) {
             if (wide_layout) {
                 BaseEntryDialog dialog = BaseEntryDialog.getInstance(BaseEntryDialog.ENTRY_FAMILY);
@@ -317,14 +328,43 @@ public class MainActivity extends AppCompatActivity
             mListFragment.addNewTask(task);
         }
 
-        onDialogClose();
+        onNewTaskDialogClose();
     }
 
     @Override
-    public void onDialogClose() {
+    public void onNewTaskDialogClose() {
         if (wide_layout) {
             FragmentManager manager = getSupportFragmentManager();
             NewTaskDialogFrag dialog = (NewTaskDialogFrag) manager.findFragmentByTag(NewTaskDialogFrag.DIALOG_TAG);
+
+            if (dialog != null) {
+                ViewGroup container = findViewById(R.id.main_view_holder);
+
+                Animation animation = AnimationUtils.loadAnimation(this, R.anim.right_out);
+                animation.setAnimationListener(new Animation.AnimationListener() {
+
+                    @Override
+                    public void onAnimationEnd(Animation animation) {
+                        manager.beginTransaction()
+                                .remove(dialog)
+                                .commit();
+                    }
+
+                    @Override public void onAnimationStart(Animation animation) {}
+                    @Override public void onAnimationRepeat(Animation animation) {}
+                });
+
+                container.startAnimation(animation);
+                container.setVisibility(View.GONE);
+            }
+        }
+    }
+
+    @Override
+    public void onEntryDialogClose() {
+        if (wide_layout) {
+            FragmentManager manager = getSupportFragmentManager();
+            BaseEntryDialog dialog = (BaseEntryDialog) manager.findFragmentByTag(BaseEntryDialog.DIALOG_TAG);
 
             if (dialog != null) {
                 ViewGroup container = findViewById(R.id.main_view_holder);
@@ -364,6 +404,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onEntrySave(String name) {
         mListFragment.onFamilyEntered(name);
+        onEntryDialogClose();
     }
 
     public void updateNetworkStatus() {

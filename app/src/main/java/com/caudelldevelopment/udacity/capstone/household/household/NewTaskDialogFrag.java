@@ -19,7 +19,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.widget.Button;
-import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Switch;
@@ -32,16 +31,13 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
-import com.pchmn.materialchips.ChipView;
 import com.pchmn.materialchips.ChipsInput;
 import com.pchmn.materialchips.model.Chip;
 import com.pchmn.materialchips.model.ChipInterface;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -499,7 +495,7 @@ public class NewTaskDialogFrag extends DialogFragment
 
                 break;
             case Dialog.BUTTON_NEGATIVE:
-                mListener.onDialogClose();
+                mListener.onNewTaskDialogClose();
                 break;
             case Dialog.BUTTON_NEUTRAL:
                 AlertDialog.Builder conf_builder = new AlertDialog.Builder(getContext());
@@ -511,7 +507,7 @@ public class NewTaskDialogFrag extends DialogFragment
                                     .document(mTask.getId())
                                     .delete();
 
-                            mListener.onDialogClose();
+                            mListener.onNewTaskDialogClose();
                         }).setNegativeButton(R.string.cancel_text, (conf_dialog, conf_which) -> {
 
                 });
@@ -525,7 +521,7 @@ public class NewTaskDialogFrag extends DialogFragment
 
     public interface NewTaskDialogListener {
         void onDialogPositiveClick(Task task);
-        void onDialogClose();
+        void onNewTaskDialogClose();
         void onFragmentReady();
         List<Tag> getAllTags();
     }
