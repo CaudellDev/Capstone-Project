@@ -64,4 +64,5 @@
     <string name="logout_key" translatable="false">logout_preference</string>
     <string name="acc_key" translatable="false">account_category</string>
     <string name="widget_data_updated" translatable="false">app_widget_data_updated_intent_tag</string>
+    <string name="add_tag_content_desc">Add Tag</string>
 </resources>
