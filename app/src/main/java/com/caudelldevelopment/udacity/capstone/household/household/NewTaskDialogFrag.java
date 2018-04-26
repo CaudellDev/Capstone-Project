@@ -6,6 +6,7 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.res.Configuration;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
@@ -36,6 +37,7 @@ import com.pchmn.materialchips.ChipsInput;
 import com.pchmn.materialchips.model.Chip;
 import com.pchmn.materialchips.model.ChipInterface;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -391,24 +393,37 @@ public class NewTaskDialogFrag extends DialogFragment
     public void onClick(View v) {
         if (v.getId() == R.id.dialog_date_imgbtn) {
 
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-                DatePickerDialog pickerDialog = new DatePickerDialog(getContext());
-                pickerDialog.setOnDateSetListener((view, year, month, dayOfMonth) -> {
-                    Calendar cal = Calendar.getInstance();
-                    cal.set(year, month, dayOfMonth);
-                    String date = new SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()).format(cal.getTime());
-                    mDate.setText(date);
-                });
+            DatePickerDialog pickerDialog;
 
-                pickerDialog.show();
-            } else {
-                Date current = Calendar.getInstance().getTime();
-                String today = new SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()).format(current);
-                mDate.setText(today);
+            DatePickerDialog.OnDateSetListener listener = (datePicker, year, month, dayOfMonth) -> {
+                Calendar cal = Calendar.getInstance();
+                cal.set(year, month, dayOfMonth);
+                String date = new SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()).format(cal.getTime());
+                mDate.setText(date);
+            };
 
-                // Do something else... ?
+            Calendar cal = Calendar.getInstance();
+            int year;
+            int month;
+            int dayOfMonth;
+
+            // Check if the date was already selected. We'll open the dialog at that date.
+            if (!mDate.getText().toString().isEmpty()) {
+                SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy", Locale.getDefault());
+                try {
+                    Date date = dateFormat.parse(mDate.getText().toString());
+                    cal.setTime(date);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
             }
 
+            year = cal.get(Calendar.YEAR);
+            month = cal.get(Calendar.MONTH);
+            dayOfMonth = cal.get(Calendar.DAY_OF_MONTH);
+
+            pickerDialog = new DatePickerDialog(getContext(), listener, year, month, dayOfMonth);
+            pickerDialog.show();
         } else {
             Log.w(LOG_TAG, "onClick - view id not recognized. id: " + v.getId());
         }
