@@ -5,6 +5,7 @@ import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
@@ -127,6 +128,24 @@ public class NewTaskDialogFrag extends DialogFragment
     @Override
     public void onDestroy() {
         super.onDestroy();
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
+//        if (getShowsDialog()) {
+//            if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+//                Dialog dialog = getDialog();
+//                if (dialog != null) {
+//                    dialog.dismiss();
+//                }
+//            }
+//        } else {
+//            if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
+//                mNegConf.performClick();
+//            }
+//        }
     }
 
     @Override

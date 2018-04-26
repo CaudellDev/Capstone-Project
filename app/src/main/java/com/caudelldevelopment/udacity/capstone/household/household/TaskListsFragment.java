@@ -3,6 +3,7 @@ package com.caudelldevelopment.udacity.capstone.household.household;
 import android.appwidget.AppWidgetManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
@@ -48,13 +49,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link OnListsFragmentListener} interface
- * to handle interaction events.
- */
 public class TaskListsFragment extends Fragment
                                 implements PersonalListFragment.OnPersonalFragListener,
                                             FamilyListFragment.OnFamilyFragListener,
@@ -92,7 +86,7 @@ public class TaskListsFragment extends Fragment
         super.onCreate(savedInstanceState);
 
         if (savedInstanceState != null) {
-            User temp = savedInstanceState.getParcelable("user");
+            User temp = savedInstanceState.getParcelable(User.DOC_TAG);
             if (temp != null) {
                 mUser = temp;
             }
@@ -177,9 +171,9 @@ public class TaskListsFragment extends Fragment
         mListener = null;
     }
 
-        @Override
+    @Override
     public void onSaveInstanceState(Bundle outState) {
-        outState.putParcelable("user", mUser);
+        outState.putParcelable(User.DOC_TAG, mUser);
 
         Tag[] tag_arr = new Tag[mTagsList.size()];
         tag_arr = mTagsList.toArray(tag_arr);

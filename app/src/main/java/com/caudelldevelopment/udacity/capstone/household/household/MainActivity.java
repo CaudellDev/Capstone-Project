@@ -10,6 +10,7 @@ import android.os.Parcelable;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -73,10 +74,6 @@ public class MainActivity extends AppCompatActivity
             }
 
             mNoFamily = (mFamily == null);
-
-            if (!mNoFamily) {
-                for (String member : mFamily.getMembers()) Log.v(LOG_TAG, "onCreate - family member: " + member);
-            }
         }
 
         setContentView(R.layout.activity_main);
@@ -104,6 +101,25 @@ public class MainActivity extends AppCompatActivity
     protected void onStop() {
         super.onStop();
         unregisterReceiver(mNetworkRec);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        NewTaskDialogFrag dialog = (NewTaskDialogFrag) getSupportFragmentManager().findFragmentByTag(NewTaskDialogFrag.DIALOG_TAG);
+
+        // If the layout is wide, but the dialog is showing an AlertDialog,
+        // it must have been made in a smaller layout and rotated.
+        if (dialog != null) {
+            if (wide_layout && dialog.getShowsDialog()) {
+                dialog.dismiss();
+            } else if (!wide_layout && !dialog.getShowsDialog()) {
+                getSupportFragmentManager().beginTransaction()
+                                        .remove(dialog)
+                                        .commit();
+            }
+        }
     }
 
     @Override
@@ -294,7 +310,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onDialogPositiveClick(Task task) {
         NewTaskDialogFrag dialog = (NewTaskDialogFrag) getSupportFragmentManager().findFragmentByTag(NewTaskDialogFrag.DIALOG_TAG);
-        Log.v(LOG_TAG, "onDialogPositiveClick - dialog == null: " + (dialog == null ) + ((dialog == null) ? "" : ", " + dialog.isAccessIdDiff()));
 
         if (dialog != null) {
             mListFragment.addNewTask(task, dialog.isAccessIdDiff());
@@ -316,10 +331,6 @@ public class MainActivity extends AppCompatActivity
 
                 Animation animation = AnimationUtils.loadAnimation(this, R.anim.right_out);
                 animation.setAnimationListener(new Animation.AnimationListener() {
-                    @Override
-                    public void onAnimationStart(Animation animation) {
-
-                    }
 
                     @Override
                     public void onAnimationEnd(Animation animation) {
@@ -328,10 +339,8 @@ public class MainActivity extends AppCompatActivity
                                 .commit();
                     }
 
-                    @Override
-                    public void onAnimationRepeat(Animation animation) {
-
-                    }
+                    @Override public void onAnimationStart(Animation animation) {}
+                    @Override public void onAnimationRepeat(Animation animation) {}
                 });
 
                 container.startAnimation(animation);
@@ -358,11 +367,6 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void updateNetworkStatus() {
-//        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-//
-//        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-//        isConnected = (activeNetwork != null) && activeNetwork.isConnectedOrConnecting();
-
         if (!isConnected) {
             doSnackbar(R.string.main_not_connected_msg);
         }
@@ -397,13 +401,9 @@ public class MainActivity extends AppCompatActivity
                 NetworkInfo netInfo = cm.getActiveNetworkInfo();
 
                 if (netInfo != null && netInfo.isConnectedOrConnecting()) {
-                    Log.v(LOG_TAG, "NetworkReceiver.onReceive: Network is connected!!!");
-
                     isConnected = true;
                     updateNetworkStatus();
                 } else {
-                    Log.v(LOG_TAG, "NetworkReceiver.onReceive:   ----!!!!!----   Network is not connected!!!!!!");
-
                     isConnected = false;
                     updateNetworkStatus();
                 }
