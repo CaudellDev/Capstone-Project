@@ -3,6 +3,7 @@ package com.caudelldevelopment.udacity.capstone.household.household;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
@@ -22,6 +23,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QuerySnapshot;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -41,6 +43,7 @@ public class SelectFamilyFrag extends Fragment {
     private static final String LOG_TAG = SelectFamilyFrag.class.getSimpleName();
     private static final String SEL_FAM_LIST = "select_family_list";
 
+    private RecyclerView mFamiliesList;
     private SelectAdapter mAdapter;
     private OnSelectFamilyListener mListener;
 
@@ -50,21 +53,15 @@ public class SelectFamilyFrag extends Fragment {
 
     public static SelectFamilyFrag newInstance(List<Family> data) {
         SelectFamilyFrag result = new SelectFamilyFrag();
+        Bundle args = new Bundle();
 
-        Family[] temp_list;
-
-        if (data == null) {
-            temp_list = new Family[0];
-        } else {
-            temp_list = new Family[data.size()];
+        if (data != null) {
+            Family[] temp_list = new Family[data.size()];
             temp_list = data.toArray(temp_list);
+            args.putParcelableArray(SEL_FAM_LIST, temp_list);
         }
 
-        Bundle args = new Bundle();
-        args.putParcelableArray(SEL_FAM_LIST, temp_list);
-
         result.setArguments(args);
-
         return result;
     }
 
@@ -77,14 +74,14 @@ public class SelectFamilyFrag extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_select_family, container, false);
 
-        RecyclerView mFamilyList = rootView.findViewById(R.id.family_select_list_rv);
+        mFamiliesList = rootView.findViewById(R.id.family_select_list_rv);
         DividerItemDecoration itemDecoration = new DividerItemDecoration(getContext(), DividerItemDecoration.VERTICAL);
         itemDecoration.setDrawable(getContext().getDrawable(R.drawable.list_divider));
-        mFamilyList.addItemDecoration(itemDecoration);
-        mFamilyList.setLayoutManager(new LinearLayoutManager(getContext()));
+        mFamiliesList.addItemDecoration(itemDecoration);
+        mFamiliesList.setLayoutManager(new LinearLayoutManager(getContext()));
 
         mAdapter = new SelectAdapter();
-        mFamilyList.setAdapter(mAdapter);
+        mFamiliesList.setAdapter(mAdapter);
 
         if (getArguments() != null) {
             Bundle args = getArguments();
@@ -104,6 +101,41 @@ public class SelectFamilyFrag extends Fragment {
         }
 
         return rootView;
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+        if (savedInstanceState != null) {
+            Parcelable[] stored = savedInstanceState.getParcelableArray(SEL_FAM_LIST);
+
+            if (stored != null) {
+                 Family [] select_arr = Arrays.copyOf(stored, stored.length, Family[].class);
+
+                 if (mAdapter == null) {
+                     mAdapter = new SelectAdapter();
+
+                     if (mFamiliesList != null) {
+                         mFamiliesList.setAdapter(mAdapter);
+                     }
+                 }
+
+                 mAdapter.update(Arrays.asList(select_arr));
+            }
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        Family[] select_arr = new Family[0];
+        select_arr = mAdapter.data.toArray(select_arr);
+
+        Parcelable[] store;
+        store = Arrays.copyOf(select_arr, select_arr.length, Parcelable[].class);
+        outState.putParcelableArray(SEL_FAM_LIST, store);
     }
 
     @Override
@@ -127,23 +159,12 @@ public class SelectFamilyFrag extends Fragment {
     }
 
     public void setData(List<Family> data) {
-        Log.v(LOG_TAG, "setData has started!!! ");
         if (mAdapter != null) {
             mAdapter.data = data;
             mAdapter.notifyDataSetChanged();
         }
     }
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
     public interface OnSelectFamilyListener {
         void onFamilyItemClick(Family family);
     }
@@ -173,6 +194,11 @@ public class SelectFamilyFrag extends Fragment {
 
         public SelectAdapter() {
             data = new LinkedList<>();
+        }
+
+        public void update(List<Family> data) {
+            this.data = data;
+            notifyDataSetChanged();
         }
 
         @Override

@@ -57,8 +57,6 @@ public class TaskListsFragment extends Fragment
 
     private static final String LOG_TAG = TaskListsFragment.class.getSimpleName();
 
-    private static final String TASK_LIST = "TASK_LIST";
-
     private FirebaseFirestore mDatabase;
     private User mUser;
     private Family mFamily;
@@ -92,7 +90,6 @@ public class TaskListsFragment extends Fragment
             }
 
             Parcelable[] temp_arr = savedInstanceState.getParcelableArray("all_tags");
-
             if (temp_arr != null && temp_arr.length > 0) {
                 Tag[] tag_arr = Arrays.copyOf(temp_arr, temp_arr.length, Tag[].class);
                 mTagsList = new LinkedList<>(Arrays.asList(tag_arr));
@@ -149,7 +146,6 @@ public class TaskListsFragment extends Fragment
 
     @Override
     public void onAttach(Context context) {
-        Log.v(LOG_TAG, "onAttach has started!!!");
         super.onAttach(context);
 
         if (context instanceof OnListsFragmentListener) {
@@ -158,7 +154,6 @@ public class TaskListsFragment extends Fragment
             mFamily = mListener.getFamily();
             mNoFamily = (mFamily == null);
             mListener.onListsFragAttach();
-            Log.v(LOG_TAG, "onAttach - global variables have been set. User == null: " + (mUser == null) + ", Family == null: " + (mFamily == null));
         } else {
             throw new RuntimeException(context.toString()
                     + " must implement OnListsFragmentListener");
@@ -489,8 +484,6 @@ public class TaskListsFragment extends Fragment
     }
 
     private void updateWidget(boolean personal) {
-        Log.v(LOG_TAG, "updateWidget - context == null: " + (getContext() == null));
-
         Intent intent = new Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
 
         intent.putExtra(TasksWidget.IS_PERSONAL, personal);
@@ -576,11 +569,8 @@ public class TaskListsFragment extends Fragment
                 .addOnFailureListener(this);
     }
 
-    // Erase the unused fragment and data at some point?
-
     private void notifyFamilyUpdate() {
         mNoFamily = false;
-        mFamiliesList.clear();
         mListener.onFamilyChange(mFamily);
         mListener.updateFabDesc();
         mTaskAdapter.notifyDataSetChanged();
@@ -612,16 +602,6 @@ public class TaskListsFragment extends Fragment
         mListener.doSnackbar(R.string.family_add_failure);
     }
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
     public interface OnListsFragmentListener {
         void onListsFragAttach();
         void onTaskClick(Task task, String tab);
@@ -643,13 +623,9 @@ public class TaskListsFragment extends Fragment
 
         @Override
         public Fragment getItem(int position) {
-            Log.v(LOG_TAG, "TaskListsPagerAdapter - getItem has been run.");
-
             Fragment result = null;
 
             if (position == 0) {
-//                Log.v(LOG_TAG, "TaskListPagerAdapter, getPersonalFrag - mPersonalTasks.size: " + mPersonalTasks.size());
-                Log.v(LOG_TAG, "TaskListPagerAdapter, getPersonalFrag - mPersonalFrag == null: " + (mPersonalFrag == null));
                 if (mPersonalFrag == null) {
                     result = PersonalListFragment.newInstance(mPersonalTasks);
                     mPersonalFrag = (PersonalListFragment) result;
@@ -658,12 +634,8 @@ public class TaskListsFragment extends Fragment
                     result = mPersonalFrag;
                 }
             } else if (position == 1) {
-//                Log.v(LOG_TAG, "TaskListPagerAdapter, getFamilyFrag - mFamilyTasks.size: " + mFamilyTasks.size());
-                Log.v(LOG_TAG, "TaskListPagerAdapter, getFamilyFrag - mFamilyFrag == null: " + (mFamilyFrag == null));
-
                 if (mNoFamily) {
                     if (mSelectFrag == null) {
-                        Log.v(LOG_TAG, "TaskListPagerAdapter, getSelectFrag - mFamiliesList size: " + ((mFamiliesList == null) ? "null" : mFamiliesList.size()));
                         result = SelectFamilyFrag.newInstance(mFamiliesList);
                         mSelectFrag = (SelectFamilyFrag) result;
                     } else {
@@ -721,8 +693,6 @@ public class TaskListsFragment extends Fragment
                     Log.w(LOG_TAG, "Warning!!! TaskListsFragment - getPageTitle() position not recognized: " + position);
                     break;
             }
-
-            Log.v(LOG_TAG, "TaskListsPagerAdapter - getPageTitle: " + result);
 
             return result;
         }
