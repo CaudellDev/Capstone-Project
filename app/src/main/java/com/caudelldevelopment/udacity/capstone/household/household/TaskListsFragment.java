@@ -310,7 +310,6 @@ public class TaskListsFragment extends Fragment
                     mPersonalTasks.remove(removed_task);
                     break;
                 default:
-                    Log.w(LOG_TAG, "doPersonalTasks - document change not recognized!!! Type: " + dc.getType());
                     return;
             }
         }
@@ -356,7 +355,6 @@ public class TaskListsFragment extends Fragment
                     mFamilyTasks.remove(removed_task);
                     break;
                 default:
-                    Log.w(LOG_TAG, "doFamilyTasks - document change not recognized!!! Type: " + dc.getType());
                     return;
             }
         }
@@ -411,7 +409,6 @@ public class TaskListsFragment extends Fragment
                     // Families won't be removed. Ignore this.
                     return;
                 default:
-                    Log.w(LOG_TAG, "doFamilies - document change not recognized!!! Type: " + dc.getType());
                     return;
             }
         }

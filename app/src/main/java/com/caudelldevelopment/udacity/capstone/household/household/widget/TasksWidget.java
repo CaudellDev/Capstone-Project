@@ -32,14 +32,11 @@ public class TasksWidget extends AppWidgetProvider {
 //        personal = true;
     }
 
-    private void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
-                                 int appWidgetId) {
-        Log.v(LOG_TAG, "updateAppWidget has started!!! widget id: " + appWidgetId);
-
+    private void updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
         // Construct the RemoteViews object
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.tasks_widget);
 
-        views.setTextViewText(R.id.widget_date_tv, getDateRange());
+        views.setTextViewText(R.id.widget_date_tv, getDateRange(context));
         views.setOnClickPendingIntent(R.id.widget_swap_btn_pers, getPendingSelfIntent(context, true));
         views.setOnClickPendingIntent(R.id.widget_swap_btn_fam,  getPendingSelfIntent(context, false));
         views.setRemoteAdapter(R.id.widget_task_list, getRemoteAdapterIntent(context, true)); // Default is personal
@@ -60,7 +57,7 @@ public class TasksWidget extends AppWidgetProvider {
         return PendingIntent.getBroadcast(context, 0, intent, 0);
     }
 
-    private String getDateRange() {
+    private String getDateRange(Context context) {
         Calendar cal = Calendar.getInstance();
         Date today = cal.getTime();
 
@@ -70,7 +67,7 @@ public class TasksWidget extends AppWidgetProvider {
         String today_str = new SimpleDateFormat("MM/dd", Locale.US).format(today);
         String week_str  = new SimpleDateFormat("MM/dd", Locale.US).format(in_week);
 
-        return today_str + "-" + week_str;
+        return context.getString(R.string.dialog_date_range, today_str, week_str);
     }
 
     @Override
@@ -84,8 +81,6 @@ public class TasksWidget extends AppWidgetProvider {
     @Override
     public void onReceive(Context context, Intent intent) {
         super.onReceive(context, intent);
-
-        Log.v(LOG_TAG, "onReceive - intent.getAction: " + intent.getAction());
 
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.tasks_widget);
         AppWidgetManager manager = AppWidgetManager.getInstance(context);
@@ -154,8 +149,6 @@ public class TasksWidget extends AppWidgetProvider {
     }
 
     private Intent getRemoteAdapterIntent(Context context, boolean personal) {
-        Log.v(LOG_TAG, "getRemoteAdapterIntent has started!!! personal: " + personal);
-
         Intent intent;
 
         // I tried this app using one RemoteViewsService, but I couldn't figure out how

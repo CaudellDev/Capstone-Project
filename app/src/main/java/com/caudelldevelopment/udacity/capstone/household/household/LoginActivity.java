@@ -64,8 +64,6 @@ public class LoginActivity extends AppCompatActivity implements OnSuccessListene
             if (resultCode == RESULT_OK) {
                 doLogin();
             } else {
-                Log.w(LOG_TAG, "onActivityResult - Error Logging in user. ResultCode: " + resultCode);
-
                 Snackbar.make(findViewById(R.id.login_root_layout), R.string.login_error_snackbar, Snackbar.LENGTH_INDEFINITE).show();
             }
         } else if (requestCode == MAIN_ACTIVITY_REQ_CODE) {
@@ -111,12 +109,10 @@ public class LoginActivity extends AppCompatActivity implements OnSuccessListene
     }
 
     private void startMainActivity() {
-        Log.v(LOG_TAG, "startMainActivity has started!!!");
-
         Intent intent = new Intent(this, MainActivity.class);
 
-        // For some reason, if I passed these as Parcelable Extras,
-        // the mUser (or one of any two Parcelable objects) would be null.
+        // For some reason, if I passed these as separate Parcelable Extras,
+        // the mUser (or the first of any two Parcelable objects) would be null.
         // Putting them into a bundle didn't work either.
         intent.putExtra("user_data", new Parcelable[] {mUser, mFamily});
 

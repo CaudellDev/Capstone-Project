@@ -53,7 +53,6 @@ public class PersonalWidgetRemoteViewsService extends RemoteViewsService {
 
         @Override
         public void onCreate() {
-            Log.v(LOG_TAG, "onCreate has started!!!");
             doUserQuery();
         }
 
@@ -83,15 +82,12 @@ public class PersonalWidgetRemoteViewsService extends RemoteViewsService {
                         .document(fireUser.getUid())
                         .addSnapshotListener((documentSnapshot, e) -> {
                             if (e != null) {
-                                Log.w(LOG_TAG, "doUserQuery, User SnapshotListener - Firebase Exception: " + e.getMessage());
-                                e.printStackTrace();
+                                updateWidgetError(getString(R.string.widget_err_user_fail));
                                 return;
                             }
 
                             if (documentSnapshot != null && documentSnapshot.exists()) {
                                 mUser = User.fromDoc(documentSnapshot);
-                                Log.v(LOG_TAG, "doUserQuery, User SnapshotListener - user: " + mUser.getId() + ", " + mUser.getName());
-
                                 updateWidget();
                             }
                         });
@@ -100,9 +96,6 @@ public class PersonalWidgetRemoteViewsService extends RemoteViewsService {
 
         private void doTaskQuery() {
             if (mQuery == null) {
-                Log.v(LOG_TAG, "doTaskQuery - mQuery is null. Starting data fetch.");
-
-
                 // Use the user to finally get the list of tasks
                 FirebaseFirestore db = FirebaseFirestore.getInstance();
                 mQuery = db.collection(Task.COL_TAG)
@@ -116,8 +109,6 @@ public class PersonalWidgetRemoteViewsService extends RemoteViewsService {
             }
 
             if (mQuery.isComplete() && mQuery.isSuccessful()) {
-                Log.v(LOG_TAG, "doTaskQuery - mQuery is done and successful.");
-
                 mTasks = new LinkedList<>();
                 List<DocumentSnapshot> docs = mQuery.getResult().getDocuments();
                 for (DocumentSnapshot doc : docs) {
@@ -125,9 +116,8 @@ public class PersonalWidgetRemoteViewsService extends RemoteViewsService {
                     mTasks.add(task);
                 }
 
-                Log.v(LOG_TAG, "doTaskQuery - task count: " + mTasks.size());
                 if (mTasks.isEmpty()) {
-                    updateWidgetError("No tasks");
+                    updateWidgetError(getString(R.string.empty_task_list_dialog_err));
                 }
 
                 mQuery = null;
@@ -135,7 +125,6 @@ public class PersonalWidgetRemoteViewsService extends RemoteViewsService {
         }
 
         private void updateWidgetError(String message) {
-            Log.v(LOG_TAG, "updateWidgetError has started!!!");
             Intent intent = new Intent(mContext, TasksWidget.class);
             intent.setAction(PERS_EMPTY_LIST_TAG);
             intent.putExtra(PERS_WIDGET_ERR_MSG, message);
@@ -146,7 +135,7 @@ public class PersonalWidgetRemoteViewsService extends RemoteViewsService {
             Calendar cal = Calendar.getInstance();
             Date today = cal.getTime();
 
-            return new SimpleDateFormat("MM/dd/yyyy", Locale.US).format(today);
+            return new SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()).format(today);
         }
 
         private String getDateInWeek() {
@@ -154,7 +143,7 @@ public class PersonalWidgetRemoteViewsService extends RemoteViewsService {
             cal.add(Calendar.DATE, 7);
             Date in_week = cal.getTime();
 
-            return new SimpleDateFormat("MM/dd/yyyy", Locale.US).format(in_week);
+            return new SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()).format(in_week);
         }
 
         @Override
@@ -164,8 +153,6 @@ public class PersonalWidgetRemoteViewsService extends RemoteViewsService {
 
         @Override
         public int getCount() {
-//                return 3;
-            Log.v(LOG_TAG, "getCount - count: " + (mTasks == null ? 0 : mTasks.size()));
             return mTasks == null ? 0 : mTasks.size();
         }
 
@@ -184,7 +171,7 @@ public class PersonalWidgetRemoteViewsService extends RemoteViewsService {
 
         @Override
         public RemoteViews getLoadingView() {
-            return new RemoteViews(getPackageName(), R.layout.widget_task_item);
+            return null;
         }
 
         @Override

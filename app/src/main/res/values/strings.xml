@@ -1,7 +1,6 @@
 <resources>
     <string name="app_name">Household</string>
 
-    <!-- Strings related to login -->
     <string name="prompt_email">Email</string>
     <string name="prompt_password">Password (optional)</string>
     <string name="action_sign_in">Sign in or register</string>
@@ -10,13 +9,7 @@
     <string name="error_invalid_password">This password is too short</string>
     <string name="error_incorrect_password">This password is incorrect</string>
     <string name="error_field_required">This field is required</string>
-    <string name="permission_rationale">"Contacts permissions are needed for providing email
-        completions."
-    </string>
-
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
-
+    <string name="permission_rationale">Contacts permissions are needed for providing email completions.</string>
     <string name="family_title">Family</string>
     <string name="personal_title">Personal</string>
     <string name="no_network_title">Network Error: Not Connected</string>
@@ -29,8 +22,6 @@
     <string name="settings_title">Settings</string>
     <string name="title_activity_tags">All Tags</string>
     <string name="new_tag_title_hint">Tag Title</string>
-    <string name="logout_key">logout_preference</string>
-    <string name="acc_key">account_category</string>
     <string name="family_title_menu">Family Options</string>
     <string name="select_header">You have not chosen a family you would like to join. Please select one from the list below, or create your own.</string>
     <string name="select_subheader">Tasks you create for the family will be visible to all of it\'s members, and you can see tasks the other members add.</string>
@@ -39,11 +30,9 @@
     <string name="new_tag_title">Add new Tag</string>
     <string name="family_add_failure">Family was not successfully added. Please try again.</string>
     <string name="login_user_null">Login failed. Could not retrieve user information.</string>
-
-    <string name="widget_data_updated">app_widget_data_updated_intent_tag</string>
     <string name="widget_empty_text">No items in list.</string>
     <string name="widget_err_user_fail">Cannot get your user info.</string>
-    <string name="widget_date_init">Loading...</string>
+    <string name="widget_date_init">Loading…</string>
     <string name="login_error_snackbar">There was an error logging you in. Please try again.</string>
     <string name="no_family_snackbar">Please select a family in the family tab.</string>
     <string name="leave_family_btn">Leave Family</string>
@@ -67,5 +56,12 @@
     <string name="delete_text">DELETE TASK</string>
     <string name="cancel_text">CANCEL</string>
     <string name="chips_input_cont_desc">Tags Enter Box</string>
+    <string name="empty_task_list_dialog_err">No tasks in this list</string>
+    <string name="dialog_date_range">%s-%s</string>
+    <string name="leave_family_conf_msg">Are you sure you want to leave %s?</string>
+    <string name="leave_family_conf_btn">LEAVE</string>
 
+    <string name="logout_key" translatable="false">logout_preference</string>
+    <string name="acc_key" translatable="false">account_category</string>
+    <string name="widget_data_updated" translatable="false">app_widget_data_updated_intent_tag</string>
 </resources>

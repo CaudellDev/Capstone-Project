@@ -35,17 +35,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link OnPersonalFragListener} interface
- * to handle interaction events.
- * Use the {@link PersonalListFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class PersonalListFragment extends Fragment {
-//        implements OnCompleteListener<QuerySnapshot>, OnFailureListener {
 
     private static final String LOG_TAG = PersonalListFragment.class.getSimpleName();
     private static final String PERS_TASK_LIST = "parsonal_task_list";
@@ -86,7 +76,6 @@ public class PersonalListFragment extends Fragment {
                 Task[] task_arr = Arrays.copyOf(temp_arr, temp_arr.length, Task[].class);
                 data = new LinkedList<>(Arrays.asList(task_arr));
             } else {
-                Log.w(LOG_TAG, "onCreate - List of tasks could not be retrieved.");
                 data = new LinkedList<>();
             }
 
@@ -308,16 +297,6 @@ public class PersonalListFragment extends Fragment {
         }
     }
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
     public interface OnPersonalFragListener {
         void onPersonalTaskCheckClick(Task task, int pos);
         void onPersonalTaskClick(Task task, int pos);

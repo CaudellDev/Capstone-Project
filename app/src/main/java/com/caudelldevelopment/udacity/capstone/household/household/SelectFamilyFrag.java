@@ -29,15 +29,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.zip.Inflater;
 
-
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link OnSelectFamilyListener} interface
- * to handle interaction events.
- * Use the {@link SelectFamilyFrag#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class SelectFamilyFrag extends Fragment {
 
     private static final String LOG_TAG = SelectFamilyFrag.class.getSimpleName();

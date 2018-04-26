@@ -31,8 +31,6 @@ public class BaseEntryDialog extends DialogFragment {
 
     private EntryDialogListener mListener;
     private EditText mName;
-    private Button mPosConf;
-    private Button mNegConf;
 
     public static BaseEntryDialog getInstance(String entry) {
         BaseEntryDialog dialog = new BaseEntryDialog();
@@ -89,8 +87,8 @@ public class BaseEntryDialog extends DialogFragment {
             TextView title = rootView.findViewById(R.id.dialog_container_title);
             title.setText(getEntryTitle());
 
-            mPosConf = rootView.findViewById(R.id.dialog_container_pos_btn);
-            mNegConf = rootView.findViewById(R.id.dialog_container_neg_btn);
+            Button mPosConf = rootView.findViewById(R.id.dialog_container_pos_btn);
+            Button mNegConf = rootView.findViewById(R.id.dialog_container_neg_btn);
 
             mPosConf.setOnClickListener(v -> {
                 String name = mName.getText().toString().trim();

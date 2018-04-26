@@ -33,13 +33,10 @@ public class FamilyActivity extends AppCompatActivity implements View.OnClickLis
     public static final String USER_EXTRA = "user_extra";
     public static final String LEFT_FAMILY = "left_fammily";
 
-    private User mUser;
     private Family mFamily;
     private List<User> mMembers;
 
-    private RecyclerView mMembersList;
     private MembersAdapter mAdapter;
-    private Button leaveFamily;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,7 +48,7 @@ public class FamilyActivity extends AppCompatActivity implements View.OnClickLis
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         Intent intent = getIntent();
-        mUser = intent.getParcelableExtra(USER_EXTRA);
+        User mUser = intent.getParcelableExtra(USER_EXTRA);
 
         if (mUser != null) {
             FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -78,7 +75,7 @@ public class FamilyActivity extends AppCompatActivity implements View.OnClickLis
                     });
         }
 
-        mMembersList = findViewById(R.id.family_members_list);
+        RecyclerView mMembersList = findViewById(R.id.family_members_list);
         DividerItemDecoration itemDecoration = new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
         itemDecoration.setDrawable(this.getDrawable(R.drawable.list_divider));
         mMembersList.addItemDecoration(itemDecoration);
@@ -87,13 +84,12 @@ public class FamilyActivity extends AppCompatActivity implements View.OnClickLis
         mAdapter = new MembersAdapter();
         mMembersList.setAdapter(mAdapter);
 
-        leaveFamily = findViewById(R.id.leave_family_btn);
+        Button leaveFamily = findViewById(R.id.leave_family_btn);
         leaveFamily.setOnClickListener(this);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-
         if (item.getItemId() == android.R.id.home) {
             finish();
             return true;
@@ -104,9 +100,7 @@ public class FamilyActivity extends AppCompatActivity implements View.OnClickLis
 
     @Override
     public void onBackPressed() {
-        Log.v(LOG_TAG, "onBackPressed has started!!!");
         super.onBackPressed();
-        Log.v(LOG_TAG, "onBackPressed has ended!!!!!");
     }
 
     private void updateMembersList() {
@@ -120,9 +114,9 @@ public class FamilyActivity extends AppCompatActivity implements View.OnClickLis
     public void onClick(View v) {
         if (v.getId() == R.id.leave_family_btn) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setMessage("Are you sure you want to leave " + mFamily.getName() + "?")
-                    .setPositiveButton("LEAVE", (dialog, which) -> leaveFamily())
-                    .setNegativeButton("DISMISS", (dialog, which) -> {});
+            builder.setMessage(getString(R.string.leave_family_conf_msg, mFamily.getName()))
+                    .setPositiveButton(R.string.leave_family_conf_btn, (dialog, which) -> leaveFamily())
+                    .setNegativeButton(R.string.dismiss_text, (dialog, which) -> {});
             builder.show();
         }
     }
@@ -132,21 +126,6 @@ public class FamilyActivity extends AppCompatActivity implements View.OnClickLis
         intent.putExtra(LEFT_FAMILY, true);
         setResult(RESULT_OK, intent);
         finish();
-
-
-//        FirebaseFirestore db = FirebaseFirestore.getInstance();
-//
-//        mUser.setFamily("");
-//        db.collection(User.COL_TAG)
-//                .document(mUser.getId())
-//                .update(User.FAMILY_ID, "");
-//
-//        List<String> temp_list = mFamily.getMembers();
-//        temp_list.remove(mUser.getId());
-//        mFamily.setMembers(temp_list);
-//        db.collection(User.COL_TAG)
-//                .document(mFamily.getId())
-//                .update(mFamily.toMap());
     }
 
     class MembersViewHolder extends RecyclerView.ViewHolder {

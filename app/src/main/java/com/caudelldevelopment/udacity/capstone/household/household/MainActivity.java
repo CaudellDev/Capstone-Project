@@ -300,8 +300,8 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onTaskClick(Task task, String tab) {
         if (tab != null && task != null) {
+            boolean family = tab.equals(getString(R.string.family_title));
             if (wide_layout) {
-                boolean family = tab.equals("Family");
                 NewTaskDialogFrag dialog = NewTaskDialogFrag.newInstance(family, mListFragment.getAllTags(), mUser, task);
                 FragmentManager manager = getSupportFragmentManager();
 
@@ -309,7 +309,6 @@ public class MainActivity extends AppCompatActivity
                         .replace(R.id.main_view_holder, dialog, NewTaskDialogFrag.DIALOG_TAG)
                         .commit();
             } else {
-                boolean family = tab.equals("Family");
                 NewTaskDialogFrag dialog = NewTaskDialogFrag.newInstance(family, mListFragment.getAllTags(), mUser, task);
                 dialog.show(getSupportFragmentManager(), NewTaskDialogFrag.DIALOG_TAG);
             }

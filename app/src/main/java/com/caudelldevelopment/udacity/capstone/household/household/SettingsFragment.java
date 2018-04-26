@@ -22,10 +22,6 @@ public class SettingsFragment extends PreferenceFragmentCompat {
     public static SettingsFragment getInstance() {
         SettingsFragment result = new SettingsFragment();
 
-        Bundle args = new Bundle();
-        // ....
-        result.setArguments(args);
-
         return result;
     }
 
@@ -36,9 +32,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         addPreferencesFromResource(R.xml.preferences);
 
         Preference preference = getPreferenceManager().findPreference(getString(R.string.logout_key));
-        preference.setOnPreferenceClickListener(preference1 -> {
-            Log.v(LOG_TAG, "onCreate, onClickListener - preference has been clicked!!!");
-//            FirebaseAuth.getInstance().signOut();
+        preference.setOnPreferenceClickListener(pref -> {
             mListener.doSignOut();
             return true;
         });

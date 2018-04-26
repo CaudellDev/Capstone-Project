@@ -19,6 +19,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Switch;
@@ -42,10 +43,6 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
-
-/**
- * Created by caude on 1/23/2018.
- */
 
 public class NewTaskDialogFrag extends DialogFragment
                                 implements OnCompleteListener<QuerySnapshot>,
@@ -124,24 +121,6 @@ public class NewTaskDialogFrag extends DialogFragment
     @Override
     public void onDestroy() {
         super.onDestroy();
-    }
-
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-
-//        if (getShowsDialog()) {
-//            if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-//                Dialog dialog = getDialog();
-//                if (dialog != null) {
-//                    dialog.dismiss();
-//                }
-//            }
-//        } else {
-//            if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
-//                mNegConf.performClick();
-//            }
-//        }
     }
 
     @Override
@@ -313,15 +292,8 @@ public class NewTaskDialogFrag extends DialogFragment
         });
 
         mDate.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
+            @Override public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
+            @Override public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
 
             @Override
             public void afterTextChanged(Editable editable) {
@@ -431,7 +403,7 @@ public class NewTaskDialogFrag extends DialogFragment
                 pickerDialog.show();
             } else {
                 Date current = Calendar.getInstance().getTime();
-                String today = new SimpleDateFormat("MM/dd/yyyy", Locale.US).format(current);
+                String today = new SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()).format(current);
                 mDate.setText(today);
 
                 // Do something else... ?

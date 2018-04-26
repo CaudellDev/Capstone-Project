@@ -46,7 +46,7 @@ public class TagsActivity extends AppCompatActivity implements BaseEntryDialog.E
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(view -> {
             BaseEntryDialog dialog = BaseEntryDialog.getInstance(BaseEntryDialog.ENTRY_TAG);
-            dialog.show(getSupportFragmentManager(), "base_entry_dialog");
+            dialog.show(getSupportFragmentManager(), BaseEntryDialog.DIALOG_TAG);
         });
 
         RecyclerView mTagList = findViewById(R.id.tag_list_rv);
@@ -64,7 +64,6 @@ public class TagsActivity extends AppCompatActivity implements BaseEntryDialog.E
             Tag[] task_arr = Arrays.copyOf(temp_arr, temp_arr.length, Tag[].class);
             mAdapter.data = new LinkedList<>(Arrays.asList(task_arr));
         } else {
-            Log.w(LOG_TAG, "onCreate - List of tags could not be retrieved.");
             mAdapter.data = new LinkedList<>();
         }
 

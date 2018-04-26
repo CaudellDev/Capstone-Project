@@ -82,8 +82,6 @@ public class FamilyWidgetRemoteViewsService extends RemoteViewsService {
                         .document(fireUser.getUid())
                         .addSnapshotListener((documentSnapshot, e) -> {
                             if (e != null) {
-                                Log.w(LOG_TAG, "doUserQuery, User SnapshotListener - Firebase Exception: " + e.getMessage());
-                                e.printStackTrace();
                                 updateWidgetError(getString(R.string.widget_err_user_fail));
                                 return;
                             }
@@ -124,7 +122,7 @@ public class FamilyWidgetRemoteViewsService extends RemoteViewsService {
                 }
 
                 if (mTasks.isEmpty()) {
-                    updateWidgetError("No tasks in this list");
+                    updateWidgetError(getString(R.string.empty_task_list_dialog_err));
                 }
 
                 mQuery = null;
@@ -132,7 +130,6 @@ public class FamilyWidgetRemoteViewsService extends RemoteViewsService {
         }
 
         private void updateWidgetError(String message) {
-            Log.v(LOG_TAG, "updateWidgetError has started!!!");
             Intent intent = new Intent(mContext, TasksWidget.class);
             intent.setAction(FAM_EMPTY_LIST_TAG);
             intent.putExtra(FAM_WIDGET_ERR_MSG, message);
@@ -143,7 +140,7 @@ public class FamilyWidgetRemoteViewsService extends RemoteViewsService {
             Calendar cal = Calendar.getInstance();
             Date today = cal.getTime();
 
-            return new SimpleDateFormat("MM/dd/yyyy", Locale.US).format(today);
+            return new SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()).format(today);
         }
 
         private String getDateInWeek() {
@@ -152,7 +149,7 @@ public class FamilyWidgetRemoteViewsService extends RemoteViewsService {
             cal.add(Calendar.DATE, 7);
             Date in_week = cal.getTime();
 
-            return new SimpleDateFormat("MM/dd/yyyy", Locale.US).format(in_week);
+            return new SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()).format(in_week);
         }
 
         @Override
