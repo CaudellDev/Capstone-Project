@@ -61,8 +61,6 @@ public class PersonalWidgetRemoteViewsService extends RemoteViewsService {
         public void onDataSetChanged() {
             if (mUser != null) {
                 doTaskQuery();
-            } else {
-                Log.w(LOG_TAG, "onDataSetChanged - mUser is null!!!!");
             }
         }
 

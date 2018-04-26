@@ -61,8 +61,6 @@ public class FamilyWidgetRemoteViewsService extends RemoteViewsService {
         public void onDataSetChanged() {
             if (mUser != null) {
                 doTaskQuery();
-            } else {
-                Log.v(LOG_TAG, "onDataSetChanged - mUser is null!!!!");
             }
         }
 

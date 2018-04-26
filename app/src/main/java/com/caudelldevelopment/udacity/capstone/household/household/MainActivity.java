@@ -291,8 +291,6 @@ public class MainActivity extends AppCompatActivity
                 boolean family = tab.equals(getString(R.string.family_title));
                 NewTaskDialogFrag dialog = NewTaskDialogFrag.newInstance(family, mListFragment.getAllTags(), mUser, null);
                 dialog.show(getSupportFragmentManager(), NewTaskDialogFrag.DIALOG_TAG);
-            } else {
-                Log.w(LOG_TAG, "onClick, but tab title could not be retrieved.");
             }
         }
     }
@@ -312,8 +310,6 @@ public class MainActivity extends AppCompatActivity
                 NewTaskDialogFrag dialog = NewTaskDialogFrag.newInstance(family, mListFragment.getAllTags(), mUser, task);
                 dialog.show(getSupportFragmentManager(), NewTaskDialogFrag.DIALOG_TAG);
             }
-        } else {
-            Log.w(LOG_TAG, "onTaskClick, but tab title or edit task could not be retrieved.");
         }
     }
 

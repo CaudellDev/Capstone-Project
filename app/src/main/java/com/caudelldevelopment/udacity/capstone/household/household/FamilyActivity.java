@@ -200,7 +200,5 @@ public class FamilyActivity extends AppCompatActivity implements View.OnClickLis
             else
                 return MEM_VIEW_TYPE;
         }
-
-
     }
 }

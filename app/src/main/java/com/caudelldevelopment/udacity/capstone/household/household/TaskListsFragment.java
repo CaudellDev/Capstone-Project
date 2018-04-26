@@ -276,8 +276,6 @@ public class TaskListsFragment extends Fragment
 
     private void doPersonalTasks(QuerySnapshot query, FirebaseFirestoreException e) {
         if (e != null) {
-            Log.w(LOG_TAG, "doPersonalTasks - Firebase Exception: " + e.getMessage());
-            e.printStackTrace();
             return;
         }
 
@@ -319,8 +317,6 @@ public class TaskListsFragment extends Fragment
 
     private void doFamilyTasks(QuerySnapshot query, FirebaseFirestoreException e) {
         if (e != null) {
-            Log.w(LOG_TAG, "doFamilyTasks - Firebase Exception: " + e.getMessage());
-            e.printStackTrace();
             return;
         }
 
@@ -378,8 +374,6 @@ public class TaskListsFragment extends Fragment
 
     private void doFamilies(QuerySnapshot query, FirebaseFirestoreException e) {
         if (e != null) {
-            Log.w(LOG_TAG, "doFamilies - Firebase Exception: " + e.getMessage());
-            e.printStackTrace();
             return;
         }
 
@@ -420,8 +414,6 @@ public class TaskListsFragment extends Fragment
 
     private void doTags(QuerySnapshot querySnapshot, FirebaseFirestoreException e) {
         if (e != null) {
-            Log.w(LOG_TAG, "doTags - Firebase Exception: " + e.getMessage());
-            e.printStackTrace();
             return;
         }
 
@@ -648,8 +640,6 @@ public class TaskListsFragment extends Fragment
                         result = mFamilyFrag;
                     }
                 }
-            } else {
-                Log.w(LOG_TAG, "TaskListPagerAdapter - position not recognized! getItem.position: " + position);
             }
 
             return result;
@@ -685,9 +675,6 @@ public class TaskListsFragment extends Fragment
                     break;
                 case 1:
                     result = getString(R.string.family_title);
-                    break;
-                default:
-                    Log.w(LOG_TAG, "Warning!!! TaskListsFragment - getPageTitle() position not recognized: " + position);
                     break;
             }
 

@@ -424,8 +424,6 @@ public class NewTaskDialogFrag extends DialogFragment
 
             pickerDialog = new DatePickerDialog(getContext(), listener, year, month, dayOfMonth);
             pickerDialog.show();
-        } else {
-            Log.w(LOG_TAG, "onClick - view id not recognized. id: " + v.getId());
         }
     }
 
@@ -501,8 +499,6 @@ public class NewTaskDialogFrag extends DialogFragment
 
                 conf_builder.create().show();
                 break;
-            default:
-                Log.w(LOG_TAG, "onClick - id is not recognized: " + which);
         }
     }
 

@@ -124,8 +124,6 @@ public class BaseEntryDialog extends DialogFragment {
             case ENTRY_TAG:
                 title = getString(R.string.new_tag_title);
                 break;
-            default:
-                Log.w(LOG_TAG, "Entry is not recognized!!!!");
         }
 
         return title;

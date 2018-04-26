@@ -85,9 +85,6 @@ public class SelectFamilyFrag extends Fragment {
                 }
 
                 setData(fam_arr);
-
-            } else {
-                Log.w(LOG_TAG, "onCreate - Parcelable array was null! args contains SEL_FAM_LIST: " + args.containsKey(SEL_FAM_LIST));
             }
         }
 
