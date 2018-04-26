@@ -492,7 +492,6 @@ public class NewTaskDialogFrag extends DialogFragment
                                     .document(mTask.getId())
                                     .delete();
 
-                            mListener.onNewTaskDialogClose();
                         }).setNegativeButton(R.string.cancel_text, (conf_dialog, conf_which) -> {
 
                 });

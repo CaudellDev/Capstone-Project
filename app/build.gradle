@@ -4,6 +4,12 @@ android {
     signingConfigs {
         debug {
         }
+        config {
+            keyAlias 'HouseholdKey'
+            keyPassword 'n3wy3ar'
+            storeFile file('C:/Users/caude/Downloads/Household/android.jks')
+            storePassword 'strangeandquarky'
+        }
     }
     compileSdkVersion 26
     defaultConfig {
@@ -18,6 +24,7 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.config
         }
     }
     buildToolsVersion '27.0.3'
