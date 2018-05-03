@@ -1,9 +1,12 @@
 package com.caudelldevelopment.udacity.capstone.household.household;
 
 import android.content.Intent;
+import android.os.Handler;
 import android.os.Parcelable;
+import android.os.ResultReceiver;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 
 import android.os.Bundle;
@@ -11,6 +14,8 @@ import android.util.Log;
 
 import com.caudelldevelopment.udacity.capstone.household.household.data.Family;
 import com.caudelldevelopment.udacity.capstone.household.household.data.User;
+import com.caudelldevelopment.udacity.capstone.household.household.service.MyResultReceiver;
+import com.caudelldevelopment.udacity.capstone.household.household.service.UserIntentService;
 import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -27,7 +32,7 @@ import java.util.List;
 /**
  * A login screen that offers login via email/password.
  */
-public class LoginActivity extends AppCompatActivity implements OnSuccessListener<DocumentSnapshot> {
+public class LoginActivity extends AppCompatActivity implements OnSuccessListener<DocumentSnapshot>,MyResultReceiver.Receiver {
 
     private static final String LOG_TAG = LoginActivity.class.getSimpleName();
 
@@ -42,6 +47,8 @@ public class LoginActivity extends AppCompatActivity implements OnSuccessListene
     private User mUser;
     private Family mFamily;
 
+    private MyResultReceiver mReceiver;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,6 +61,16 @@ public class LoginActivity extends AppCompatActivity implements OnSuccessListene
         } else {
             showLogin();
         }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
     }
 
     @Override
@@ -98,11 +115,11 @@ public class LoginActivity extends AppCompatActivity implements OnSuccessListene
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
 
         if (firebaseUser != null) {
-            FirebaseFirestore db = FirebaseFirestore.getInstance();
-            db.collection(User.COL_TAG)
-                    .document(firebaseUser.getUid())
-                    .get()
-                    .addOnSuccessListener(this);
+            mReceiver = new MyResultReceiver(new Handler());
+            mReceiver.setReceiver(this);
+
+            UserIntentService.startUserFetch(this, mReceiver, firebaseUser.getUid());
+
         } else {
             Snackbar.make(findViewById(R.id.login_root_layout), getString(R.string.login_user_null), Snackbar.LENGTH_LONG);
         }
@@ -149,6 +166,26 @@ public class LoginActivity extends AppCompatActivity implements OnSuccessListene
                     .set(mUser.toMap())
                     .addOnSuccessListener(task -> startMainActivity())
                     .addOnFailureListener(Throwable::printStackTrace);
+        }
+    }
+
+    @Override
+    public void onReceiveResult(int resultCode, Bundle resultData) {
+        User temp_user = resultData.getParcelable(User.DOC_TAG);
+
+        if (temp_user != null) {
+            mUser = temp_user;
+            mReceiver = null;
+
+            if (mUser.getFamily() != null && !mUser.getFamily().isEmpty()) {
+                // TODO: Fetch family....
+                startMainActivity();
+            } else {
+                startMainActivity();
+            }
+        } else {
+            temp_user = new User(FirebaseAuth.getInstance().getCurrentUser());
+            UserIntentService.startUserWrite(this, mReceiver, temp_user, null);
         }
     }
 }

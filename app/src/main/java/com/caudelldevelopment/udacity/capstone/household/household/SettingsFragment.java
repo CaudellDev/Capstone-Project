@@ -15,7 +15,7 @@ import com.google.firebase.auth.FirebaseAuth;
 
 public class SettingsFragment extends PreferenceFragmentCompat {
 
-    public static final String LOG_TAG = SettingsFragment.class.getSimpleName();
+    private static final String LOG_TAG = SettingsFragment.class.getSimpleName();
 
     private OnSettingsFragListener mListener;
 

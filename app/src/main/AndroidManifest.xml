@@ -14,8 +14,6 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
-
         <activity
             android:name=".LoginActivity"
             android:label="@string/app_name">
@@ -25,67 +23,74 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".MainActivity"
-            android:windowSoftInputMode="adjustPan"/>
+        <activity
+            android:name=".MainActivity"
+            android:windowSoftInputMode="adjustPan" />
         <activity
             android:name=".TagsActivity"
             android:label="@string/title_activity_tags">
-            <meta-data android:name="android.support.PARENT_ACTIVITY"
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MainActivity" />
         </activity>
-        <activity android:name=".SettingsActivity"
-            android:parentActivityName=".MainActivity"/>
+        <activity
+            android:name=".SettingsActivity"
+            android:parentActivityName=".MainActivity" />
         <activity android:name=".FamilyActivity" />
 
-
-
         <receiver android:name=".widget.TasksWidget">
-
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
 
-            <!--<intent-filter>-->
-                <!--<action android:name="household.widget.TasksWidget.PERS_CLICK_TAG"/>-->
-                <!--<category android:name="android.intent.category.DEFAULT"/>-->
-            <!--</intent-filter>-->
+            <!-- <intent-filter> -->
+            <!-- <action android:name="household.widget.TasksWidget.PERS_CLICK_TAG"/> -->
+            <!-- <category android:name="android.intent.category.DEFAULT"/> -->
+            <!-- </intent-filter> -->
 
-            <!--<intent-filter>-->
-                <!--<action android:name="household.widget.TasksWidget.FAM_CLICK_TAG"/>-->
-                <!--<category android:name="android.intent.category.DEFAULT"/>-->
-            <!--</intent-filter>-->
 
-            <!--<intent-filter>-->
-                <!--<action android:name="household.widget.PersonalWidgetRemoteViewsService.PERS_EMPTY_LIST_TAG"/>-->
-                <!--<category android:name="android.intent.category.DEFAULT"/>-->
-            <!--</intent-filter>-->
+            <!-- <intent-filter> -->
+            <!-- <action android:name="household.widget.TasksWidget.FAM_CLICK_TAG"/> -->
+            <!-- <category android:name="android.intent.category.DEFAULT"/> -->
+            <!-- </intent-filter> -->
 
-            <!--<intent-filter>-->
-                <!--<action android:name="household.widget.FamilyWidgetRemoteViewsService.FAM_EMPTY_LIST_TAG"/>-->
-                <!--<category android:name="android.intent.category.DEFAULT"/>-->
-            <!--</intent-filter>-->
 
-            <intent-filter>
-                <action android:name="household.widget.PersonalWidgetRemoteViewsService.PERS_WIDGET_UPDATE"/>
-                <category android:name="android.intent.category.DEFAULT"/>
-            </intent-filter>
+            <!-- <intent-filter> -->
+            <!-- <action android:name="household.widget.PersonalWidgetRemoteViewsService.PERS_EMPTY_LIST_TAG"/> -->
+            <!-- <category android:name="android.intent.category.DEFAULT"/> -->
+            <!-- </intent-filter> -->
+
+
+            <!-- <intent-filter> -->
+            <!-- <action android:name="household.widget.FamilyWidgetRemoteViewsService.FAM_EMPTY_LIST_TAG"/> -->
+            <!-- <category android:name="android.intent.category.DEFAULT"/> -->
+            <!-- </intent-filter> -->
 
             <intent-filter>
-                <action android:name="household.widget.FamilyWidgetRemoteViewsService.FAM_WIDGET_UPDATE"/>
-                <category android:name="android.intent.category.DEFAULT"/>
+                <action android:name="household.widget.PersonalWidgetRemoteViewsService.PERS_WIDGET_UPDATE" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="household.widget.FamilyWidgetRemoteViewsService.FAM_WIDGET_UPDATE" />
+
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
 
-            <meta-data android:name="android.appwidget.provider"
+            <meta-data
+                android:name="android.appwidget.provider"
                 android:resource="@xml/tasks_widget_info" />
-
         </receiver>
 
-        <service android:name=".widget.PersonalWidgetRemoteViewsService"
+        <service
+            android:name=".widget.PersonalWidgetRemoteViewsService"
             android:permission="android.permission.BIND_REMOTEVIEWS" />
-
-        <service android:name=".widget.FamilyWidgetRemoteViewsService"
+        <service
+            android:name=".widget.FamilyWidgetRemoteViewsService"
             android:permission="android.permission.BIND_REMOTEVIEWS" />
-
+        <service
+            android:name=".service.UserIntentService"
+            android:exported="false"></service>
     </application>
 
 </manifest>

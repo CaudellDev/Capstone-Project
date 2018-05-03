@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -24,12 +25,15 @@ import com.caudelldevelopment.udacity.capstone.household.household.data.Family;
 import com.caudelldevelopment.udacity.capstone.household.household.data.Tag;
 import com.caudelldevelopment.udacity.capstone.household.household.data.Task;
 import com.caudelldevelopment.udacity.capstone.household.household.data.User;
+import com.caudelldevelopment.udacity.capstone.household.household.service.MyResultReceiver;
+import com.caudelldevelopment.udacity.capstone.household.household.service.UserIntentService;
 import com.caudelldevelopment.udacity.capstone.household.household.widget.FamilyWidgetRemoteViewsService;
 import com.caudelldevelopment.udacity.capstone.household.household.widget.PersonalWidgetRemoteViewsService;
 import com.caudelldevelopment.udacity.capstone.household.household.widget.TasksWidget;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentReference;
@@ -49,13 +53,18 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-public class TaskListsFragment extends Fragment
-                                implements PersonalListFragment.OnPersonalFragListener,
-                                            FamilyListFragment.OnFamilyFragListener,
-                                            SelectFamilyFrag.OnSelectFamilyListener,
-                                            OnCompleteListener<Void>, OnFailureListener {
+public class TaskListsFragment
+        extends Fragment
+        implements PersonalListFragment.OnPersonalFragListener,
+                    FamilyListFragment.OnFamilyFragListener,
+                    SelectFamilyFrag.OnSelectFamilyListener,
+                    OnCompleteListener<Void>, OnFailureListener,
+                    MyResultReceiver.Receiver {
 
     private static final String LOG_TAG = TaskListsFragment.class.getSimpleName();
+
+    private FirebaseDatabase mRealtimeDB;
+    private MyResultReceiver mReceiver;
 
     private FirebaseFirestore mDatabase;
     private User mUser;
@@ -521,6 +530,22 @@ public class TaskListsFragment extends Fragment
 
         batch.commit()
                 .addOnSuccessListener(v -> notifyFamiliesUpdate());
+
+
+        // +++++++ Realtime Database +++++++
+
+        mReceiver = new MyResultReceiver(new Handler());
+        mReceiver.setReceiver(this);
+
+        // Update mUser
+
+        // Represents the user before leaving the family.
+        User old_user = new User();
+        old_user.setId(mUser.getId());
+        old_user.setName(mUser.getName());
+        old_user.setFamily(temp_family.getId());
+
+        UserIntentService.startUserWrite(getContext(), mReceiver, mUser, old_user);
     }
 
     public void onFamilyEntered(String name) {
@@ -556,6 +581,23 @@ public class TaskListsFragment extends Fragment
         batch.commit()
                 .addOnCompleteListener(task -> notifyFamilyUpdate())
                 .addOnFailureListener(this);
+
+
+
+        // ++++++ Realtime Database +++++++
+
+        mReceiver = new MyResultReceiver(new Handler());
+        mReceiver.setReceiver(this);
+
+        // Update mUser with family id.
+
+        // User just joined a family, so make a user without a family to represent it before the change.
+        User old_user = new User();
+        old_user.setId(mUser.getId());
+        old_user.setName(mUser.getName());
+        old_user.setFamily("");
+
+        UserIntentService.startUserWrite(getContext(), mReceiver, mUser, old_user);
     }
 
     private void notifyFamilyUpdate() {
@@ -589,6 +631,11 @@ public class TaskListsFragment extends Fragment
         mNoFamily = true;
 
         mListener.doSnackbar(R.string.family_add_failure);
+    }
+
+    @Override
+    public void onReceiveResult(int resultCode, Bundle resultData) {
+
     }
 
     public interface OnListsFragmentListener {

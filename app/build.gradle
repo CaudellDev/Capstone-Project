@@ -7,7 +7,7 @@ android {
         config {
             keyAlias 'HouseholdKey'
             keyPassword 'n3wy3ar'
-            storeFile file('C:/Users/caude/Downloads/Household/android.jks')
+            storeFile file('app/keystore/android.jks')
             storePassword 'strangeandquarky'
         }
     }
@@ -38,18 +38,19 @@ dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.android.support:appcompat-v7:26.1.0'
     implementation 'com.android.support:design:26.1.0'
-    implementation 'com.android.support.constraint:constraint-layout:1.0.2'
+    implementation 'com.android.support.constraint:constraint-layout:1.1.0'
     implementation 'com.android.support:support-v4:26.1.0'
     implementation 'com.android.support:preference-v14:26.1.0'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
     implementation 'com.github.pchmn:MaterialChipsInput:1.0.8'
-    implementation 'com.google.firebase:firebase-core:11.8.0'
-    implementation 'com.google.firebase:firebase-firestore:11.8.0'
-    implementation 'com.google.firebase:firebase-auth:11.8.0'
+    implementation 'com.google.firebase:firebase-core:15.0.0'
+    implementation 'com.google.firebase:firebase-firestore:15.0.0'
+    implementation 'com.google.firebase:firebase-auth:15.0.0'
     implementation 'com.firebaseui:firebase-ui-auth:3.1.0'
-    implementation 'com.google.android.gms:play-services-auth:11.8.0'
+    implementation 'com.google.android.gms:play-services-auth:15.0.0'
+    implementation 'com.google.firebase:firebase-database:15.0.0'
 }
 
 apply plugin: 'com.google.gms.google-services'

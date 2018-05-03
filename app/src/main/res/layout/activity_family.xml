@@ -7,6 +7,7 @@
     tools:context="com.caudelldevelopment.udacity.capstone.household.household.FamilyActivity">
 
     <android.support.design.widget.AppBarLayout
+        android:id="@+id/appBarLayout2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
@@ -20,19 +21,22 @@
     </android.support.design.widget.AppBarLayout>
 
 
-
     <android.support.v7.widget.RecyclerView
         android:id="@+id/family_members_list"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="?attr/actionBarSize"/>
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintBottom_toTopOf="@id/leave_family_btn"
+        app:layout_constraintTop_toBottomOf="@+id/appBarLayout2" />
 
     <Button
         android:id="@+id/leave_family_btn"
-        android:text="@string/leave_family_btn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        app:layout_constraintBottom_toTopOf="parent"/>
+        android:layout_marginBottom="8dp"
+        android:text="@string/leave_family_btn"
+        app:layout_constraintBottom_toBottomOf="parent"
+        tools:layout_editor_absoluteX="0dp" />
 
 </android.support.constraint.ConstraintLayout>
