@@ -34,6 +34,7 @@ import com.pchmn.materialchips.model.Chip;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 public class PersonalListFragment extends Fragment {
 
@@ -271,21 +272,12 @@ public class PersonalListFragment extends Fragment {
         }
 
         private List<ChipView> getTagChipList(Task task) {
-            List<String> tagIdList = task.getTag_ids();
-
             List<ChipView> result = new LinkedList<>();
-            for (String curr : tagIdList) {
-                Tag tag = mListener.getTag(curr);
-                String label;
 
-                if (tag == null) {
-                    continue;
-                } else {
-                    label = tag.getName();
-                }
+            for (String curr : task.getTag_ids().values()) {
 
                 ChipView chip = new ChipView(getContext());
-                chip.setLabel(label);
+                chip.setLabel(curr);
                 chip.setPadding(4, 4, 4, 4);
                 chip.setLabelColor(getResources().getColor(R.color.black));
                 chip.setChipBackgroundColor(getResources().getColor(R.color.colorAccent));
@@ -300,6 +292,5 @@ public class PersonalListFragment extends Fragment {
     public interface OnPersonalFragListener {
         void onPersonalTaskCheckClick(Task task, int pos);
         void onPersonalTaskClick(Task task, int pos);
-        Tag getTag(String id);
     }
 }

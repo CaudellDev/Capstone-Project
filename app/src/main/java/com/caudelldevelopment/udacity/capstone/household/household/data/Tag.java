@@ -4,6 +4,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
 
+import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.firestore.DocumentSnapshot;
 
 import java.util.HashMap;
@@ -26,7 +27,8 @@ public class Tag implements Parcelable {
 
     private String name;
     private String id;
-    private List<String> task_ids;
+    private Map<String, String> task_ids;
+//    private List<String> task_ids;
 
     public static Tag fromDoc(DocumentSnapshot doc) {
         Tag tag = doc.toObject(Tag.class);
@@ -34,21 +36,40 @@ public class Tag implements Parcelable {
         return tag;
     }
 
+    public static Tag fromSnapshot(DataSnapshot query) {
+        Log.v(LOG_TAG, "fromSnapshot - query id: " + query.getKey());
+        Tag tag = query.getValue(Tag.class);
+        tag.setId(query.getKey());
+        return tag;
+    }
+
     // Required for Firebase DocumentSnapshot.toObject function.
     public Tag() {
-        task_ids = new LinkedList<>();
+        task_ids = new HashMap<>();
     }
 
     private Tag(Parcel in) {
         id = in.readString();
         name = in.readString();
-        task_ids = new LinkedList<>();
-        in.readStringList(task_ids);
+        task_ids = new HashMap<>();
+        in.readMap(task_ids, String.class.getClassLoader());
     }
 
     public Tag(String name) {
         this.name = name;
-        task_ids = new LinkedList<>();
+        task_ids = new HashMap<>();
+    }
+
+    public Tag(String name, Map<String, String> task_ids) {
+        this.name = name;
+        this.task_ids = task_ids;
+    }
+
+    // If the tag doesn't have any task ids in Firebase, it'll be an empty string.
+    // I need this here to catch those and init with an empty map.
+    public Tag(String name, String empty_task_ids_placeholder) {
+        this.name = name;
+        task_ids = new HashMap<>();
     }
 
     public Map<String, Object> toMap() {
@@ -76,12 +97,12 @@ public class Tag implements Parcelable {
         this.id = id;
     }
 
-    public List<String> getTask_ids() {
+    public Map<String, String> getTask_ids() {
         return task_ids;
     }
 
-    public void addTask(String task) {
-        task_ids.add(task);
+    public void addTask(String task_id, String task_name) {
+        task_ids.put(task_id, task_name);
     }
 
     public void removeTask(String task) {
@@ -110,7 +131,7 @@ public class Tag implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(id);
         dest.writeString(name);
-        dest.writeStringList(task_ids);
+        dest.writeMap(task_ids);
     }
 
     public static final Parcelable.Creator<Tag> CREATOR = new Parcelable.Creator<Tag>() {

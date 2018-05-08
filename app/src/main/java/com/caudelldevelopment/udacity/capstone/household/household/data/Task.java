@@ -2,12 +2,15 @@ package com.caudelldevelopment.udacity.capstone.household.household.data;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.firestore.DocumentSnapshot;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -19,7 +22,7 @@ import java.util.Map;
  * Created by caude on 12/25/2017.
  */
 
-public class Task implements Parcelable {
+public class Task implements Parcelable, Comparable<Task> {
 
     private static final String LOG_TAG = Task.class.getSimpleName();
 
@@ -43,7 +46,8 @@ public class Task implements Parcelable {
     private String date;
     private boolean complete;
     private boolean family;
-    private List<String> tag_ids;
+//    private List<String> tag_ids;
+    private Map<String, String> tag_ids;
 
     public static Task fromDoc(DocumentSnapshot doc, User user) {
         Task task = doc.toObject(Task.class);
@@ -58,15 +62,22 @@ public class Task implements Parcelable {
         return task;
     }
 
+    public static Task fromSnapshot(DataSnapshot query) {
+        Task task = query.getValue(Task.class);
+        task.setId(query.getKey());
+
+        return task;
+    }
+
     // Required for Firebase DocumentSnapshot toObject function.
     public Task() {
-        tag_ids = new LinkedList<>();
+        tag_ids = new HashMap<>();
         complete = false;
         family = false;
     }
 
     private Task(Parcel in) {
-        tag_ids = new LinkedList<>();
+        tag_ids = new HashMap<>();
 
         id = in.readString();
         access_id = in.readString();
@@ -74,7 +85,7 @@ public class Task implements Parcelable {
         desc = in.readString();
         date = in.readString();
         family = in.readByte() == 1;
-        in.readStringList(tag_ids);
+        in.readMap(tag_ids, String.class.getClassLoader());
     }
 
     public Map<String, Object> toMap() {
@@ -143,12 +154,12 @@ public class Task implements Parcelable {
         this.family = family;
     }
 
-    public List<String> getTag_ids() {
+    public Map<String, String> getTag_ids() {
         return tag_ids;
     }
 
-    public void addTag_id(String tag) {
-        tag_ids.add(tag);
+    public void addTag_id(String tag_id, String tag_name) {
+        tag_ids.put(tag_id, tag_name);
     }
 
     @Override
@@ -159,6 +170,11 @@ public class Task implements Parcelable {
         } else {
             return false;
         }
+    }
+
+    @Override
+    public int compareTo(@NonNull Task task) {
+        return date.compareTo(task.date);
     }
 
     // ###----- Parcelable ----###
@@ -176,9 +192,7 @@ public class Task implements Parcelable {
         out.writeString(desc);
         out.writeString(date);
         out.writeByte((byte) (family ? 1 : 0));
-
-        String[] tag_arr = new String[tag_ids.size()];
-        out.writeArray(tag_ids.toArray(tag_arr));
+        out.writeMap(tag_ids);
     }
 
     public static final Parcelable.Creator<Task> CREATOR = new Parcelable.Creator<Task>() {

@@ -1,11 +1,15 @@
 package com.caudelldevelopment.udacity.capstone.household.household;
 
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Handler;
+import android.os.IBinder;
 import android.os.Parcelable;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -27,15 +31,21 @@ import com.caudelldevelopment.udacity.capstone.household.household.data.Family;
 import com.caudelldevelopment.udacity.capstone.household.household.data.Tag;
 import com.caudelldevelopment.udacity.capstone.household.household.data.Task;
 import com.caudelldevelopment.udacity.capstone.household.household.data.User;
+import com.caudelldevelopment.udacity.capstone.household.household.service.FamilyIntentService;
+import com.caudelldevelopment.udacity.capstone.household.household.service.MyResultReceiver;
+import com.caudelldevelopment.udacity.capstone.household.household.service.TaskIntentService;
+import com.caudelldevelopment.udacity.capstone.household.household.service.TagIntentService;
 
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity
                           implements View.OnClickListener,
                                      TaskListsFragment.OnListsFragmentListener,
                                      NewTaskDialogFrag.NewTaskDialogListener,
-                                     BaseEntryDialog.EntryDialogListener {
+                                     BaseEntryDialog.EntryDialogListener,
+                                     MyResultReceiver.Receiver {
 
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
     private static final String USER_SAVE_STATE = "user_save_state_key";
@@ -48,13 +58,20 @@ public class MainActivity extends AppCompatActivity
     private TaskListsFragment mListFragment;
     private FloatingActionButton mAddTaskBtn;
     private boolean wide_layout;
-    private boolean isConnected;
 
     private User mUser;
     private Family mFamily;
     private boolean mNoFamily;
+    private List<Tag> mAllTags;
+
+    private MyResultReceiver mPersonalTaskResults;
+    private MyResultReceiver mFamilyTaskResults;
+    private MyResultReceiver mAllTagsResults;
+    private MyResultReceiver mFamilyResults;
+    private ServiceConnection mConnection;
 
     private NetworkReceiver mNetworkRec;
+    private boolean isConnected;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,6 +103,49 @@ public class MainActivity extends AppCompatActivity
         wide_layout = (view_holder != null);
 
         mNetworkRec = new NetworkReceiver();
+
+        doPersonalTaskFetch();
+
+        if (mNoFamily) {
+            doBindFamilies();
+        } else {
+            doFamilyTaskFetch();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        unbindServices();
+        undoResultReceivers();
+        super.onDestroy();
+    }
+
+    private void unbindServices() {
+        if (mConnection != null) {
+            unbindService(mConnection);
+        }
+    }
+
+    private void undoResultReceivers() {
+        if (mFamilyResults != null) {
+            mFamilyResults.setReceiver(null);
+            mFamilyResults = null;
+        }
+
+        if (mAllTagsResults != null) {
+            mAllTagsResults.setReceiver(null);
+            mAllTagsResults = null;
+        }
+
+        if (mPersonalTaskResults != null) {
+            mPersonalTaskResults.setReceiver(null);
+            mPersonalTaskResults = null;
+        }
+
+        if (mFamilyTaskResults != null) {
+            mFamilyTaskResults.setReceiver(null);
+            mFamilyTaskResults = null;
+        }
     }
 
     @Override
@@ -160,17 +220,16 @@ public class MainActivity extends AppCompatActivity
                     doSnackbar(R.string.no_family_snackbar);
                 } else {
                     Intent family = new Intent(this, FamilyActivity.class);
-                    family.putExtra(FamilyActivity.USER_EXTRA, mUser);
+                    family.putExtra(FamilyActivity.FAMILY_EXTRA, mFamily);
                     startActivityForResult(family, FAMILY_REQ_CODE);
                 }
                 return true;
             case R.id.menu_tags:
                 Intent tags = new Intent(this, TagsActivity.class);
-                List<Tag> all_tags = mListFragment.getAllTags();
 
-                if (all_tags != null) {
-                    Tag[] tags_arr = new Tag[all_tags.size()];
-                    tags_arr = all_tags.toArray(tags_arr);
+                if (mAllTags != null) {
+                    Tag[] tags_arr = new Tag[mAllTags.size()];
+                    tags_arr = mAllTags.toArray(tags_arr);
 
                     Parcelable[] temp_arr = Arrays.copyOf(tags_arr, tags_arr.length, Parcelable[].class);
                     tags.putExtra("all_tags", temp_arr);
@@ -228,6 +287,50 @@ public class MainActivity extends AppCompatActivity
         mListFragment = (TaskListsFragment) getSupportFragmentManager().findFragmentById(R.id.main_task_lists);
     }
 
+    private void doBindFamilies() {
+        mConnection = new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+                Log.i(LOG_TAG, "onServiceConnected has started. Connection has been made!!!");
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName componentName) {
+
+            }
+        };
+
+        mFamilyResults = new MyResultReceiver(new Handler());
+        mFamilyResults.setReceiver(this);
+
+        FamilyIntentService.bindFamilies(this, mFamilyResults, mConnection);
+    }
+
+    private void doPersonalTaskFetch() {
+        if (mPersonalTaskResults == null) {
+            mPersonalTaskResults = new MyResultReceiver(new Handler());
+            mPersonalTaskResults.setReceiver(this);
+        }
+
+        TaskIntentService.startAllTasksFetch(this, mPersonalTaskResults, mUser.getId());
+    }
+
+    private void doFamilyTaskFetch() {
+        if (mFamilyTaskResults == null) {
+            mFamilyTaskResults = new MyResultReceiver(new Handler());
+            mFamilyTaskResults.setReceiver(this);
+        }
+
+        TaskIntentService.startAllTasksFetch(this, mFamilyTaskResults, mUser.getFamily());
+    }
+
+    private void doAllTagsFetch() {
+        mAllTagsResults = new MyResultReceiver(new Handler());
+        mAllTagsResults.setReceiver(this);
+
+        TagIntentService.startAllTagsFetch(this, mAllTagsResults);
+    }
+
     @Override
     public User getUser() {
         return mUser;
@@ -242,15 +345,20 @@ public class MainActivity extends AppCompatActivity
     @Nullable
     @Override
     public List<Tag> getAllTags() {
-        return mListFragment.getAllTags();
+        return mAllTags;
     }
 
     @Override
     public void onFamilyChange(Family family) {
         mFamily = family;
         mNoFamily = (mFamily == null);
+        updateFabDesc();
 
         onEntryDialogClose();
+
+        if (mNoFamily) {
+            doBindFamilies();
+        }
     }
 
     @Override
@@ -279,7 +387,7 @@ public class MainActivity extends AppCompatActivity
         }
 
         if (wide_layout) {
-            NewTaskDialogFrag dialog =  NewTaskDialogFrag.newInstance(false, mListFragment.getAllTags(), mUser, null);
+            NewTaskDialogFrag dialog =  NewTaskDialogFrag.newInstance(false, mAllTags, mUser, null);
             FragmentManager manager = getSupportFragmentManager();
 
             manager.beginTransaction()
@@ -289,7 +397,7 @@ public class MainActivity extends AppCompatActivity
 
             if (tab != null) {
                 boolean family = tab.equals(getString(R.string.family_title));
-                NewTaskDialogFrag dialog = NewTaskDialogFrag.newInstance(family, mListFragment.getAllTags(), mUser, null);
+                NewTaskDialogFrag dialog = NewTaskDialogFrag.newInstance(family, mAllTags, mUser, null);
                 dialog.show(getSupportFragmentManager(), NewTaskDialogFrag.DIALOG_TAG);
             }
         }
@@ -300,14 +408,14 @@ public class MainActivity extends AppCompatActivity
         if (tab != null && task != null) {
             boolean family = tab.equals(getString(R.string.family_title));
             if (wide_layout) {
-                NewTaskDialogFrag dialog = NewTaskDialogFrag.newInstance(family, mListFragment.getAllTags(), mUser, task);
+                NewTaskDialogFrag dialog = NewTaskDialogFrag.newInstance(family, mAllTags, mUser, task);
                 FragmentManager manager = getSupportFragmentManager();
 
                 manager.beginTransaction()
                         .replace(R.id.main_view_holder, dialog, NewTaskDialogFrag.DIALOG_TAG)
                         .commit();
             } else {
-                NewTaskDialogFrag dialog = NewTaskDialogFrag.newInstance(family, mListFragment.getAllTags(), mUser, task);
+                NewTaskDialogFrag dialog = NewTaskDialogFrag.newInstance(family, mAllTags, mUser, task);
                 dialog.show(getSupportFragmentManager(), NewTaskDialogFrag.DIALOG_TAG);
             }
         }
@@ -426,6 +534,49 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void doSnackbar(int message) {
         Snackbar.make(findViewById(R.id.appBarLayout), message, Snackbar.LENGTH_LONG).show();
+    }
+
+    @Override
+    public void onReceiveResult(int resultCode, Bundle resultData) {
+        switch (resultCode) {
+            case TaskIntentService.PERSONAL_TASK_SERVICE_RESULT_CODE:
+                Parcelable[] temp_arr = resultData.getParcelableArray(Task.COL_TAG);
+
+                if (temp_arr != null) {
+                    Task[] task_arr = Arrays.copyOf(temp_arr, temp_arr.length, Task[].class);
+                    List<Task> task_list = new LinkedList<>(Arrays.asList(task_arr));
+                    mListFragment.setPersonalTasks(task_list);
+                }
+                break;
+            case TaskIntentService.FAMILY_TASK_SERVICE_RESULT_CODE:
+                temp_arr = resultData.getParcelableArray(Task.COL_TAG);
+
+                if (temp_arr != null) {
+                    Task[] task_arr = Arrays.copyOf(temp_arr, temp_arr.length, Task[].class);
+                    List<Task> task_list = new LinkedList<>(Arrays.asList(task_arr));
+                    mListFragment.setFamilyTasks(task_list);
+                }
+                break;
+            case FamilyIntentService.FAMILY_BIND_SERVICE_RESULT_CODE:
+                temp_arr = resultData.getParcelableArray(Family.COL_TAG);
+
+                if (temp_arr != null) {
+                    Family[] fam_arr = Arrays.copyOf(temp_arr, temp_arr.length, Family[].class);
+                    List<Family> fam_list = new LinkedList<>(Arrays.asList(fam_arr));
+                    mListFragment.updateFamiliesList(fam_list);
+                }
+
+                break;
+            case TagIntentService.TAG_SERVICE_RESULT_CODE:
+                temp_arr = resultData.getParcelableArray(Tag.COL_TAG);
+
+                if (temp_arr != null) {
+                    Tag[] tag_arr = Arrays.copyOf(temp_arr, temp_arr.length, Tag[].class);
+                    mAllTags = new LinkedList<>(Arrays.asList(tag_arr));
+                }
+
+                break;
+        }
     }
 
     protected class NetworkReceiver extends BroadcastReceiver {

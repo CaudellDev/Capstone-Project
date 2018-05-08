@@ -326,7 +326,7 @@ public class NewTaskDialogFrag extends DialogFragment
 
 
             if (mTags != null && !mTags.isEmpty()) {
-                for (String tag_id : mTask.getTag_ids()) {
+                for (String tag_id : mTask.getTag_ids().keySet()) {
                     for (Tag curr : mTags) {
                         if (curr.getId().equals(tag_id)) {
                             mTagInput.addChip(curr.getName(), null);
@@ -444,7 +444,7 @@ public class NewTaskDialogFrag extends DialogFragment
                 for (ChipInterface chip : tags) {
                     for (Tag tag : mTags) {
                         if (tag.getName().equals(chip.getLabel())) {
-                            newTask.addTag_id(tag.getId());
+                            newTask.addTag_id(tag.getId(), tag.getName());
                         }
                     }
                 }

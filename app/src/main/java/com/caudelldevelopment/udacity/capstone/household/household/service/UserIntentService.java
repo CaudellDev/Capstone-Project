@@ -26,6 +26,8 @@ import java.util.Map;
  */
 public class UserIntentService extends IntentService {
 
+    public static final int USER_SERVICE_RESULT_CODE = 10;
+
     private static final String LOG_TAG = UserIntentService.class.getSimpleName();
 
     private static final String ACTION_USER_FETCH = "com.caudelldevelopment.udacity.capstone.household.household.data.action.USER_FETCH";
@@ -119,7 +121,7 @@ public class UserIntentService extends IntentService {
         Bundle data = new Bundle();
         data.putParcelable(User.DOC_TAG, user);
 
-        mResults.send(0, data);
+        mResults.send(USER_SERVICE_RESULT_CODE, data);
         stopSelf();
     }
 
@@ -130,6 +132,12 @@ public class UserIntentService extends IntentService {
         FirebaseDatabase db = FirebaseDatabase.getInstance();
 
         Map<String, Object> updates = new HashMap<>();
+
+        // Assign an id to a new user.
+        if (old_user == null) {
+            String user_id = db.getReference(User.COL_TAG).push().getKey();
+            new_user.setId(user_id);
+        }
 
         String user_path = makeFirebasePath(User.COL_TAG, new_user.getId());
         updates.put(user_path, new_user.toMap());
@@ -160,7 +168,7 @@ public class UserIntentService extends IntentService {
         Bundle data = new Bundle();
         data.putParcelable(User.DOC_TAG, user);
 
-        mResults.send(0, data);
+        mResults.send(USER_SERVICE_RESULT_CODE, data);
         stopSelf();
     }
 

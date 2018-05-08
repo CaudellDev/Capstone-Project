@@ -90,6 +90,15 @@
             android:permission="android.permission.BIND_REMOTEVIEWS" />
         <service
             android:name=".service.UserIntentService"
+            android:exported="false" />
+        <service
+            android:name=".service.FamilyIntentService"
+            android:exported="false" />
+        <service
+            android:name=".service.TagIntentService"
+            android:exported="false" />
+        <service
+            android:name=".service.TaskIntentService"
             android:exported="false"></service>
     </application>
 

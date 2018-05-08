@@ -4,6 +4,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
 
+import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.firestore.DocumentSnapshot;
 
 import java.util.HashMap;
@@ -27,7 +28,7 @@ public class Family implements Parcelable {
 
     private String name;
     private String id;
-    private List<String> members;
+    private Map<String, String> members;
 
     public static Family fromDoc(DocumentSnapshot doc) {
         Family family = doc.toObject(Family.class);
@@ -35,23 +36,38 @@ public class Family implements Parcelable {
         return family;
     }
 
+    public static Family fromSnapshot(DataSnapshot query) {
+        Family family = query.getValue(Family.class);
+
+        if (family != null) {
+            family.setId(query.getKey());
+        }
+
+        return family;
+    }
+
     // Required for Firebase DocumentSnapshot toObject function.
     public Family() {
-        members = new LinkedList<>();
+        members = new HashMap<>();
+    }
+
+    public Family(String name, Map<String, String> members) {
+        this.name = name;
+        this.members = members;
     }
 
     public Family(String name, User user) {
         this.name = name;
-        members = new LinkedList<>();
-        members.add(user.getId());
+        members = new HashMap<>();
+        members.put(user.getId(), user.getName());
     }
 
     public Family(Parcel in) {
         id = in.readString();
         name = in.readString();
 
-        members = new LinkedList<>();
-        in.readStringList(members);
+        members = new HashMap<>();
+        in.readMap(members, String.class.getClassLoader());
     }
 
     public Map<String, Object> toMap() {
@@ -79,7 +95,7 @@ public class Family implements Parcelable {
         this.id = id;
     }
 
-    public List<String> getMembers() {
+    public Map<String, String> getMembers() {
         return members;
     }
 
@@ -87,8 +103,8 @@ public class Family implements Parcelable {
         members.remove(member);
     }
 
-    public void addMember(String member) {
-        members.add(member);
+    public void addMember(String member_id, String member_name) {
+        members.put(member_id, member_name);
     }
 
     @Override
@@ -110,7 +126,7 @@ public class Family implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(id);
         dest.writeString(name);
-        dest.writeStringList(members);
+        dest.writeMap(members);
     }
 
     public static final Parcelable.Creator<Family> CREATOR = new Parcelable.Creator<Family>() {

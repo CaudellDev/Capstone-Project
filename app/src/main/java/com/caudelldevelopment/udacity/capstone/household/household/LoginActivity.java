@@ -14,6 +14,7 @@ import android.util.Log;
 
 import com.caudelldevelopment.udacity.capstone.household.household.data.Family;
 import com.caudelldevelopment.udacity.capstone.household.household.data.User;
+import com.caudelldevelopment.udacity.capstone.household.household.service.FamilyIntentService;
 import com.caudelldevelopment.udacity.capstone.household.household.service.MyResultReceiver;
 import com.caudelldevelopment.udacity.capstone.household.household.service.UserIntentService;
 import com.firebase.ui.auth.AuthUI;
@@ -32,7 +33,7 @@ import java.util.List;
 /**
  * A login screen that offers login via email/password.
  */
-public class LoginActivity extends AppCompatActivity implements OnSuccessListener<DocumentSnapshot>,MyResultReceiver.Receiver {
+public class LoginActivity extends AppCompatActivity implements MyResultReceiver.Receiver {
 
     private static final String LOG_TAG = LoginActivity.class.getSimpleName();
 
@@ -64,13 +65,13 @@ public class LoginActivity extends AppCompatActivity implements OnSuccessListene
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
-    }
+    protected void onDestroy() {
+        if (mReceiver != null) {
+            mReceiver.setReceiver(null);
+            mReceiver = null;
+        }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
+        super.onDestroy();
     }
 
     @Override
@@ -119,7 +120,6 @@ public class LoginActivity extends AppCompatActivity implements OnSuccessListene
             mReceiver.setReceiver(this);
 
             UserIntentService.startUserFetch(this, mReceiver, firebaseUser.getUid());
-
         } else {
             Snackbar.make(findViewById(R.id.login_root_layout), getString(R.string.login_user_null), Snackbar.LENGTH_LONG);
         }
@@ -137,55 +137,39 @@ public class LoginActivity extends AppCompatActivity implements OnSuccessListene
     }
 
     @Override
-    public void onSuccess(DocumentSnapshot documentSnapshot) {
-        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-
-        if (documentSnapshot.exists()) {
-            // Launch activity with user object
-            mUser = User.fromDoc(documentSnapshot);
-
-            if (mUser.getFamily() != null && !mUser.getFamily().isEmpty()) {
-                db.collection(Family.COL_TAG)
-                        .document(mUser.getFamily())
-                        .get()
-                        .addOnSuccessListener(famSnapshot -> {
-                            mFamily = Family.fromDoc(famSnapshot);
-                            startMainActivity();
-                        });
-            } else {
-                startMainActivity();
-            }
-        } else {
-            // User must not exist yet. Create it, then...
-            mUser = new User(firebaseUser);
-
-            // ... submit it to Firestore. Once complete, launch MainActivity.
-            db.collection(User.COL_TAG)
-                    .document(mUser.getId())
-                    .set(mUser.toMap())
-                    .addOnSuccessListener(task -> startMainActivity())
-                    .addOnFailureListener(Throwable::printStackTrace);
-        }
-    }
-
-    @Override
     public void onReceiveResult(int resultCode, Bundle resultData) {
-        User temp_user = resultData.getParcelable(User.DOC_TAG);
+        switch (resultCode) {
+            case UserIntentService.USER_SERVICE_RESULT_CODE:
+                User temp_user = resultData.getParcelable(User.DOC_TAG);
 
-        if (temp_user != null) {
-            mUser = temp_user;
-            mReceiver = null;
+                if (temp_user != null) {
+                    mUser = temp_user;
+                    mReceiver = null;
 
-            if (mUser.getFamily() != null && !mUser.getFamily().isEmpty()) {
-                // TODO: Fetch family....
-                startMainActivity();
-            } else {
-                startMainActivity();
-            }
-        } else {
-            temp_user = new User(FirebaseAuth.getInstance().getCurrentUser());
-            UserIntentService.startUserWrite(this, mReceiver, temp_user, null);
+                    if (mUser.hasFamily() && mFamily == null) {
+                        mReceiver = new MyResultReceiver(new Handler());
+                        mReceiver.setReceiver(this);
+
+                        FamilyIntentService.startFamilyFetch(this, mReceiver, mUser.getFamily());
+                    } else {
+                        startMainActivity();
+                    }
+                }
+
+                break;
+            case FamilyIntentService.FAMILY_SERVICE_RESULT_CODE:
+                Family temp_fam = resultData.getParcelable(Family.DOC_TAG);
+
+                if (temp_fam != null) {
+                    mFamily = temp_fam;
+                    mReceiver = null;
+
+                    if (mUser != null) {
+                        startMainActivity();
+                    }
+                }
+
+                break;
         }
     }
 }

@@ -271,21 +271,11 @@ public class FamilyListFragment extends Fragment {
         }
 
         private List<ChipView> getTagChipList(Task task) {
-            List<String> tagIdList = task.getTag_ids();
-
             List<ChipView> result = new LinkedList<>();
-            for (String curr : tagIdList) {
-                Tag tag = mListener.getTag(curr);
-                String label;
 
-                if (tag == null) {
-                    continue;
-                } else {
-                    label = tag.getName();
-                }
-
+            for (String curr : task.getTag_ids().values()) {
                 ChipView chip = new ChipView(getContext());
-                chip.setLabel(label);
+                chip.setLabel(curr);
                 chip.setPadding(4, 4, 4, 4);
                 chip.setLabelColor(getResources().getColor(R.color.black));
                 chip.setChipBackgroundColor(getResources().getColor(R.color.colorAccent));
@@ -300,6 +290,5 @@ public class FamilyListFragment extends Fragment {
     public interface OnFamilyFragListener {
         void onFamilyTaskCheckClick(Task task, int pos);
         void onFamilyTaskClick(Task task, int pos);
-        Tag getTag(String id);
     }
 }

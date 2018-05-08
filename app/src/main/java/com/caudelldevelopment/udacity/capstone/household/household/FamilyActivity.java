@@ -2,6 +2,7 @@ package com.caudelldevelopment.udacity.capstone.household.household;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.os.Handler;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -20,22 +21,26 @@ import android.widget.TextView;
 
 import com.caudelldevelopment.udacity.capstone.household.household.data.Family;
 import com.caudelldevelopment.udacity.capstone.household.household.data.User;
+import com.caudelldevelopment.udacity.capstone.household.household.service.FamilyIntentService;
+import com.caudelldevelopment.udacity.capstone.household.household.service.MyResultReceiver;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-public class FamilyActivity extends AppCompatActivity implements View.OnClickListener {
+public class FamilyActivity extends AppCompatActivity
+                            implements View.OnClickListener {
 
     private static final String LOG_TAG = FamilyActivity.class.getSimpleName();
 
-    public static final String USER_EXTRA = "user_extra";
-    public static final String LEFT_FAMILY = "left_fammily";
+    public static final String FAMILY_EXTRA = "family_extra";
+    public static final String LEFT_FAMILY = "left_family";
 
     private Family mFamily;
-    private List<User> mMembers;
-
     private MembersAdapter mAdapter;
 
     @Override
@@ -47,45 +52,25 @@ public class FamilyActivity extends AppCompatActivity implements View.OnClickLis
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        Intent intent = getIntent();
-        User mUser = intent.getParcelableExtra(USER_EXTRA);
-
-        if (mUser != null) {
-            FirebaseFirestore db = FirebaseFirestore.getInstance();
-
-            db.collection(Family.COL_TAG)
-                    .document(mUser.getFamily())
-                    .get()
-                    .addOnSuccessListener(documentSnapshot -> {
-                        mFamily = Family.fromDoc(documentSnapshot);
-                        updateMembersList();
-                    });
-
-            db.collection(User.COL_TAG)
-                    .whereEqualTo(User.FAMILY_ID, mUser.getFamily())
-                    .addSnapshotListener((documentSnapshots, e) -> {
-                        List<User> temp_list = new LinkedList<>();
-                        for (DocumentSnapshot doc : documentSnapshots.getDocuments()) {
-                            User member = User.fromDoc(doc);
-                            temp_list.add(member);
-                        }
-
-                        mMembers = temp_list;
-                        updateMembersList();
-                    });
-        }
-
         RecyclerView mMembersList = findViewById(R.id.family_members_list);
         DividerItemDecoration itemDecoration = new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
         itemDecoration.setDrawable(this.getDrawable(R.drawable.list_divider));
         mMembersList.addItemDecoration(itemDecoration);
         mMembersList.setLayoutManager(new LinearLayoutManager(this));
 
+        Button leaveFamily = findViewById(R.id.leave_family_btn);
+        leaveFamily.setOnClickListener(this);
+
+
         mAdapter = new MembersAdapter();
         mMembersList.setAdapter(mAdapter);
 
-        Button leaveFamily = findViewById(R.id.leave_family_btn);
-        leaveFamily.setOnClickListener(this);
+        Intent intent = getIntent();
+        mFamily = intent.getParcelableExtra(FAMILY_EXTRA);
+
+        if (mFamily != null) {
+            updateMembersList();
+        }
     }
 
     @Override
@@ -105,7 +90,8 @@ public class FamilyActivity extends AppCompatActivity implements View.OnClickLis
 
     private void updateMembersList() {
         if (mAdapter != null) {
-            mAdapter.data = mMembers;
+            Collection<String> temp_list = mFamily.getMembers().values();
+            mAdapter.names = new LinkedList<>(temp_list);
             mAdapter.notifyDataSetChanged();
         }
     }
@@ -155,7 +141,7 @@ public class FamilyActivity extends AppCompatActivity implements View.OnClickLis
         private final int FAM_VIEW_TYPE = 1;
         private final int MEM_VIEW_TYPE = 2;
 
-        protected List<User> data;
+        protected List<String> names;
 
         @Override
         public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -181,16 +167,15 @@ public class FamilyActivity extends AppCompatActivity implements View.OnClickLis
                 famVH.familyName.setText(mFamily.getName());
             }
 
-            if (holder.getItemViewType() == MEM_VIEW_TYPE && data != null) {
+            if (holder.getItemViewType() == MEM_VIEW_TYPE && names != null) {
                 MembersViewHolder memVH = (MembersViewHolder) holder;
-                User curr = data.get(position - 1);
-                memVH.memberName.setText(curr.getName());
+                memVH.memberName.setText(names.get(position - 1));
             }
         }
 
         @Override
         public int getItemCount() {
-            return (data == null) ? 1 : data.size() + 1;
+            return (names == null) ? 1 : names.size() + 1;
         }
 
         @Override
