@@ -218,14 +218,14 @@ public class PersonalListFragment extends Fragment {
             Task curr = mAdapter.data.get(pos);
 
             curr.setComplete(isChecked);
-            mListener.onPersonalTaskCheckClick(curr, pos);
+            mListener.onPersonalTaskCheckClick(curr);
         }
 
         void onItemClick(View v) {
             int pos = getAdapterPosition();
             Task curr = mAdapter.data.get(pos);
 
-            mListener.onPersonalTaskClick(curr, pos);
+            mListener.onPersonalTaskClick(curr);
         }
     }
 
@@ -290,7 +290,7 @@ public class PersonalListFragment extends Fragment {
     }
 
     public interface OnPersonalFragListener {
-        void onPersonalTaskCheckClick(Task task, int pos);
-        void onPersonalTaskClick(Task task, int pos);
+        void onPersonalTaskCheckClick(Task task);
+        void onPersonalTaskClick(Task task);
     }
 }

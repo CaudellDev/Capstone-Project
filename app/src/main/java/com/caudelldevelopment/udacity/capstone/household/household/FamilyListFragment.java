@@ -50,7 +50,6 @@ public class FamilyListFragment extends Fragment {
 
     public static FamilyListFragment newInstance(@Nullable List<Task> data) {
         FamilyListFragment fragment = new FamilyListFragment();
-
         Bundle args = new Bundle();
 
         if (data != null) {
@@ -64,41 +63,30 @@ public class FamilyListFragment extends Fragment {
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        List<Task> data;
-
-        if (getArguments() != null) {
-            Parcelable[] temp_arr = getArguments().getParcelableArray(FAML_TASK_LIST);
-
-            if (temp_arr != null && temp_arr.length > 0) {
-                Task[] task_arr = Arrays.copyOf(temp_arr, temp_arr.length, Task[].class);
-                data = new LinkedList<>(Arrays.asList(task_arr));
-            } else {
-                data = new LinkedList<>();
-            }
-
-            if (mAdapter == null) mAdapter = new FamilyAdapter();
-            mAdapter.data = data;
-        }
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_family_list, container, false);
-
+        mEmptyView = rootView.findViewById(R.id.family_empty_tv);
         mTaskList = rootView.findViewById(R.id.family_list_rv);
+
         DividerItemDecoration itemDecoration = new DividerItemDecoration(getContext(), DividerItemDecoration.VERTICAL);
         itemDecoration.setDrawable(getContext().getDrawable(R.drawable.list_divider));
         mTaskList.addItemDecoration(itemDecoration);
         mTaskList.setLayoutManager(new LinearLayoutManager(getContext()));
 
+        if (mAdapter == null) {
+            mAdapter = new FamilyAdapter();
+        }
         mTaskList.setAdapter(mAdapter);
-        mAdapter.notifyDataSetChanged();
 
-        mEmptyView = rootView.findViewById(R.id.family_empty_tv);
+        if (getArguments() != null) {
+            Parcelable[] temp_arr = getArguments().getParcelableArray(FAML_TASK_LIST);
+
+            if (temp_arr != null) {
+                Task[] task_arr = Arrays.copyOf(temp_arr, temp_arr.length, Task[].class);
+                List<Task> data = new LinkedList<>(Arrays.asList(task_arr));
+                setData(data);
+            }
+        }
 
         updateEmpty();
 
@@ -144,10 +132,10 @@ public class FamilyListFragment extends Fragment {
 
     @Override
     public void onAttach(Context context) {
+        Log.v(LOG_TAG, "onAttach has started!!!");
         super.onAttach(context);
 
-        FragmentManager fm = getFragmentManager();
-        Fragment parent = fm.findFragmentById(R.id.main_task_lists);
+        Fragment parent = getFragmentManager().findFragmentById(R.id.main_task_lists);
 
         if (parent != null) {
             if (parent instanceof OnFamilyFragListener) {
@@ -217,14 +205,14 @@ public class FamilyListFragment extends Fragment {
             Task curr = mAdapter.data.get(pos);
 
             curr.setComplete(isChecked);
-            mListener.onFamilyTaskCheckClick(curr, pos);
+            mListener.onFamilyTaskCheckClick(curr);
         }
 
         public void onItemClick(View v) {
             int pos = getAdapterPosition();
             Task curr = mAdapter.data.get(pos);
 
-            mListener.onFamilyTaskClick(curr, pos);
+            mListener.onFamilyTaskClick(curr);
         }
     }
 
@@ -288,7 +276,7 @@ public class FamilyListFragment extends Fragment {
     }
 
     public interface OnFamilyFragListener {
-        void onFamilyTaskCheckClick(Task task, int pos);
-        void onFamilyTaskClick(Task task, int pos);
+        void onFamilyTaskCheckClick(Task task);
+        void onFamilyTaskClick(Task task);
     }
 }

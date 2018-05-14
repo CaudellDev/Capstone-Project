@@ -36,6 +36,7 @@ public class SelectFamilyFrag extends Fragment {
 
     private RecyclerView mFamiliesList;
     private SelectAdapter mAdapter;
+
     private OnSelectFamilyListener mListener;
 
     public SelectFamilyFrag() {
@@ -43,7 +44,7 @@ public class SelectFamilyFrag extends Fragment {
     }
 
     public static SelectFamilyFrag newInstance(List<Family> data) {
-        SelectFamilyFrag result = new SelectFamilyFrag();
+        SelectFamilyFrag fragment = new SelectFamilyFrag();
         Bundle args = new Bundle();
 
         if (data != null) {
@@ -52,13 +53,8 @@ public class SelectFamilyFrag extends Fragment {
             args.putParcelableArray(SEL_FAM_LIST, temp_list);
         }
 
-        result.setArguments(args);
-        return result;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+        fragment.setArguments(args);
+        return fragment;
     }
 
     @Override
@@ -71,20 +67,18 @@ public class SelectFamilyFrag extends Fragment {
         mFamiliesList.addItemDecoration(itemDecoration);
         mFamiliesList.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        mAdapter = new SelectAdapter();
+        if (mAdapter == null) {
+            mAdapter = new SelectAdapter();
+        }
         mFamiliesList.setAdapter(mAdapter);
 
         if (getArguments() != null) {
-            Bundle args = getArguments();
-            Parcelable[] temp_arr = args.getParcelableArray(SEL_FAM_LIST);
+            Parcelable[] temp_arr = getArguments().getParcelableArray(SEL_FAM_LIST);
 
             if (temp_arr != null) {
-                List<Family> fam_arr = new LinkedList<>();
-                for (Parcelable curr : temp_arr) {
-                    fam_arr.add((Family) curr);
-                }
-
-                setData(fam_arr);
+                Family[] fam_arr = Arrays.copyOf(temp_arr, temp_arr.length, Family[].class);
+                List<Family> data = new LinkedList<>(Arrays.asList(fam_arr));
+                setData(data);
             }
         }
 
@@ -123,6 +117,7 @@ public class SelectFamilyFrag extends Fragment {
 
         Parcelable[] store;
         store = Arrays.copyOf(select_arr, select_arr.length, Parcelable[].class);
+
         outState.putParcelableArray(SEL_FAM_LIST, store);
     }
 
@@ -130,13 +125,15 @@ public class SelectFamilyFrag extends Fragment {
     public void onAttach(Context context) {
         super.onAttach(context);
 
-        TaskListsFragment parent = (TaskListsFragment) getFragmentManager().findFragmentById(R.id.main_task_lists);
+        Fragment parent = getFragmentManager().findFragmentById(R.id.main_task_lists);
 
         if (parent != null) {
-            mListener = parent;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnSelectFamilyListener");
+            if (parent instanceof OnSelectFamilyListener) {
+                mListener = (OnSelectFamilyListener) parent;
+            } else {
+                throw new RuntimeException(context.toString()
+                        + " must implement OnSelectFamilyListener");
+            }
         }
     }
 
@@ -180,7 +177,7 @@ public class SelectFamilyFrag extends Fragment {
 
         List<Family> data;
 
-        public SelectAdapter() {
+        SelectAdapter() {
             data = new LinkedList<>();
         }
 

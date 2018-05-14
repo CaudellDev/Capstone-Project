@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.ResultReceiver;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.caudelldevelopment.udacity.capstone.household.household.data.Task;
@@ -71,7 +72,7 @@ public class TaskIntentService extends IntentService {
      *
      * @see IntentService
      */
-    public static void startTaskWrite(Context context, ResultReceiver results, Task new_task, Task old_task) {
+    public static void startTaskWrite(Context context, ResultReceiver results, Task new_task, @Nullable Task old_task) {
         Intent intent = new Intent(context, TaskIntentService.class);
         intent.setAction(ACTION_TASK_WRITE);
         intent.putExtra(EXTRA_RESULTS, results);
@@ -136,8 +137,6 @@ public class TaskIntentService extends IntentService {
 
     private void finishAllTasksFetch(DataSnapshot query) {
         int count = (int) query.getChildrenCount();
-        Log.v(LOG_TAG, "finishAllTasksFetch - query child count: " + count);
-
         Task[] task_arr = new Task[count];
 
         Iterator<DataSnapshot> iterator = query.getChildren().iterator();
@@ -151,6 +150,10 @@ public class TaskIntentService extends IntentService {
         // Sort by the date
         Arrays.sort(task_arr);
 
+        for (Task curr : task_arr) {
+            Log.v(LOG_TAG, "finishAllTasksFetch - task name: " + curr.getName());
+        }
+
         int result_code = PERSONAL_TASK_SERVICE_RESULT_CODE; // Personal will just be default, but it shouldn't matter.
         if (task_arr.length > 0) {
             boolean family = task_arr[0].isFamily();
@@ -160,6 +163,7 @@ public class TaskIntentService extends IntentService {
                 result_code = PERSONAL_TASK_SERVICE_RESULT_CODE;
             }
         }
+
 
         Bundle data = new Bundle();
         data.putParcelableArray(Task.COL_TAG, task_arr);

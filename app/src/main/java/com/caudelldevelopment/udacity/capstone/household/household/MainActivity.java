@@ -1,5 +1,6 @@
 package com.caudelldevelopment.udacity.capstone.household.household;
 
+import android.appwidget.AppWidgetManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -35,6 +36,8 @@ import com.caudelldevelopment.udacity.capstone.household.household.service.Famil
 import com.caudelldevelopment.udacity.capstone.household.household.service.MyResultReceiver;
 import com.caudelldevelopment.udacity.capstone.household.household.service.TaskIntentService;
 import com.caudelldevelopment.udacity.capstone.household.household.service.TagIntentService;
+import com.caudelldevelopment.udacity.capstone.household.household.service.UserIntentService;
+import com.caudelldevelopment.udacity.capstone.household.household.widget.TasksWidget;
 
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -64,10 +67,11 @@ public class MainActivity extends AppCompatActivity
     private boolean mNoFamily;
     private List<Tag> mAllTags;
 
+    private MyResultReceiver mUserResults;
+    private MyResultReceiver mFamilyResults;
     private MyResultReceiver mPersonalTaskResults;
     private MyResultReceiver mFamilyTaskResults;
     private MyResultReceiver mAllTagsResults;
-    private MyResultReceiver mFamilyResults;
     private ServiceConnection mConnection;
 
     private NetworkReceiver mNetworkRec;
@@ -126,7 +130,15 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    // Trying to make sure I don't keep a reference to the activity,
+    // preventing it from getting garbage collected causing a context memory leak.
+    // Is this proper?
     private void undoResultReceivers() {
+        if (mUserResults != null) {
+            mUserResults.setReceiver(null);
+            mUserResults = null;
+        }
+
         if (mFamilyResults != null) {
             mFamilyResults.setReceiver(null);
             mFamilyResults = null;
@@ -252,12 +264,15 @@ public class MainActivity extends AppCompatActivity
 
         if (requestCode == FAMILY_REQ_CODE) {
             if (resultCode == RESULT_OK) {
-                if (data.hasExtra(FamilyActivity.LEFT_FAMILY)) {
-                    boolean left_fam = data.getBooleanExtra(FamilyActivity.LEFT_FAMILY, false);
+                boolean left_fam = data.getBooleanExtra(FamilyActivity.LEFT_FAMILY, false);
 
-                    if (left_fam) {
-                        mListFragment.onFamilyLeft();
-                    }
+                if (left_fam) {
+                    // Represents the user before leaving the family.
+                    User new_user = new User();
+                    new_user.setId(mUser.getId());
+                    new_user.setName(mUser.getName());
+
+                    UserIntentService.startUserWrite(this, getServiceReceiver("User"), new_user, mUser);
                 }
             }
         } else if (requestCode == SETTING_REQ_CODE) {
@@ -300,10 +315,7 @@ public class MainActivity extends AppCompatActivity
             }
         };
 
-        mFamilyResults = new MyResultReceiver(new Handler());
-        mFamilyResults.setReceiver(this);
-
-        FamilyIntentService.bindFamilies(this, mFamilyResults, mConnection);
+        FamilyIntentService.bindFamilies(this, getServiceReceiver("Family"), mConnection);
     }
 
     private void doPersonalTaskFetch() {
@@ -342,6 +354,11 @@ public class MainActivity extends AppCompatActivity
         return mFamily;
     }
 
+    @Override
+    public boolean isNoFamily() {
+        return mNoFamily;
+    }
+
     @Nullable
     @Override
     public List<Tag> getAllTags() {
@@ -349,7 +366,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onFamilyChange(Family family) {
+    public void onFamilyChange(@Nullable Family family) {
         mFamily = family;
         mNoFamily = (mFamily == null);
         updateFabDesc();
@@ -357,7 +374,11 @@ public class MainActivity extends AppCompatActivity
         onEntryDialogClose();
 
         if (mNoFamily) {
+            mListFragment.onFamilyLeft();
             doBindFamilies();
+        } else {
+            mUser.setFamily(mFamily.getId());
+            doFamilyTaskFetch();
         }
     }
 
@@ -394,12 +415,9 @@ public class MainActivity extends AppCompatActivity
                     .replace(R.id.main_view_holder, dialog, NewTaskDialogFrag.DIALOG_TAG)
                     .commit();
         } else {
-
-            if (tab != null) {
-                boolean family = tab.equals(getString(R.string.family_title));
-                NewTaskDialogFrag dialog = NewTaskDialogFrag.newInstance(family, mAllTags, mUser, null);
-                dialog.show(getSupportFragmentManager(), NewTaskDialogFrag.DIALOG_TAG);
-            }
+            boolean family = tab.equals(getString(R.string.family_title));
+            NewTaskDialogFrag dialog = NewTaskDialogFrag.newInstance(family, mAllTags, mUser, null);
+            dialog.show(getSupportFragmentManager(), NewTaskDialogFrag.DIALOG_TAG);
         }
     }
 
@@ -422,16 +440,37 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    public void onTaskCheckClick(Task task) {
+
+    }
+
+    @Override
     public void onDialogPositiveClick(Task task) {
         NewTaskDialogFrag dialog = (NewTaskDialogFrag) getSupportFragmentManager().findFragmentByTag(NewTaskDialogFrag.DIALOG_TAG);
 
+        boolean isAccessDiff;
         if (dialog != null) {
-            mListFragment.addNewTask(task, dialog.isAccessIdDiff());
+            isAccessDiff = dialog.isAccessIdDiff();
         } else {
-            mListFragment.addNewTask(task);
+            isAccessDiff = false;
         }
 
         onNewTaskDialogClose();
+
+        addNewTask(task, isAccessDiff);
+    }
+
+    private void addNewTask(Task task, boolean isAccessDiff) {
+        Task old_task = null;
+        MyResultReceiver results;
+
+        if (task.isFamily()) {
+            results = getServiceReceiver("Family");
+        } else {
+            results = getServiceReceiver("Personal");
+        }
+
+        TaskIntentService.startTaskWrite(this, results, task, old_task);
     }
 
     @Override
@@ -505,8 +544,20 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    public void onFamilyItemClicked(Family family) {
+        User new_user = new User();
+        new_user.setId(mUser.getId());
+        new_user.setName(mUser.getName());
+        new_user.setFamily(family.getId());
+
+        UserIntentService.startUserWrite(this, getServiceReceiver("User"), new_user, mUser);
+    }
+
+    @Override
     public void onEntrySave(String name) {
-        mListFragment.onFamilyEntered(name);
+        Family family = new Family(name, mUser);
+        FamilyIntentService.startFamilyWrite(this, getServiceReceiver("Family"), family);
+
         onEntryDialogClose();
     }
 
@@ -516,9 +567,20 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    // This is just to make sure Talk Back will be clear and stay updated when the app changes.
     @Override
-    public void updateFabDesc() {
+    public void onTabChanged() {
+        updateFabDesc();
+    }
+
+    private void updateWidget(boolean personal) {
+        Intent intent = new Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+        intent.putExtra(TasksWidget.IS_PERSONAL, personal);
+
+        sendBroadcast(intent);
+    }
+
+    // This is just to make sure Talk Back will be clear and stay updated when the app changes.
+    private void updateFabDesc() {
         String tab = mListFragment.getSelectedTab();
         if (tab.equals(getString(R.string.personal_title))) {
             mAddTaskBtn.setContentDescription(getString(R.string.pers_fab_desc));
@@ -537,6 +599,37 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    public MyResultReceiver getServiceReceiver(String type) {
+        if (type.equals("User")) {
+            if (mUserResults == null) {
+                mUserResults = new MyResultReceiver(new Handler());
+                mUserResults.setReceiver(this);
+            }
+            return mUserResults;
+        } else if (type.equals("Family")) {
+            if (mFamilyResults == null) {
+                mFamilyResults = new MyResultReceiver(new Handler());
+                mFamilyResults.setReceiver(this);
+            }
+            return mFamilyResults;
+        } else if (type.equals("Personal")) {
+            if (mPersonalTaskResults == null) {
+                mPersonalTaskResults = new MyResultReceiver(new Handler());
+                mPersonalTaskResults.setReceiver(this);
+            }
+            return mPersonalTaskResults;
+        } else if (type.equals("Tag")) {
+            if (mAllTagsResults == null) {
+                mAllTagsResults = new MyResultReceiver(new Handler());
+                mAllTagsResults.setReceiver(this);
+            }
+            return mAllTagsResults;
+        }
+
+        return null;
+    }
+
+    @Override
     public void onReceiveResult(int resultCode, Bundle resultData) {
         switch (resultCode) {
             case TaskIntentService.PERSONAL_TASK_SERVICE_RESULT_CODE:
@@ -546,15 +639,48 @@ public class MainActivity extends AppCompatActivity
                     Task[] task_arr = Arrays.copyOf(temp_arr, temp_arr.length, Task[].class);
                     List<Task> task_list = new LinkedList<>(Arrays.asList(task_arr));
                     mListFragment.setPersonalTasks(task_list);
+                    updateWidget(true);
                 }
                 break;
             case TaskIntentService.FAMILY_TASK_SERVICE_RESULT_CODE:
+
                 temp_arr = resultData.getParcelableArray(Task.COL_TAG);
 
                 if (temp_arr != null) {
                     Task[] task_arr = Arrays.copyOf(temp_arr, temp_arr.length, Task[].class);
                     List<Task> task_list = new LinkedList<>(Arrays.asList(task_arr));
+
                     mListFragment.setFamilyTasks(task_list);
+                    updateWidget(false);
+                }
+                break;
+            case UserIntentService.USER_SERVICE_RESULT_CODE:
+                User new_user = resultData.getParcelable(User.DOC_TAG);
+
+                if (new_user != null) {
+                    boolean famLeft   =  mUser.hasFamily() && !new_user.hasFamily();
+                    boolean famJoined = !mUser.hasFamily() && new_user.hasFamily();
+
+                    mUser = new_user;
+
+                    if (famLeft) {
+                        onFamilyChange(null);
+                    }
+
+                    if (famJoined) {
+                        // We need to call onFamilyChange, but I need the family first in this case.
+                        FamilyIntentService.startFamilyFetch(this, getServiceReceiver("Family"), new_user.getFamily());
+                    }
+                }
+                break;
+            case FamilyIntentService.FAMILY_SERVICE_RESULT_CODE:
+                Family temp_family = resultData.getParcelable(Family.DOC_TAG);
+
+                if (temp_family != null) {
+                    mFamily = temp_family;
+
+                    // This will start the task fetch too.
+                    onFamilyChange(mFamily);
                 }
                 break;
             case FamilyIntentService.FAMILY_BIND_SERVICE_RESULT_CODE:
