@@ -26,11 +26,8 @@ public class TasksWidget extends AppWidgetProvider {
     public static final String FAM_CLICK_TAG  = "household.widget.TasksWidget.FAM_CLICK_TAG";
     public static final String IS_PERSONAL = "persomal_boolean_service_intent_tag";
 
-//    private boolean personal;
-
-    public TasksWidget() {
-//        personal = true;
-    }
+    private Intent mPersIntent;
+    private Intent mFamIntent;
 
     private void updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
         // Construct the RemoteViews object
@@ -85,6 +82,8 @@ public class TasksWidget extends AppWidgetProvider {
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.tasks_widget);
         AppWidgetManager manager = AppWidgetManager.getInstance(context);
         String action = intent.getAction();
+        Log.v(LOG_TAG, "onReceive - action: " + action);
+
 
         if (action != null) {
             switch (action) {
@@ -141,38 +140,32 @@ public class TasksWidget extends AppWidgetProvider {
     private void doWidgetListUpdate(AppWidgetManager manager, RemoteViews views, Context context) {
         int[] widgetIds = manager.getAppWidgetIds(new ComponentName(context, getClass()));
 
-        views.setViewVisibility(R.id.widget_task_list, View.VISIBLE);
         views.setViewVisibility(R.id.widget_empty_tv, View.GONE);
+        views.setViewVisibility(R.id.widget_task_list, View.VISIBLE);
 
         manager.notifyAppWidgetViewDataChanged(widgetIds, R.id.widget_task_list);
-        manager.updateAppWidget(widgetIds, views);
     }
 
     private Intent getRemoteAdapterIntent(Context context, boolean personal) {
-        Intent intent;
-
         // I tried this app using one RemoteViewsService, but I couldn't figure out how
         // to pass the personal boolean to it. If I could, I would have just let the
         // RemoteViewsService handle the logic and save code. This intent doesn't get sent
         // to the RemoteViewsService though, and I don't have an instance so I ended up
         // making one RemoteViewsService for Personal tasks and Family tasks.
         if (personal) {
-            intent = new Intent(context, PersonalWidgetRemoteViewsService.class);
+            if (mPersIntent == null) {
+                mPersIntent = new Intent(context, PersonalWidgetRemoteViewsService.class);
+            }
+            return mPersIntent;
         } else {
-            intent = new Intent(context, FamilyWidgetRemoteViewsService.class);
+            if (mFamIntent == null) {
+                mFamIntent = new Intent(context, FamilyWidgetRemoteViewsService.class);
+            }
+            return mFamIntent;
         }
-
-        return intent;
     }
 
-    @Override
-    public void onEnabled(Context context) {
-        // Enter relevant functionality for when the first widget is created
-    }
-
-    @Override
-    public void onDisabled(Context context) {
-        // Enter relevant functionality for when the last widget is disabled
-    }
+    @Override public void onEnabled(Context context) {}
+    @Override public void onDisabled(Context context) {}
 }
 

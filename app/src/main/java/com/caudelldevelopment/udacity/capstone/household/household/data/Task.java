@@ -10,6 +10,7 @@ import com.google.firebase.firestore.DocumentSnapshot;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -67,6 +68,17 @@ public class Task implements Parcelable, Comparable<Task> {
         task.setId(query.getKey());
 
         return task;
+    }
+
+    public static List<Task> convertParcelableArray(Parcelable[] arr) {
+
+
+        if (arr != null) {
+            Task[] task_arr = Arrays.copyOf(arr, arr.length, Task[].class);
+            return new LinkedList<>(Arrays.asList(task_arr));
+        }
+
+        return null;
     }
 
     // Required for Firebase DocumentSnapshot toObject function.

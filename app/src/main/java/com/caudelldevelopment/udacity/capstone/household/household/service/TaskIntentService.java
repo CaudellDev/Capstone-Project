@@ -63,7 +63,10 @@ public class TaskIntentService extends IntentService {
         intent.setAction(ACTION_ALL_TASKS_FETCH);
         intent.putExtra(EXTRA_RESULTS, results);
         intent.putExtra(EXTRA_ACCESS_ID, access_id);
+
+        Log.v(LOG_TAG, "startAllTasksFetch - pre service start.");
         context.startService(intent);
+        Log.v(LOG_TAG, "startAllTasksFetch - post service start.");
     }
 
     /**

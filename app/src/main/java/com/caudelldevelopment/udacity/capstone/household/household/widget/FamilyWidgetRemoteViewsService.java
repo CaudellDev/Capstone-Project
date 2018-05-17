@@ -3,6 +3,9 @@ package com.caudelldevelopment.udacity.capstone.household.household.widget;
 import android.appwidget.AppWidgetManager;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.util.Log;
 import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
@@ -10,6 +13,9 @@ import android.widget.RemoteViewsService;
 import com.caudelldevelopment.udacity.capstone.household.household.R;
 import com.caudelldevelopment.udacity.capstone.household.household.data.Task;
 import com.caudelldevelopment.udacity.capstone.household.household.data.User;
+import com.caudelldevelopment.udacity.capstone.household.household.service.MyResultReceiver;
+import com.caudelldevelopment.udacity.capstone.household.household.service.TaskIntentService;
+import com.caudelldevelopment.udacity.capstone.household.household.service.UserIntentService;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -41,12 +47,15 @@ public class FamilyWidgetRemoteViewsService extends RemoteViewsService {
         return new FamilyRemoteViewsFactory(this);
     }
 
-    public class FamilyRemoteViewsFactory implements RemoteViewsFactory {
+    public class FamilyRemoteViewsFactory implements RemoteViewsFactory, MyResultReceiver.Receiver {
 
         private Context mContext;
         private User   mUser;
         private List<Task> mTasks;
-        private com.google.android.gms.tasks.Task<QuerySnapshot> mQuery;
+
+        private MyResultReceiver mUserResults;
+        private MyResultReceiver mTaskResults;
+        private HandlerThread mHandlerThread;
 
         public FamilyRemoteViewsFactory(Context context) {
             mContext = context;
@@ -54,6 +63,7 @@ public class FamilyWidgetRemoteViewsService extends RemoteViewsService {
 
         @Override
         public void onCreate() {
+            Log.v(LOG_TAG, "onCreate has been started!!!!");
             doUserQuery();
         }
 
@@ -75,20 +85,12 @@ public class FamilyWidgetRemoteViewsService extends RemoteViewsService {
             FirebaseUser fireUser = FirebaseAuth.getInstance().getCurrentUser();
 
             if (fireUser != null) {
-                FirebaseFirestore db = FirebaseFirestore.getInstance();
-                db.collection(User.COL_TAG)
-                        .document(fireUser.getUid())
-                        .addSnapshotListener((documentSnapshot, e) -> {
-                            if (e != null) {
-                                updateWidgetError(getString(R.string.widget_err_user_fail));
-                                return;
-                            }
+                if (mUserResults == null) {
+                    mUserResults = new MyResultReceiver(new Handler());
+                    mUserResults.setReceiver(this);
+                }
 
-                            if (documentSnapshot != null && documentSnapshot.exists()) {
-                                mUser = User.fromDoc(documentSnapshot);
-                                updateWidget();
-                            }
-                        });
+                UserIntentService.startUserFetch(mContext, mUserResults, fireUser.getUid());
             }
         }
 
@@ -97,33 +99,41 @@ public class FamilyWidgetRemoteViewsService extends RemoteViewsService {
          * Then check if the query is done. This will get called once the broadcast is sent.
          */
         private void doTaskQuery() {
-            // Save the query, and when it completes, update the widget.
-            if (mQuery == null) {
-                FirebaseFirestore db = FirebaseFirestore.getInstance();
-                mQuery = db.collection(Task.COL_TAG)
-                        .whereEqualTo(Task.ACCESS_ID, mUser.getFamily())
-                        .orderBy(Task.DATE_ID)
-                        .startAt(getDate())
-                        .endAt(getDateInWeek())
-                        .get()
-                        .addOnSuccessListener(task -> updateWidget())
-                        .addOnFailureListener(e    -> updateWidgetError(""));
+            if (mTaskResults == null) {
+                mHandlerThread = new HandlerThread("family_task_intent_service");
+                mHandlerThread.start();
+
+                mTaskResults = new MyResultReceiver(new Handler(mHandlerThread.getLooper()));
+                mTaskResults.setReceiver(this);
+
+                TaskIntentService.startAllTasksFetch(mContext, mTaskResults, mUser.getFamily());
             }
+        }
 
-            // Use the results we got and put them into the array. Once that's done, remove query.
-            if (mQuery.isComplete() && mQuery.isSuccessful()) {
-                mTasks = new LinkedList<>();
-                List<DocumentSnapshot> docs = mQuery.getResult().getDocuments();
-                for (DocumentSnapshot doc : docs) {
-                    Task task = Task.fromDoc(doc, mUser);
-                    mTasks.add(task);
-                }
+        @Override
+        public void onReceiveResult(int resultCode, Bundle resultData) {
+            switch (resultCode) {
+                case UserIntentService.USER_SERVICE_RESULT_CODE:
+                    User temp_user = resultData.getParcelable(User.DOC_TAG);
+                    if (temp_user != null) {
+                        mUser = temp_user;
+                        doTaskQuery();
+                    }
+                    break;
+                case TaskIntentService.FAMILY_TASK_SERVICE_RESULT_CODE:
+                    // We completed the fetch, so set this to null so we can start another one.
+//                    mTaskResults = null;
 
-                if (mTasks.isEmpty()) {
-                    updateWidgetError(getString(R.string.empty_task_list_dialog_err));
-                }
+                    List<Task> task_list = Task.convertParcelableArray(resultData.getParcelableArray(Task.COL_TAG));
 
-                mQuery = null;
+                    if (task_list != null) {
+                        mTasks = task_list;
+                        updateWidget();
+                    } else {
+                        updateWidgetError(getString(R.string.widget_empty_text));
+                    }
+
+                    break;
             }
         }
 
@@ -134,25 +144,13 @@ public class FamilyWidgetRemoteViewsService extends RemoteViewsService {
             sendBroadcast(intent);
         }
 
-        private String getDate() {
-            Calendar cal = Calendar.getInstance();
-            Date today = cal.getTime();
-
-            return new SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()).format(today);
-        }
-
-        private String getDateInWeek() {
-
-            Calendar cal = Calendar.getInstance();
-            cal.add(Calendar.DATE, 7);
-            Date in_week = cal.getTime();
-
-            return new SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()).format(in_week);
-        }
-
         @Override
         public void onDestroy() {
             mTasks = null;
+
+            if (mHandlerThread != null && mHandlerThread.isAlive()) {
+                mHandlerThread.quit();
+            }
         }
 
         @Override

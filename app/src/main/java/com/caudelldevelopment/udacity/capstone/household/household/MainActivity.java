@@ -633,23 +633,18 @@ public class MainActivity extends AppCompatActivity
     public void onReceiveResult(int resultCode, Bundle resultData) {
         switch (resultCode) {
             case TaskIntentService.PERSONAL_TASK_SERVICE_RESULT_CODE:
-                Parcelable[] temp_arr = resultData.getParcelableArray(Task.COL_TAG);
+                List<Task> task_list = Task.convertParcelableArray(resultData.getParcelableArray(Task.COL_TAG));
 
-                if (temp_arr != null) {
-                    Task[] task_arr = Arrays.copyOf(temp_arr, temp_arr.length, Task[].class);
-                    List<Task> task_list = new LinkedList<>(Arrays.asList(task_arr));
+                if (task_list != null) {
                     mListFragment.setPersonalTasks(task_list);
                     updateWidget(true);
                 }
                 break;
             case TaskIntentService.FAMILY_TASK_SERVICE_RESULT_CODE:
 
-                temp_arr = resultData.getParcelableArray(Task.COL_TAG);
+                task_list = Task.convertParcelableArray(resultData.getParcelableArray(Task.COL_TAG));
 
-                if (temp_arr != null) {
-                    Task[] task_arr = Arrays.copyOf(temp_arr, temp_arr.length, Task[].class);
-                    List<Task> task_list = new LinkedList<>(Arrays.asList(task_arr));
-
+                if (task_list != null) {
                     mListFragment.setFamilyTasks(task_list);
                     updateWidget(false);
                 }
@@ -684,7 +679,7 @@ public class MainActivity extends AppCompatActivity
                 }
                 break;
             case FamilyIntentService.FAMILY_BIND_SERVICE_RESULT_CODE:
-                temp_arr = resultData.getParcelableArray(Family.COL_TAG);
+                Parcelable[] temp_arr = resultData.getParcelableArray(Family.COL_TAG);
 
                 if (temp_arr != null) {
                     Family[] fam_arr = Arrays.copyOf(temp_arr, temp_arr.length, Family[].class);

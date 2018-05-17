@@ -8,5 +8,5 @@
     android:minResizeWidth="180dp"
     android:resizeMode="vertical"
     android:previewImage="@drawable/task_widget_preview"
-    android:updatePeriodMillis="@integer/zero"
+    android:updatePeriodMillis="@integer/ten_minutes"
     android:widgetCategory="home_screen"/>
