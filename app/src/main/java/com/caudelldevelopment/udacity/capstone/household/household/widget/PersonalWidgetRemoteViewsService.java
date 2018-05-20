@@ -98,7 +98,7 @@ public class PersonalWidgetRemoteViewsService extends RemoteViewsService {
                 mTaskResults = new MyResultReceiver(new Handler(mHandlerThread.getLooper()));
                 mTaskResults.setReceiver(this);
 
-                TaskIntentService.startAllTasksFetch(mContext, mTaskResults, mUser.getId());
+                TaskIntentService.startAllTasksFetch(mContext, mTaskResults, mUser.getId(), true);
             }
         }
 

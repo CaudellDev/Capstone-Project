@@ -71,6 +71,7 @@ public class MainActivity extends AppCompatActivity
     private MyResultReceiver mFamilyResults;
     private MyResultReceiver mPersonalTaskResults;
     private MyResultReceiver mFamilyTaskResults;
+    private MyResultReceiver mDeleteTaskResults;
     private MyResultReceiver mAllTagsResults;
     private ServiceConnection mConnection;
 
@@ -108,6 +109,7 @@ public class MainActivity extends AppCompatActivity
 
         mNetworkRec = new NetworkReceiver();
 
+        doAllTagsFetch();
         doPersonalTaskFetch();
 
         if (mNoFamily) {
@@ -157,6 +159,11 @@ public class MainActivity extends AppCompatActivity
         if (mFamilyTaskResults != null) {
             mFamilyTaskResults.setReceiver(null);
             mFamilyTaskResults = null;
+        }
+
+        if (mDeleteTaskResults != null) {
+            mDeleteTaskResults.setReceiver(null);
+            mDeleteTaskResults = null;
         }
     }
 
@@ -324,7 +331,7 @@ public class MainActivity extends AppCompatActivity
             mPersonalTaskResults.setReceiver(this);
         }
 
-        TaskIntentService.startAllTasksFetch(this, mPersonalTaskResults, mUser.getId());
+        TaskIntentService.startAllTasksFetch(this, mPersonalTaskResults, mUser.getId(), false);
     }
 
     private void doFamilyTaskFetch() {
@@ -333,7 +340,7 @@ public class MainActivity extends AppCompatActivity
             mFamilyTaskResults.setReceiver(this);
         }
 
-        TaskIntentService.startAllTasksFetch(this, mFamilyTaskResults, mUser.getFamily());
+        TaskIntentService.startAllTasksFetch(this, mFamilyTaskResults, mUser.getFamily(), true);
     }
 
     private void doAllTagsFetch() {
@@ -407,15 +414,15 @@ public class MainActivity extends AppCompatActivity
             return;
         }
 
+        boolean family = tab.equals(getString(R.string.family_title));
         if (wide_layout) {
-            NewTaskDialogFrag dialog =  NewTaskDialogFrag.newInstance(false, mAllTags, mUser, null);
+            NewTaskDialogFrag dialog =  NewTaskDialogFrag.newInstance(family, mAllTags, mUser, null);
             FragmentManager manager = getSupportFragmentManager();
 
             manager.beginTransaction()
                     .replace(R.id.main_view_holder, dialog, NewTaskDialogFrag.DIALOG_TAG)
                     .commit();
         } else {
-            boolean family = tab.equals(getString(R.string.family_title));
             NewTaskDialogFrag dialog = NewTaskDialogFrag.newInstance(family, mAllTags, mUser, null);
             dialog.show(getSupportFragmentManager(), NewTaskDialogFrag.DIALOG_TAG);
         }
@@ -441,7 +448,6 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onTaskCheckClick(Task task) {
-
     }
 
     @Override
@@ -460,14 +466,67 @@ public class MainActivity extends AppCompatActivity
         addNewTask(task, isAccessDiff);
     }
 
-    private void addNewTask(Task task, boolean isAccessDiff) {
-        Task old_task = null;
-        MyResultReceiver results;
+    @Override
+    public void onTaskDeleteClicked(Task task) {
+        if (mDeleteTaskResults == null) {
+            mDeleteTaskResults = new MyResultReceiver(new Handler());
+            mDeleteTaskResults.setReceiver(this);
+        }
 
+        TaskIntentService.startTaskDelete(this, mDeleteTaskResults, task);
+    }
+
+    private void addNewTask(Task task, boolean isAccessDiff) {
+        MyResultReceiver results;
         if (task.isFamily()) {
             results = getServiceReceiver("Family");
         } else {
             results = getServiceReceiver("Personal");
+        }
+
+        Task old_task = null;
+        if (task.getId() != null && !task.getId().isEmpty()) {
+            List<Task> personalTasks = mListFragment.getPersonalTasks();
+            List<Task> familyTasks = mListFragment.getFamilyTasks();
+
+            if (personalTasks == null) personalTasks = new LinkedList<>();
+            if (familyTasks == null) familyTasks = new LinkedList<>();
+
+            if (task.isFamily()) {
+                if (isAccessDiff) {
+                    for (Task curr : personalTasks) {
+                        // Compares the ids, returns true if they're the same.
+                        if (curr.equals(task)) {
+                            old_task = curr;
+                            break;
+                        }
+                    }
+                } else {
+                    for (Task curr : familyTasks) {
+                        if (curr.equals(task)) {
+                            old_task = curr;
+                            break;
+                        }
+                    }
+                }
+            } else {
+                if (isAccessDiff) {
+                    for (Task curr : familyTasks) {
+                        if (curr.equals(task)) {
+                            old_task = curr;
+                            break;
+                        }
+                    }
+                } else {
+                    for (Task curr : personalTasks) {
+                        // Compares the ids, returns true if they're the same.
+                        if (curr.equals(task)) {
+                            old_task = curr;
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
         TaskIntentService.startTaskWrite(this, results, task, old_task);
@@ -635,19 +694,53 @@ public class MainActivity extends AppCompatActivity
             case TaskIntentService.PERSONAL_TASK_SERVICE_RESULT_CODE:
                 List<Task> task_list = Task.convertParcelableArray(resultData.getParcelableArray(Task.COL_TAG));
 
-                if (task_list != null) {
-                    mListFragment.setPersonalTasks(task_list);
-                    updateWidget(true);
-                }
+                mListFragment.setPersonalTasks(task_list);
+                updateWidget(true);
                 break;
             case TaskIntentService.FAMILY_TASK_SERVICE_RESULT_CODE:
-
                 task_list = Task.convertParcelableArray(resultData.getParcelableArray(Task.COL_TAG));
 
-                if (task_list != null) {
-                    mListFragment.setFamilyTasks(task_list);
-                    updateWidget(false);
+                mListFragment.setFamilyTasks(task_list);
+                updateWidget(false);
+                break;
+            case TaskIntentService.WRITE_TASK_SERVICE_RESULT_CODE:
+                Task new_task = resultData.getParcelable(TaskIntentService.EXTRA_NEW_TASK);
+                Task old_task = resultData.getParcelable(TaskIntentService.EXTRA_OLD_TASK);
+
+                // Make sure the widget gets updated.
+                if (new_task != null) {
+                    mListFragment.addNewTask(new_task, old_task);
+
+                    if (old_task != null) {
+                        boolean access_change = new_task.getAccess_id().equals(old_task.getAccess_id());
+                        if (access_change) {
+                            updateWidget(true);
+                            updateWidget(false);
+                        } else {
+                            updateWidget(new_task.isFamily());
+                        }
+                    } else {
+                        updateWidget(new_task.isFamily());
+                    }
                 }
+
+                break;
+            case TaskIntentService.DELETE_TASK_SERVICE_RESULT_CODE:
+                Task deleted_task = resultData.getParcelable(Task.DOC_TAG);
+
+                if (deleted_task != null) {
+                    doSnackbar(R.string.delete_task_succ_msg);
+                    onNewTaskDialogClose();
+
+                    if (deleted_task.isFamily()) {
+                        doFamilyTaskFetch();
+                    } else {
+                        doPersonalTaskFetch();
+                    }
+                } else {
+                    doSnackbar(R.string.delete_task_err_msg);
+                }
+
                 break;
             case UserIntentService.USER_SERVICE_RESULT_CODE:
                 User new_user = resultData.getParcelable(User.DOC_TAG);

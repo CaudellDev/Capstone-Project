@@ -60,6 +60,8 @@
     <string name="dialog_date_range">%s-%s</string>
     <string name="leave_family_conf_msg">Are you sure you want to leave %s?</string>
     <string name="leave_family_conf_btn">LEAVE</string>
+    <string name="delete_task_succ_msg">Successfully deleted task.</string>
+    <string name="delete_task_err_msg">There was an error deleting the task. Please try again.</string>
 
     <string name="logout_key" translatable="false">logout_preference</string>
     <string name="acc_key" translatable="false">account_category</string>

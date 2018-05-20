@@ -26,7 +26,7 @@ import java.util.Map;
  */
 public class UserIntentService extends IntentService {
 
-    public static final int USER_SERVICE_RESULT_CODE = 10;
+    public static final int USER_SERVICE_RESULT_CODE = 11;
 
     private static final String LOG_TAG = UserIntentService.class.getSimpleName();
 

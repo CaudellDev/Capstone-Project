@@ -106,7 +106,7 @@ public class FamilyWidgetRemoteViewsService extends RemoteViewsService {
                 mTaskResults = new MyResultReceiver(new Handler(mHandlerThread.getLooper()));
                 mTaskResults.setReceiver(this);
 
-                TaskIntentService.startAllTasksFetch(mContext, mTaskResults, mUser.getFamily());
+                TaskIntentService.startAllTasksFetch(mContext, mTaskResults, mUser.getFamily(), true);
             }
         }
 

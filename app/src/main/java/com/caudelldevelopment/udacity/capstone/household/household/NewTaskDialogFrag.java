@@ -117,11 +117,11 @@ public class NewTaskDialogFrag extends DialogFragment
     @Override
     public void onDetach() {
         super.onDetach();
-        mListener = null;
     }
 
     @Override
     public void onDestroy() {
+        mListener = null;
         super.onDestroy();
     }
 
@@ -237,11 +237,15 @@ public class NewTaskDialogFrag extends DialogFragment
             }
         }
 
+        Log.v(LOG_TAG, "initViews - mTags count: " + ((mTags == null) ? "null" : mTags.size()));
+
         if (mTags != null) {
             for (Tag tag : mTags) {
                 Chip tag_chip = new Chip(tag.getName(), "");
                 mChips.add(tag_chip);
             }
+
+            Log.v(LOG_TAG, "initViews - mChips count: " + ((mChips == null) ? "null" : mChips.size()));
 
             mTagInput.setFilterableList(mChips);
         }
@@ -484,17 +488,15 @@ public class NewTaskDialogFrag extends DialogFragment
                 break;
             case Dialog.BUTTON_NEUTRAL:
                 AlertDialog.Builder conf_builder = new AlertDialog.Builder(getContext());
+                final NewTaskDialogListener temp_listener = mListener;
                 conf_builder.setTitle(R.string.are_you_sure_title)
                         .setMessage(getString(R.string.are_you_sure_msg, mTask.getName())) // Not using the edit field text because those changes haven't been saved.
                         .setPositiveButton(R.string.delete_text, (conf_dialog, conf_which) -> {
-                            FirebaseFirestore db_task = FirebaseFirestore.getInstance();
-                            db_task.collection(Task.COL_TAG)
-                                    .document(mTask.getId())
-                                    .delete();
-
-                        }).setNegativeButton(R.string.cancel_text, (conf_dialog, conf_which) -> {
-
-                });
+                            Log.v(LOG_TAG, "onClick, positive button click - mListener == null: " + (mListener == null));
+                            Log.v(LOG_TAG, "onClick, positive button click - mTask == null: " + (mTask == null));
+                            temp_listener.onTaskDeleteClicked(mTask);
+                        })
+                        .setNegativeButton(R.string.cancel_text, null);
 
                 conf_builder.create().show();
                 break;
@@ -504,6 +506,7 @@ public class NewTaskDialogFrag extends DialogFragment
     public interface NewTaskDialogListener {
         void onDialogPositiveClick(Task task);
         void onNewTaskDialogClose();
+        void onTaskDeleteClicked(Task task);
         void onFragmentReady();
         List<Tag> getAllTags();
     }

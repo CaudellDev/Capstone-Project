@@ -35,8 +35,8 @@ import java.util.Map;
  */
 public class FamilyIntentService extends IntentService {
 
-    public static final int FAMILY_SERVICE_RESULT_CODE = 11;
-    public static final int FAMILY_BIND_SERVICE_RESULT_CODE = 111;
+    public static final int FAMILY_SERVICE_RESULT_CODE = 21;
+    public static final int FAMILY_BIND_SERVICE_RESULT_CODE = 210;
 
     private static final String LOG_TAG = FamilyIntentService.class.getSimpleName();
 

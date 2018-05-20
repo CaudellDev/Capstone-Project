@@ -21,6 +21,7 @@ import com.caudelldevelopment.udacity.capstone.household.household.data.User;
 import com.caudelldevelopment.udacity.capstone.household.household.service.MyResultReceiver;
 import com.caudelldevelopment.udacity.capstone.household.household.widget.TasksWidget;
 
+import java.util.LinkedList;
 import java.util.List;
 
 public class TaskListsFragment
@@ -109,13 +110,49 @@ public class TaskListsFragment
         super.onSaveInstanceState(outState);
     }
 
-    public void addNewTask(Task task, boolean accessChange) {
+    public void addNewTask(Task new_task, @Nullable Task old_task) {
+        if (mFamilyTasks == null) mFamilyTasks = new LinkedList<>();
+        if (old_task == null) {
+            if (new_task.isFamily()) {
+                mFamilyTasks.add(new_task);
+                updateFamilyTasks();
+            } else {
+                mPersonalTasks.add(new_task);
+                updatePersonalTasks();
+            }
+        } else {
+            boolean access_change = !new_task.getAccess_id().equals(old_task.getAccess_id());
 
+            if (access_change) {
+                if (new_task.isFamily()) {
+                    // Remove from personal and add to family
+                    mPersonalTasks.remove(old_task);
+                    mFamilyTasks.add(new_task);
+                } else {
+                    // Remove from family and add to personal
+                    mFamilyTasks.remove(old_task);
+                    mPersonalTasks.add(new_task);
+                }
+                updatePersonalTasks();
+                updateFamilyTasks();
+            } else {
+                if (new_task.isFamily()) {
+                    // Replace task in family list
+                    int index = mFamilyTasks.indexOf(old_task);
+                    mFamilyTasks.set(index, new_task);
+                    updateFamilyTasks();
+                } else {
+                    // Replace task in personal list
+                    int index = mPersonalTasks.indexOf(old_task);
+                    mPersonalTasks.set(index, new_task);
+                    updatePersonalTasks();
+                }
+            }
+        }
     }
 
-    private void onAddNewTaskComplete() {
-        // Just show the snackbar. The snapshot listener will trigger and update/add the task.
-        mListener.doSnackbar(R.string.new_task_comp_msg);
+    public List<Task> getPersonalTasks() {
+        return mPersonalTasks;
     }
 
     public void setPersonalTasks(List<Task> personalTasks) {
@@ -131,6 +168,10 @@ public class TaskListsFragment
         if (mTaskAdapter != null) {
             mTaskAdapter.notifyDataSetChanged();
         }
+    }
+
+    public List<Task> getFamilyTasks() {
+        return mFamilyTasks;
     }
 
     public void setFamilyTasks(List<Task> familyTasks) {
@@ -232,7 +273,6 @@ public class TaskListsFragment
                     result = mPersonalFrag;
                 }
             } else if (position == 1) {
-
                 if (mListener.isNoFamily()) {
                     if (mSelectFrag == null) {
                         result = SelectFamilyFrag.newInstance(mFamiliesList);

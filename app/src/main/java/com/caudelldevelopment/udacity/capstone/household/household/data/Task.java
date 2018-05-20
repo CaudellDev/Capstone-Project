@@ -71,14 +71,12 @@ public class Task implements Parcelable, Comparable<Task> {
     }
 
     public static List<Task> convertParcelableArray(Parcelable[] arr) {
-
-
         if (arr != null) {
             Task[] task_arr = Arrays.copyOf(arr, arr.length, Task[].class);
             return new LinkedList<>(Arrays.asList(task_arr));
         }
 
-        return null;
+        return new LinkedList<>();
     }
 
     // Required for Firebase DocumentSnapshot toObject function.
@@ -178,7 +176,7 @@ public class Task implements Parcelable, Comparable<Task> {
     public boolean equals(Object o) {
         if (o instanceof Task) {
             Task temp = (Task) o;
-            return id.equals(temp.getId());
+            return (id == null && temp.getId() == null) || id.equals(temp.getId());
         } else {
             return false;
         }

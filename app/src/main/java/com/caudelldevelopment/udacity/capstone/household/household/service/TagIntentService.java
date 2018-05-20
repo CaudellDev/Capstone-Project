@@ -19,13 +19,9 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-/**
- * An {@link IntentService} subclass for handling asynchronous task requests in
- * a service on a separate handler thread.
- */
 public class TagIntentService extends IntentService {
 
-    public static final int TAG_SERVICE_RESULT_CODE = 12;
+    public static final int TAG_SERVICE_RESULT_CODE = 31;
 
     private static final String ACTION_TAG_FETCH = "com.caudelldevelopment.udacity.capstone.household.household.service.action.TAG_FETCH";
     private static final String ACTION_ALL_TAGS_FETCH = "com.caudelldevelopment.udacity.capstone.household.household.service.action.ALL_TAGS_FETCH";
