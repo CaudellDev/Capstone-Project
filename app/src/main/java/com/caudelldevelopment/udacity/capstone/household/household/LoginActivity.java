@@ -75,7 +75,6 @@ public class LoginActivity extends AppCompatActivity implements MyResultReceiver
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
         if (requestCode == SIGN_IN_REQ_CODE) {
             if (resultCode == RESULT_OK) {
                 doLogin();
@@ -152,8 +151,32 @@ public class LoginActivity extends AppCompatActivity implements MyResultReceiver
                     } else {
                         startMainActivity();
                     }
+                } else {
+                    // If it's null, it must be a new user. Create the user in Firebase.
+                    FirebaseUser fireUser = FirebaseAuth.getInstance().getCurrentUser();
+                    if (fireUser != null) {
+                        User user = new User(fireUser);
+
+                        mReceiver = new MyResultReceiver(new Handler());
+                        mReceiver.setReceiver(this);
+
+                        UserIntentService.startUserWrite(this, mReceiver, user, null);
+                    } else {
+                        Snackbar.make(findViewById(R.id.login_root_layout), getString(R.string.login_user_null), Snackbar.LENGTH_LONG);
+                    }
                 }
 
+                break;
+            case UserIntentService.WRITE_USER_SERVICE_RESULT_CODE:
+                User new_user = resultData.getParcelable(User.DOC_TAG);
+
+                if (new_user != null) {
+                    mUser = new_user;
+                    // New users won't ever have a family selected, so start main activity now.
+                    startMainActivity();
+                } else {
+                    Snackbar.make(findViewById(R.id.login_root_layout), getString(R.string.login_user_null), Snackbar.LENGTH_LONG);
+                }
                 break;
             case FamilyIntentService.FAMILY_SERVICE_RESULT_CODE:
                 Family temp_fam = resultData.getParcelable(Family.DOC_TAG);

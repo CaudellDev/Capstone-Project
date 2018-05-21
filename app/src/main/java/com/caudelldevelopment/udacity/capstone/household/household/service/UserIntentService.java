@@ -25,6 +25,7 @@ import java.util.Map;
 public class UserIntentService extends IntentService {
 
     public static final int USER_SERVICE_RESULT_CODE = 11;
+    public static final int WRITE_USER_SERVICE_RESULT_CODE = 12;
 
     private static final String LOG_TAG = UserIntentService.class.getSimpleName();
 
@@ -166,7 +167,7 @@ public class UserIntentService extends IntentService {
         Bundle data = new Bundle();
         data.putParcelable(User.DOC_TAG, user);
 
-        mResults.send(USER_SERVICE_RESULT_CODE, data);
+        mResults.send(WRITE_USER_SERVICE_RESULT_CODE, data);
         stopSelf();
     }
 

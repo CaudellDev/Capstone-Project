@@ -16,7 +16,6 @@ public class User implements Parcelable {
 
     public static final String NAME_ID = "name";
     public static final String FAMILY_ID = "family";
-    public static final String TASKS_ID = "task_ids";
 
     private String name;
     private String id;
