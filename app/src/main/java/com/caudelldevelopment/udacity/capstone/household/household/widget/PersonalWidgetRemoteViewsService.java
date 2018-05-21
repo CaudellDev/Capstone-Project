@@ -17,16 +17,8 @@ import com.caudelldevelopment.udacity.capstone.household.household.service.TaskI
 import com.caudelldevelopment.udacity.capstone.household.household.service.UserIntentService;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QuerySnapshot;
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Locale;
 
 public class PersonalWidgetRemoteViewsService extends RemoteViewsService {
 
@@ -57,7 +49,6 @@ public class PersonalWidgetRemoteViewsService extends RemoteViewsService {
 
         @Override
         public void onCreate() {
-            Log.v(LOG_TAG, "onCreate has been started!!!!");
             doUserQuery();
         }
 
@@ -104,7 +95,6 @@ public class PersonalWidgetRemoteViewsService extends RemoteViewsService {
 
         @Override
         public void onReceiveResult(int resultCode, Bundle resultData) {
-            Log.v(LOG_TAG, "onReceiveResult - resultCode: " + resultCode);
             switch (resultCode) {
                 case UserIntentService.USER_SERVICE_RESULT_CODE:
                     User temp_user = resultData.getParcelable(User.DOC_TAG);
@@ -114,13 +104,6 @@ public class PersonalWidgetRemoteViewsService extends RemoteViewsService {
                     }
                     break;
                 case TaskIntentService.PERSONAL_TASK_SERVICE_RESULT_CODE:
-                    // We completed the fetch, so set this to null so we can start another one.
-                    // This causes the widget to update constantly, but without it the list shows empty
-                    // after switching lists.
-//                    mHandlerThread.quitSafely();
-//                    mTaskResults.setReceiver(null);
-//                    mTaskResults = null;
-
                     List<Task> task_list = Task.convertParcelableArray(resultData.getParcelableArray(Task.COL_TAG));
 
                     if (task_list == null || task_list.isEmpty()) {

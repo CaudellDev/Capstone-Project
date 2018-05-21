@@ -5,16 +5,9 @@ import android.os.Parcelable;
 import android.util.Log;
 
 import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.firestore.DocumentSnapshot;
 
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
-
-/**
- * Created by caude on 12/25/2017.
- */
 
 public class Family implements Parcelable {
 
@@ -29,12 +22,6 @@ public class Family implements Parcelable {
     private String name;
     private String id;
     private Map<String, String> members;
-
-    public static Family fromDoc(DocumentSnapshot doc) {
-        Family family = doc.toObject(Family.class);
-        family.setId(doc.getId());
-        return family;
-    }
 
     public static Family fromSnapshot(DataSnapshot query) {
         Family family = query.getValue(Family.class);

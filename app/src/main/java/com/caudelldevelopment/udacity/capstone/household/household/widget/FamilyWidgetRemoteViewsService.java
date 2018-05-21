@@ -18,17 +18,8 @@ import com.caudelldevelopment.udacity.capstone.household.household.service.TaskI
 import com.caudelldevelopment.udacity.capstone.household.household.service.UserIntentService;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.Query;
-import com.google.firebase.firestore.QuerySnapshot;
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Created by caude on 3/14/2018.
@@ -121,9 +112,6 @@ public class FamilyWidgetRemoteViewsService extends RemoteViewsService {
                     }
                     break;
                 case TaskIntentService.FAMILY_TASK_SERVICE_RESULT_CODE:
-                    // We completed the fetch, so set this to null so we can start another one.
-//                    mTaskResults = null;
-
                     List<Task> task_list = Task.convertParcelableArray(resultData.getParcelableArray(Task.COL_TAG));
 
                     if (task_list != null) {

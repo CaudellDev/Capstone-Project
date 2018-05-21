@@ -82,8 +82,6 @@ public class TasksWidget extends AppWidgetProvider {
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.tasks_widget);
         AppWidgetManager manager = AppWidgetManager.getInstance(context);
         String action = intent.getAction();
-        Log.v(LOG_TAG, "onReceive - action: " + action);
-
 
         if (action != null) {
             switch (action) {

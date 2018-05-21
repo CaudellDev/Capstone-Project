@@ -20,11 +20,6 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.caudelldevelopment.udacity.capstone.household.household.data.Family;
-import com.caudelldevelopment.udacity.capstone.household.household.data.User;
-import com.caudelldevelopment.udacity.capstone.household.household.service.FamilyIntentService;
-import com.caudelldevelopment.udacity.capstone.household.household.service.MyResultReceiver;
-import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.Arrays;
 import java.util.Collection;

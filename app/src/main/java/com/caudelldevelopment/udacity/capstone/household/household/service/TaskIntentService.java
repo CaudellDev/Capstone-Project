@@ -10,7 +10,6 @@ import android.util.Log;
 
 import com.caudelldevelopment.udacity.capstone.household.household.data.Tag;
 import com.caudelldevelopment.udacity.capstone.household.household.data.Task;
-import com.caudelldevelopment.udacity.capstone.household.household.data.User;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
@@ -21,10 +20,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-/**
- * An {@link IntentService} subclass for handling asynchronous task requests in
- * a service on a separate handler thread.
- */
 public class TaskIntentService extends IntentService {
 
     public static final int PERSONAL_TASK_SERVICE_RESULT_CODE = 41;
@@ -34,13 +29,11 @@ public class TaskIntentService extends IntentService {
 
     private static final String LOG_TAG = TaskIntentService.class.getSimpleName();
 
-    private static final String ACTION_TASK_FETCH = "com.caudelldevelopment.udacity.capstone.household.household.service.action.TASK_FETCH";
     private static final String ACTION_ALL_TASKS_FETCH = "com.caudelldevelopment.udacity.capstone.household.household.service.action.ALL_TASKS_FETCH";
     private static final String ACTION_TASK_WRITE = "com.caudelldevelopment.udacity.capstone.household.household.service.action.TASK_WRITE";
     private static final String ACTION_TASK_DELETE = "com.caudelldevelopment.udacity.capstone.household.household.service.action.TASK_DELETE";
 
     private static final String EXTRA_RESULTS = "com.caudelldevelopment.udacity.capstone.household.household.service.extra.RESULTS";
-    private static final String EXTRA_TASK_ID = "com.caudelldevelopment.udacity.capstone.household.household.service.extra.TASK_ID";
     private static final String EXTRA_ACCESS_ID = "com.caudelldevelopment.udacity.capstone.household.household.service.extra.ACCESS_ID";
     private static final String EXTRA_IS_FAMILY = "com.caudelldevelopment.udacity.capstone.household.household.service.extra.IS_FAMILY";
     private static final String EXTRA_DELETE_TASK = "com.caudelldevelopment.udacity.capstone.household.household.service.extra.DELETE_TASK";
@@ -53,20 +46,6 @@ public class TaskIntentService extends IntentService {
         super("TaskIntentService");
     }
 
-    /**
-     * Starts this service to perform action Foo with the given parameters. If
-     * the service is already performing a task this action will be queued.
-     *
-     * @see IntentService
-     */
-    public static void startTaskFetch(Context context, ResultReceiver results, String task_id) {
-        Intent intent = new Intent(context, TaskIntentService.class);
-        intent.setAction(ACTION_TASK_FETCH);
-        intent.putExtra(EXTRA_RESULTS, results);
-        intent.putExtra(EXTRA_TASK_ID, task_id);
-        context.startService(intent);
-    }
-
     public static void startAllTasksFetch(Context context, ResultReceiver results, String access_id, boolean family) {
         Intent intent = new Intent(context, TaskIntentService.class);
         intent.setAction(ACTION_ALL_TASKS_FETCH);
@@ -76,12 +55,6 @@ public class TaskIntentService extends IntentService {
         context.startService(intent);
     }
 
-    /**
-     * Starts this service to perform action Baz with the given parameters. If
-     * the service is already performing a task this action will be queued.
-     *
-     * @see IntentService
-     */
     public static void startTaskWrite(Context context, ResultReceiver results, Task new_task, @Nullable Task old_task) {
         Intent intent = new Intent(context, TaskIntentService.class);
         intent.setAction(ACTION_TASK_WRITE);
@@ -105,10 +78,7 @@ public class TaskIntentService extends IntentService {
             mResults = intent.getParcelableExtra(EXTRA_RESULTS);
 
             final String action = intent.getAction();
-            if (ACTION_TASK_FETCH.equals(action)) {
-                String task_id = intent.getStringExtra(EXTRA_TASK_ID);
-                handleTaskFetch(task_id);
-            } else if (ACTION_ALL_TASKS_FETCH.equals(action)) {
+            if (ACTION_ALL_TASKS_FETCH.equals(action)) {
                 String access_id = intent.getStringExtra(EXTRA_ACCESS_ID);
                 boolean is_family = intent.getBooleanExtra(EXTRA_IS_FAMILY, false);
                 handleAllTasksFetch(access_id, is_family);
@@ -123,18 +93,6 @@ public class TaskIntentService extends IntentService {
         }
     }
 
-    /**
-     * Handle action Foo in the provided background thread with the provided
-     * parameters.
-     */
-    private void handleTaskFetch(String task_id) {
-
-    }
-
-    /**
-     * Handle action Baz in the provided background thread with the provided
-     * parameters.
-     */
     private void handleAllTasksFetch(String access_id, boolean family) {
         FirebaseDatabase db = FirebaseDatabase.getInstance();
         db.getReference(Task.COL_TAG)
@@ -191,17 +149,21 @@ public class TaskIntentService extends IntentService {
             new_task.setId(task_id);
 
             String task_path = makeFirebasePath(Task.COL_TAG, task_id);
-            updates.put(task_path, new_task);
+            updates.put(task_path, new_task.toMap());
 
             // Update the tags
             for (String tag_id : new_task.getTag_ids().keySet()) {
                 String tag_path = makeFirebasePath(Tag.COL_TAG, tag_id, Tag.TASKS_ID, new_task.getId());
                 updates.put(tag_path, new_task.getName());
             }
+        } else if ((new_task.isComplete() && !old_task.isComplete()) || (!new_task.isComplete() && old_task.isComplete())) {
+            // This checks if the complete values are different. If a task is checked, that is the only change that needs to be made.
+            String comp_path = makeFirebasePath(Task.COL_TAG, new_task.getId(), Task.COMP_ID);
+            updates.put(comp_path, new_task.isComplete());
         } else {
             // Compare the values, and update them.
             String task_path = makeFirebasePath(Task.COL_TAG, new_task.getId());
-            updates.put(task_path, new_task);
+            updates.put(task_path, new_task.toMap());
 
             // Will keep a list of all tags, in both new and old. True is add and false is remove.
             // Tags that are in both won't be added.
@@ -257,10 +219,6 @@ public class TaskIntentService extends IntentService {
             String tag_path = makeFirebasePath(Tag.COL_TAG, tag_id, Tag.TASKS_ID, delete_task.getId());
             updates.put(tag_path, null);
         }
-
-//        for (String key : updates.keySet()) {
-//            Log.v(LOG_TAG, "handleTaskDelete - path: " + key + ", value: " + updates.get(key));
-//        }
 
         FirebaseDatabase db = FirebaseDatabase.getInstance();
         db.getReference()

@@ -5,11 +5,8 @@ import android.os.Parcelable;
 
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.firestore.DocumentSnapshot;
 
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 
 public class User implements Parcelable {
@@ -24,12 +21,6 @@ public class User implements Parcelable {
     private String name;
     private String id;
     private String family;
-
-    public static User fromDoc(DocumentSnapshot doc) {
-        User user = doc.toObject(User.class);
-        user.setId(doc.getId());
-        return user;
-    }
 
     public static User fromSnapshot(DataSnapshot query) {
         User user = query.getValue(User.class);

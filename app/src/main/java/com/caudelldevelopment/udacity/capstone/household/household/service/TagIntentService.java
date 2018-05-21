@@ -16,12 +16,11 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 
 public class TagIntentService extends IntentService {
 
     public static final int TAG_SERVICE_RESULT_CODE = 31;
+    public static final int TAG_WRITE_SERVICE_RESULT_CODE = 32;
 
     private static final String ACTION_TAG_FETCH = "com.caudelldevelopment.udacity.capstone.household.household.service.action.TAG_FETCH";
     private static final String ACTION_ALL_TAGS_FETCH = "com.caudelldevelopment.udacity.capstone.household.household.service.action.ALL_TAGS_FETCH";
@@ -29,7 +28,7 @@ public class TagIntentService extends IntentService {
 
     private static final String EXTRA_RESULTS = "com.caudelldevelopment.udacity.capstone.household.household.service.extra.RESULTS";
     private static final String EXTRA_TAG_ID = "com.caudelldevelopment.udacity.capstone.household.household.service.extra.TAG_ID";
-    private static final String EXTRA_NEW_TAG = "com.caudelldevelopment.udacity.capstone.household.household.service.extra.NEW_TAG";
+    private static final String EXTRA_NEW_TAG_NAME = "com.caudelldevelopment.udacity.capstone.household.household.service.extra.NEW_TAG_NAME";
 
     private ResultReceiver mResults;
 
@@ -64,11 +63,11 @@ public class TagIntentService extends IntentService {
      *
      * @see IntentService
      */
-    public static void startActionTagWrite(Context context, ResultReceiver results, Tag tag) {
+    public static void startTagWrite(Context context, ResultReceiver results, String tag_name) {
         Intent intent = new Intent(context, TagIntentService.class);
         intent.setAction(ACTION_TAG_WRITE);
         intent.putExtra(EXTRA_RESULTS, results);
-        intent.putExtra(EXTRA_NEW_TAG, tag);
+        intent.putExtra(EXTRA_NEW_TAG_NAME, tag_name);
         context.startService(intent);
     }
 
@@ -88,8 +87,8 @@ public class TagIntentService extends IntentService {
             } else if (ACTION_TAG_WRITE.equals(action)) {
                 mResults = intent.getParcelableExtra(EXTRA_RESULTS);
 
-                Tag new_tag = intent.getParcelableExtra(EXTRA_NEW_TAG);
-                handleTagWrite(new_tag);
+                String tag_name = intent.getStringExtra(EXTRA_NEW_TAG_NAME);
+                handleTagWrite(tag_name);
             }
         }
     }
@@ -178,14 +177,15 @@ public class TagIntentService extends IntentService {
      * Handle action Baz in the provided background thread with the provided
      * parameters.
      */
-    private void handleTagWrite(Tag tag) {
+    private void handleTagWrite(String tag_name) {
         FirebaseDatabase db = FirebaseDatabase.getInstance();
         DatabaseReference ref = db.getReference(Tag.COL_TAG)
                 .push();
 
+        Tag tag = new Tag(tag_name);
         tag.setId(ref.getKey());
 
-        ref.setValue(tag)
+        ref.setValue(tag.toMap())
             .addOnSuccessListener(v -> finishTagWrite(tag));
     }
 
@@ -193,7 +193,7 @@ public class TagIntentService extends IntentService {
         Bundle data = new Bundle();
         data.putParcelable(Tag.DOC_TAG, tag);
 
-        mResults.send(TAG_SERVICE_RESULT_CODE, data);
+        mResults.send(TAG_WRITE_SERVICE_RESULT_CODE, data);
         stopSelf();
     }
 }

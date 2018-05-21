@@ -5,8 +5,6 @@ import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.res.Configuration;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
@@ -20,7 +18,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.widget.Button;
-import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Switch;
@@ -29,10 +26,6 @@ import com.caudelldevelopment.udacity.capstone.household.household.data.Family;
 import com.caudelldevelopment.udacity.capstone.household.household.data.Tag;
 import com.caudelldevelopment.udacity.capstone.household.household.data.Task;
 import com.caudelldevelopment.udacity.capstone.household.household.data.User;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QuerySnapshot;
 import com.pchmn.materialchips.ChipsInput;
 import com.pchmn.materialchips.model.Chip;
 import com.pchmn.materialchips.model.ChipInterface;
@@ -47,8 +40,7 @@ import java.util.List;
 import java.util.Locale;
 
 public class NewTaskDialogFrag extends DialogFragment
-                                implements OnCompleteListener<QuerySnapshot>,
-                                            View.OnClickListener,
+                                implements View.OnClickListener,
                                             Dialog.OnClickListener {
 
     private static final String LOG_TAG = NewTaskDialogFrag.class.getSimpleName();
@@ -367,29 +359,6 @@ public class NewTaskDialogFrag extends DialogFragment
             }
         } else {
             mPosConf.setEnabled(name_filled && date_filled);
-        }
-    }
-
-    @Override
-    public void onComplete(@NonNull com.google.android.gms.tasks.Task<QuerySnapshot> task) {
-        List<Tag> tags = new LinkedList<>();
-        List<Chip> chips = new LinkedList<>();
-
-        for (DocumentSnapshot doc : task.getResult()) {
-            Tag curr = Tag.fromDoc(doc);
-            tags.add(curr);
-            chips.add(new Chip(curr.getName(), null));
-        }
-
-        // All of the available tags that the user could assign to the task.
-        mTags = tags;
-        mChips = chips;
-
-        mTagInput.setFilterableList(mChips);
-
-        // We only need this when starting the animation in wide layout.
-        if (!getShowsDialog()) {
-            mListener.onFragmentReady();
         }
     }
 

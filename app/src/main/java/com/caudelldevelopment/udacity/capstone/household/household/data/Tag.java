@@ -5,16 +5,12 @@ import android.os.Parcelable;
 import android.util.Log;
 
 import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.firestore.DocumentSnapshot;
 
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by caude on 12/25/2017.
- */
 public class Tag implements Parcelable {
 
     private static final String LOG_TAG = Tag.class.getSimpleName();
@@ -28,13 +24,6 @@ public class Tag implements Parcelable {
     private String name;
     private String id;
     private Map<String, String> task_ids;
-//    private List<String> task_ids;
-
-    public static Tag fromDoc(DocumentSnapshot doc) {
-        Tag tag = doc.toObject(Tag.class);
-        tag.setId(doc.getId());
-        return tag;
-    }
 
     public static Tag fromSnapshot(DataSnapshot query) {
         Log.v(LOG_TAG, "fromSnapshot - query id: " + query.getKey());

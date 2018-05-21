@@ -1,6 +1,7 @@
 package com.caudelldevelopment.udacity.capstone.household.household;
 
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
@@ -19,21 +20,19 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.caudelldevelopment.udacity.capstone.household.household.data.Tag;
-import com.caudelldevelopment.udacity.capstone.household.household.data.Task;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.firebase.firestore.DocumentReference;
-import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.FirebaseFirestore;
+import com.caudelldevelopment.udacity.capstone.household.household.service.MyResultReceiver;
+import com.caudelldevelopment.udacity.capstone.household.household.service.TagIntentService;
 
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-public class TagsActivity extends AppCompatActivity implements BaseEntryDialog.EntryDialogListener {
+public class TagsActivity extends AppCompatActivity implements BaseEntryDialog.EntryDialogListener, MyResultReceiver.Receiver {
 
     private static final String LOG_TAG = TagsActivity.class.getSimpleName();
 
     private TagAdapter mAdapter;
+    private MyResultReceiver mResults;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,25 +91,12 @@ public class TagsActivity extends AppCompatActivity implements BaseEntryDialog.E
             return;
         }
 
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-
-        // Tags won't be modified or removed, so this should always be true.
-        if (tag.getId() == null) {
-            DocumentReference tagRef = db.collection(Tag.COL_TAG).document();
-            tag.setId(tagRef.getId());
+        if (mResults == null) {
+            mResults = new MyResultReceiver(new Handler());
+            mResults.setReceiver(this);
         }
 
-        db.collection(Tag.COL_TAG)
-            .document(tag.getId())
-            .set(tag.toMap())
-            .addOnSuccessListener(Void -> {
-                mAdapter.data.add(tag);
-                mAdapter.notifyDataSetChanged();
-
-                Snackbar.make(findViewById(R.id.tag_list_layout), getString(R.string.add_tag_success_msg, tag.getName()), Snackbar.LENGTH_SHORT).show();
-            }).addOnFailureListener(e -> {
-                Snackbar.make(findViewById(R.id.tag_list_layout), R.string.add_tag_failure_msg, Snackbar.LENGTH_LONG).show();
-            });
+        TagIntentService.startTagWrite(this, mResults, name);
     }
 
     @Override
@@ -121,6 +107,18 @@ public class TagsActivity extends AppCompatActivity implements BaseEntryDialog.E
     @Override
     public void onEntryDialogClose() {
         // Do nothing, for wide layout only
+    }
+
+    @Override
+    public void onReceiveResult(int resultCode, Bundle resultData) {
+        if (resultCode == TagIntentService.TAG_WRITE_SERVICE_RESULT_CODE) {
+            Tag new_tag = resultData.getParcelable(Tag.DOC_TAG);
+
+            if (new_tag != null) {
+                mAdapter.data.add(new_tag);
+                mAdapter.notifyDataSetChanged();
+            }
+        }
     }
 
     private class TagViewHolder extends RecyclerView.ViewHolder {

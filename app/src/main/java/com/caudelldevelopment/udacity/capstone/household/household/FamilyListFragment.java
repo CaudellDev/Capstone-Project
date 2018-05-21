@@ -19,14 +19,7 @@ import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.caudelldevelopment.udacity.capstone.household.household.data.Tag;
 import com.caudelldevelopment.udacity.capstone.household.household.data.Task;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.firebase.firestore.DocumentChange;
-import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.EventListener;
-import com.google.firebase.firestore.FirebaseFirestoreException;
-import com.google.firebase.firestore.QuerySnapshot;
 import com.pchmn.materialchips.ChipView;
 
 import java.util.Arrays;
@@ -196,19 +189,18 @@ public class FamilyListFragment extends Fragment {
 
             tags_layout = itemView.findViewById(R.id.task_tags_ll);
 
-            comp.setOnCheckedChangeListener(this::onCompleteChanged);
-            item.setOnClickListener(this::onItemClick);
+            comp.setOnClickListener(view -> onCompleteChanged());
+            item.setOnClickListener(view -> onItemClick());
         }
 
-        public void onCompleteChanged(CompoundButton btn, boolean isChecked) {
+        public void onCompleteChanged() {
             int pos = getAdapterPosition();
             Task curr = mAdapter.data.get(pos);
 
-            curr.setComplete(isChecked);
             mListener.onFamilyTaskCheckClick(curr);
         }
 
-        public void onItemClick(View v) {
+        public void onItemClick() {
             int pos = getAdapterPosition();
             Task curr = mAdapter.data.get(pos);
 

@@ -448,6 +448,9 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onTaskCheckClick(Task task) {
+        Log.v(LOG_TAG, "onTaskCheckClick has started!!! task complete: " + task.isComplete());
+        task.setComplete(!task.isComplete());
+        addNewTask(task, false);
     }
 
     @Override
@@ -529,6 +532,7 @@ public class MainActivity extends AppCompatActivity
             }
         }
 
+        Log.v(LOG_TAG, "addNewTask - task complete: " + task.isComplete() + ", old_task complete: " + ((old_task == null) ? "null" : old_task.isComplete()));
         TaskIntentService.startTaskWrite(this, results, task, old_task);
     }
 
@@ -690,6 +694,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onReceiveResult(int resultCode, Bundle resultData) {
+        Log.v(LOG_TAG, "onReceiveResult - resultCode: " + resultCode);
         switch (resultCode) {
             case TaskIntentService.PERSONAL_TASK_SERVICE_RESULT_CODE:
                 List<Task> task_list = Task.convertParcelableArray(resultData.getParcelableArray(Task.COL_TAG));

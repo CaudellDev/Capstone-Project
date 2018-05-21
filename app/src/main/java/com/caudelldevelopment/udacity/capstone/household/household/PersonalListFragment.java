@@ -20,16 +20,8 @@ import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.caudelldevelopment.udacity.capstone.household.household.data.Tag;
 import com.caudelldevelopment.udacity.capstone.household.household.data.Task;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.EventListener;
-import com.google.firebase.firestore.FirebaseFirestoreException;
-import com.google.firebase.firestore.QuerySnapshot;
 import com.pchmn.materialchips.ChipView;
-import com.pchmn.materialchips.model.Chip;
 
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -217,7 +209,6 @@ public class PersonalListFragment extends Fragment {
             int pos = getAdapterPosition();
             Task curr = mAdapter.data.get(pos);
 
-            curr.setComplete(isChecked);
             mListener.onPersonalTaskCheckClick(curr);
         }
 

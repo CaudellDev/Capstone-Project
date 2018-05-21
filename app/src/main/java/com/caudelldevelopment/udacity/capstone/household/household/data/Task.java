@@ -6,22 +6,12 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.firestore.DocumentSnapshot;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-
-/**
- * Created by caude on 12/25/2017.
- */
 
 public class Task implements Parcelable, Comparable<Task> {
 
@@ -49,19 +39,6 @@ public class Task implements Parcelable, Comparable<Task> {
     private boolean family;
 //    private List<String> tag_ids;
     private Map<String, String> tag_ids;
-
-    public static Task fromDoc(DocumentSnapshot doc, User user) {
-        Task task = doc.toObject(Task.class);
-        task.setId(doc.getId());
-
-        if (task.isFamily()) {
-            task.setAccess_id(user.getFamily());
-        } else {
-            task.setAccess_id(user.getId());
-        }
-
-        return task;
-    }
 
     public static Task fromSnapshot(DataSnapshot query) {
         Task task = query.getValue(Task.class);
@@ -95,6 +72,7 @@ public class Task implements Parcelable, Comparable<Task> {
         desc = in.readString();
         date = in.readString();
         family = in.readByte() == 1;
+        complete = in.readByte() == 1;
         in.readMap(tag_ids, String.class.getClassLoader());
     }
 
@@ -172,6 +150,10 @@ public class Task implements Parcelable, Comparable<Task> {
         tag_ids.put(tag_id, tag_name);
     }
 
+    public void setTag_ids(Map<String, String> tag_ids) {
+        this.tag_ids = tag_ids;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o instanceof Task) {
@@ -202,6 +184,7 @@ public class Task implements Parcelable, Comparable<Task> {
         out.writeString(desc);
         out.writeString(date);
         out.writeByte((byte) (family ? 1 : 0));
+        out.writeByte((byte) (complete ? 1 : 0));
         out.writeMap(tag_ids);
     }
 

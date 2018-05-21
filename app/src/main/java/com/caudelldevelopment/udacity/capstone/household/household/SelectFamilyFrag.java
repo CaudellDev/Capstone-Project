@@ -15,13 +15,6 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.caudelldevelopment.udacity.capstone.household.household.data.Family;
-import com.caudelldevelopment.udacity.capstone.household.household.data.User;
-import com.google.firebase.firestore.DocumentChange;
-import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.EventListener;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.FirebaseFirestoreException;
-import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.Arrays;
 import java.util.Collections;
